@@ -1,25 +1,73 @@
-import logo from './logo.svg';
-import './App.css';
+import { Route, Routes, Navigate, BrowserRouter } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import { useEffect } from "react";
+import AdminDashboard from './AdminDashboard';
+import UserDashboard from './UserDashboard';
+import DashboardScreen from "./pages/DashboardScreen";
+import ClientListScreen from "./pages/clients/ClientListScreen";
+import ProductListScreen from "./pages/products/ProductListScreen";
+import InvoiceListScreen from "./pages/invoices/InvoiceListScreen";
+import InvoiceDetailScreen from "./pages/invoices/InvoiceDetailScreen";
+import AboutScreen from "./pages/about/AboutScreen";
+import Container from "./components/Container/Container";
+import useInitApp from "./hook/useInitApp";
+import ClientDeleteConfirm from "./components/Clients/ClientDeleteConfirm";
+import ClientEditModal from "./components/Clients/ClientEditModal";
+import ProductDeleteConfirm from "./components/Product/ProductDeleteConfirm";
+import ProductEditModal from "./components/Product/ProductEditModal";
+import ClientChooseModal from "./components/Clients/ClientChooseModal";
+import ProductChoosenModal from "./components/Product/ProductChoosenModal";
+import InvoiceSettingModal from "./components/Invoice/InvoiceSettingModal";
+import InvoiceConfirmModal from "./components/Invoice/InvoiceConfirmModal";
+import InvoiceDeleteConfirm from "./components/Invoice/InvoiceDeleteConfirm";
+import PageLoading from "./components/Common/PageLoading";
 
-function App() {
+const App = () => {
+  const { initialSetData } = useInitApp();
+
+  useEffect(() => {
+    initialSetData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Container>
+      {/* <Switch>
+        <Route path="/login" component={Login} />
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/" component={UserDashboard} />
+      </Switch> */}
+        <Routes>
+          <Route path="/" element={<DashboardScreen />} />
+
+          <Route path="clients" element={<ClientListScreen />}></Route>
+
+          <Route path="products" element={<ProductListScreen />}></Route>
+
+          <Route path="invoices">
+            <Route path="" element={<InvoiceListScreen />} exact />
+            <Route path=":id" element={<InvoiceDetailScreen />} />
+          </Route>
+
+          <Route path="about" element={<AboutScreen />} />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Container>
+      <ToastContainer />
+      <ClientDeleteConfirm />
+      <ClientEditModal />
+      <ClientChooseModal />
+      <ProductDeleteConfirm />
+      <ProductEditModal />
+      <ProductChoosenModal />
+      <InvoiceSettingModal />
+      <InvoiceConfirmModal />
+      <InvoiceDeleteConfirm />
+      <PageLoading />
+    </BrowserRouter>
   );
-}
+};
 
 export default App;

@@ -1,0 +1,37 @@
+// // Login.js
+
+// import React, { useState } from 'react';
+
+// const Login = () => {
+//   const [email, setEmail] = useState('');
+//   const [password, setPassword] = useState('');
+
+//   const handleLogin = () => {
+//     // Perform authentication, set user role in state/local storage, etc.
+//   };
+
+//   return (
+//     <div>
+//       <input type="text" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+//       <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+//       <button onClick={handleLogin}>Login</button>
+//     </div>
+//   );
+// };
+
+// export default Login;
+
+// // UserDashboard.js
+
+// import React from 'react';
+
+// const UserDashboard = () => {
+//   return (
+//     <div>
+//       <h2>User Dashboard</h2>
+//       {/* User functionalities */}
+//     </div>
+//   );
+// };
+
+// export default UserDashboard;
