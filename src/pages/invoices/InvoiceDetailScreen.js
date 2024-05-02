@@ -331,6 +331,77 @@ function InvoiceDetailScreen(props) {
     [invoiceForm]
   );
 
+  // abc
+  const handlerDiscountsValue = useCallback(
+    (event, keyName, discountID) => {
+      const value = event.target.value;
+      let updateDiscounts = [...invoiceForm.discounts];
+      const isFindIndex = updateDiscounts.findIndex(
+        (disc) => disc.id === discountID
+      );
+      if (isFindIndex === -1) {
+        return;
+      }
+      const currentDiscount = updateDiscounts[isFindIndex];
+
+      // Validation based on discount type
+      if (currentDiscount.type === "percentage" && keyName === "value") {
+        if (!`${value}`.match(/^[0-9]\d*(\.\d+)?$/)) {
+          return;
+        }
+
+        if (value <= 0 || value > 100) {
+          return;
+        }
+      }
+
+      if (currentDiscount.type === "flat" && keyName === "value") {
+        if (!`${value}`.match(/^[0-9]\d*(\.\d+)?$/)) {
+          return;
+        }
+
+        if (value <= 0) {
+          return;
+        }
+      }
+
+      // Update invoice form state
+      setInvoiceForm((prev) => {
+        let discounts = [...prev.discounts];
+
+        if (keyName === "value") {
+          const sumDiscounts = (discounts) => {
+            return discounts.reduce((total, discount) => {
+              return (
+                total +
+                (discount.type === "percentage"
+                  ? (discount.value / 100) * subTotalAmount
+                  : discount.amount)
+              );
+            }, 0);
+          };
+          const subTotalAmount = sumProductTotal(prev.products);
+          const discountAmount = (value / 100) * subTotalAmount;
+          discounts[isFindIndex] = {
+            ...discounts[isFindIndex],
+            [keyName]: value,
+            amount:
+              currentDiscount.type !== "percentage" ? value : discountAmount,
+          };
+          const totalAmount = subTotalAmount - sumDiscounts(discounts);
+          return { ...prev, discounts: discounts, totalAmount: totalAmount };
+        } else {
+          discounts[isFindIndex] = {
+            ...discounts[isFindIndex],
+            [keyName]: value,
+          };
+          return { ...prev, discounts: discounts };
+        }
+      });
+    },
+    [invoiceForm]
+  );
+
   const handlerInvoiceClientValue = useCallback((event, keyName) => {
     const value =
       typeof event === "string" ? new Date(event) : event?.target?.value;
@@ -376,6 +447,8 @@ function InvoiceDetailScreen(props) {
   }, [invoiceForm]);
 
   const addPercentageTax = useCallback(() => {
+    console.log(" hello hitesh!");
+
     const isSomeTaxes = invoiceForm.taxes.some(
       (form) => form.type === "percentage"
     );
@@ -411,22 +484,16 @@ function InvoiceDetailScreen(props) {
       };
     });
   }, [invoiceForm]);
-  
-  // abc 
+
+  // abc
+
   const addDiscount = useCallback(() => {
-    if (!invoiceForm.discounts) {
-      // If discounts array is undefined, initialize it as an empty array
-      setInvoiceForm((prev) => ({
-        ...prev,
-        discounts: [],
-      }));
-      return;
-    }
-  
+    console.log("Adding Discount!");
+
     const isSomeDiscount = invoiceForm.discounts.some(
       (form) => form.type === "percentage"
     );
-  
+
     if (isSomeDiscount) {
       toast.error("Already Have Percentage Discounts!", {
         position: "bottom-center",
@@ -434,37 +501,34 @@ function InvoiceDetailScreen(props) {
       });
       return;
     }
-  
     setInvoiceForm((prev) => {
       const subTotalAmount = sumProductTotal(prev.products);
-      const amount = (5 / 100) * subTotalAmount; // Assuming a 5% discount
-      const percentageDiscount = {
+
+      // Calculate discount
+      const discountPercentage = 5; // Example: 5% discount
+      const discountAmount = (discountPercentage / 100) * subTotalAmount;
+
+      // const totalAmount = subTotalAmount - discountAmount;
+
+      const discount = {
         id: nanoid(),
-        title: "Discount %",
+        title: "Discount",
         type: "percentage",
-        value: 5, // Assuming a 5% discount
-        amount,
+        value: discountPercentage,
+        amount: discountAmount,
       };
-      const sumTotalDiscounts = (discounts) => {
-        return discounts.reduce((total, discount) => total - discount.amount, 0);
-      };
-      const updatedDiscounts = [percentageDiscount, ...(prev.discounts || [])];
-      const totalAmount = sumTotalAmount(
-        subTotalAmount,
-        sumTotalTaxes(prev.taxes),
-        sumTotalDiscounts(updatedDiscounts)
-      );
-  
+
+      const updateDiscounts = [discount, ...prev.discounts];
+
       return {
         ...prev,
-        discounts: updatedDiscounts,
+        discounts: updateDiscounts,
         totalAmount: totalAmount,
       };
     });
   }, [invoiceForm]);
-  
-  
-  // xyz 
+
+  // xyz
 
   const addEmptyTax = useCallback(() => {
     setInvoiceForm((prev) => {
@@ -498,6 +562,20 @@ function InvoiceDetailScreen(props) {
       return updatedData;
     });
   }, []);
+
+  const onDeleteDiscount = (discountID) => {
+    // Filter out the discount with the given ID
+    const updatedDiscounts = invoiceForm.discounts.filter(
+      (discount) => discount.id !== discountID
+    );
+
+    // Update the invoice form state with the filtered discounts
+    setInvoiceForm((prev) => ({
+      ...prev,
+      discounts: updatedDiscounts,
+      // You might need to recalculate the total amount here
+    }));
+  };
 
   const saveAs = useCallback(
     (status) => {
@@ -874,7 +952,7 @@ function InvoiceDetailScreen(props) {
                     onChange={(date) =>
                       handlerInvoiceValue(date.toISOString(), "createdDate")
                     }
-                    disabled={true}
+                    disabled
                     className={
                       !isViewMode
                         ? defaultInputSmStyle + " border-gray-300 text-right"
@@ -1050,7 +1128,6 @@ function InvoiceDetailScreen(props) {
                           value={product.amount}
                           className=""
                           displayType={"text"}
-                          thousandSeparator={true}
                           renderText={(value, props) => (
                             <span {...props}>{value}</span>
                           )}
@@ -1095,7 +1172,6 @@ function InvoiceDetailScreen(props) {
                           value={product.quantity}
                           className=""
                           displayType={"text"}
-                          thousandSeparator={true}
                           renderText={(value, props) => (
                             <span {...props}>{value}</span>
                           )}
@@ -1135,7 +1211,6 @@ function InvoiceDetailScreen(props) {
                       }
                       className=""
                       displayType={"text"}
-                      thousandSeparator={true}
                       renderText={(value, props) => (
                         <span {...props}>{value}</span>
                       )}
@@ -1204,7 +1279,6 @@ function InvoiceDetailScreen(props) {
                   value={subTotal}
                   className="inline-block"
                   displayType={"text"}
-                  thousandSeparator={true}
                   renderText={(value, props) => (
                     <span {...props}>
                       {value} {invoiceForm?.currencyUnit}
@@ -1323,7 +1397,6 @@ function InvoiceDetailScreen(props) {
                           }
                           className=""
                           displayType={"text"}
-                          thousandSeparator={true}
                           renderText={(value, props) => (
                             <span {...props}>
                               {value} {invoiceForm?.currencyUnit}
@@ -1348,6 +1421,134 @@ function InvoiceDetailScreen(props) {
               </div>
             ))}
             {/* Taxes Finished*/}
+
+            {/* Discounts */}
+            {invoiceForm?.discounts?.map((discount, index) => (
+              <div
+                key={`${index}_${discount.id}`}
+                className={
+                  isExporting
+                    ? "flex flex-row justify-end rounded-lg w-full px-4 py-1 items-center relative"
+                    : "flex flex-col sm:flex-row sm:justify-end rounded-lg sm:visible w-full px-4 py-1 items-center relative"
+                }
+              >
+                <div
+                  className={
+                    isExporting
+                      ? "font-title w-3/5 text-right pr-8 flex flex-row block"
+                      : "font-title w-full sm:w-3/5 text-right sm:pr-8 flex flex-row sm:block"
+                  }
+                >
+                  {!isExporting && (
+                    <div className="sm:hidden w-1/3 flex flex-row items-center">
+                      Discount Type
+                    </div>
+                  )}
+                  <div
+                    className={
+                      isExporting
+                        ? "w-full mb-0 flex flex-row items-center justify-end"
+                        : "w-2/3 sm:w-full mb-1 sm:mb-0 flex flex-row items-center sm:justify-end"
+                    }
+                  >
+                    <div
+                      className={
+                        isExporting ? "w-1/3 pr-1" : "w-1/2 sm:w-1/3 pr-1"
+                      }
+                    >
+                      {!isViewMode && (
+                        <input
+                          autoComplete="nope"
+                          value={discount.title}
+                          type={"text"}
+                          placeholder="Discount Title"
+                          className={defaultInputSmStyle + " text-right"}
+                          onChange={(e) =>
+                            handlerDiscountsValue(e, "title", discount.id)
+                          }
+                        />
+                      )}
+                    </div>
+                    <div
+                      className={
+                        (isExporting
+                          ? "w-1/3 relative flex flex-row items-center text-sm"
+                          : "w-1/2 sm:w-1/3 relative flex flex-row items-center") +
+                        (isViewMode ? " justify-end" : " pr-4")
+                      }
+                    >
+                      {!isViewMode ? (
+                        <>
+                          <input
+                            autoComplete="nope"
+                            value={discount.value}
+                            type={"number"}
+                            placeholder="Percentage"
+                            className={defaultInputSmStyle + " text-right"}
+                            onChange={(e) =>
+                              handlerDiscountsValue(e, "value", discount.id)
+                            }
+                          />
+                          <span className="ml-1">
+                            % 
+                          </span>
+                        </>
+                      ) : (
+                        <div className="text-right">{discount.title}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={
+                    isExporting
+                      ? "font-title w-1/4 text-right pr-9 flex flex-row text-sm"
+                      : "font-title w-full sm:w-1/4 text-right sm:pr-9 flex flex-row sm:block"
+                  }
+                >
+                  {!isExporting && (
+                    <span className="sm:hidden w-1/2 flex flex-row items-center">
+                      Amount
+                    </span>
+                  )}
+                  <span
+                    className={
+                      isExporting
+                        ? "inline-block w-full"
+                        : "inline-block w-1/2 sm:w-full"
+                    }
+                  >
+                    <>
+                      <div className="w-full">
+                        <NumberFormatBase
+                          value={discount.amount}
+                          className=""
+                          displayType={"text"}
+                          renderText={(value, props) => (
+                            <span {...props}>
+                              {value} {invoiceForm?.currencyUnit}
+                            </span>
+                          )}
+                        />
+                      </div>
+                    </>
+                  </span>
+                </div>
+                {!isViewMode && (
+                  <div
+                    className="w-full sm:w-10 sm:absolute sm:right-0"
+                    onClick={() => onDeleteDiscount(discount.id)}
+                  >
+                    <div className="w-full text-red-500 font-title h-8 sm:h-8 sm:w-8 cursor-pointer rounded-2xl bg-red-200 mr-2 flex justify-center items-center">
+                      <DeleteIcon className="h-4 w-4" style={IconStyle} />
+                      <span className="block sm:hidden">Delete Discount</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Discounts Finished*/}
 
             {/* Add Tax Action */}
             {!isViewMode && (
@@ -1410,7 +1611,6 @@ function InvoiceDetailScreen(props) {
                     value={invoiceForm?.totalAmount}
                     className=""
                     displayType={"text"}
-                    thousandSeparator={true}
                     renderText={(value, props) => (
                       <span {...props}>
                         {value}{" "}

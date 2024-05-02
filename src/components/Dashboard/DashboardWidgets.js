@@ -40,7 +40,7 @@ function DashboardWidgets() {
                   value={totalBalance}
                   className=""
                   displayType={"text"}
-                  thousandSeparator={true}
+                  
                   renderText={(value, props) => <span {...props}>{value}</span>}
                 />
               </div>
@@ -61,7 +61,7 @@ function DashboardWidgets() {
                   value={products?.length}
                   className=""
                   displayType={"text"}
-                  thousandSeparator={true}
+                  
                   renderText={(value, props) => <span {...props}>{value}</span>}
                 />
               </div>
@@ -82,7 +82,7 @@ function DashboardWidgets() {
                   value={allInvoices?.length}
                   className=""
                   displayType={"text"}
-                  thousandSeparator={true}
+                  
                   renderText={(value, props) => <span {...props}>{value}</span>}
                 />
               </div>
@@ -103,7 +103,7 @@ function DashboardWidgets() {
                   value={clients?.length}
                   className=""
                   displayType={"text"}
-                  thousandSeparator={true}
+                  
                   renderText={(value, props) => <span {...props}>{value}</span>}
                 />
               </div>
