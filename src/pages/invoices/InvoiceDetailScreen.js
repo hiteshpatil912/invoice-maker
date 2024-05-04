@@ -508,7 +508,7 @@ function InvoiceDetailScreen(props) {
       const discountPercentage = 5; // Example: 5% discount
       const discountAmount = (discountPercentage / 100) * subTotalAmount;
 
-      // const totalAmount = subTotalAmount - discountAmount;
+      const totalAmount = subTotalAmount - discountAmount;
 
       const discount = {
         id: nanoid(),
