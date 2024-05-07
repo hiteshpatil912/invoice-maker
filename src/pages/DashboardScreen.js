@@ -25,10 +25,10 @@ function DashboardScreen() {
         <div className="w-full lg:w-4/6 pl-4 pr-4 sm:pl-4 sm:pr-0 mb-4 sm:mb-1">
           <DashboardWidgets />
           <div className="mt-1">
-            <InvoiceTable />
+            {/* <InvoiceTable /> */}
           </div>
           <div className="mt-4">
-            <ClientTable />
+            {/* <ClientTable /> */}
           </div>
         </div>
         <div className="w-full lg:w-2/6 pl-4 pr-4 sm:pl-4 sm:pr-2">
@@ -41,7 +41,7 @@ function DashboardScreen() {
 
           <QuickEditCompany isShowDetail={false} />
           <div className="mt-4">
-            <QuickAddClient />
+            {/* <QuickAddClient /> */}
           </div>
         </div>
       </div>

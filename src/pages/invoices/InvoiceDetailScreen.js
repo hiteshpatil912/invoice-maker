@@ -1235,12 +1235,12 @@ function InvoiceDetailScreen(props) {
             {/* Add Product Actions */}
             {!isViewMode && (
               <div className="flex flex-col sm:flex-row rounded-lg sm:visible w-full px-4 py-2 items-center sm:justify-end">
-                <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
+                {/* <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
                   <Button size="sm" block={1} onClick={addEmptyProduct}>
                     <PlusCircleIcon style={IconStyle} className="h-5 w-5" />
                     Add Empty Product
                   </Button>
-                </div>
+                </div> */}
                 <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
                   <Button size="sm" block={1} onClick={openChooseProduct}>
                     <InvoiceIcon style={IconStyle} className="w-5 h-5" />
@@ -1553,24 +1553,24 @@ function InvoiceDetailScreen(props) {
             {/* Add Tax Action */}
             {!isViewMode && (
               <div className="flex flex-col sm:flex-row rounded-lg sm:visible w-full px-4 py-2 items-center sm:justify-end">
-                <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
+                {/* <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
                   <Button size="sm" block={1} onClick={addPercentageTax}>
                     <TaxesIcon style={IconStyle} className="h-5 w-5" />
                     Add Taxes (%)
                   </Button>
-                </div>
+                </div> */}
                 <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
                   <Button size="sm" block={1} onClick={addDiscount}>
                     <TaxesIcon style={IconStyle} className="h-5 w-5" />
                     Add Discount (%)
                   </Button>
                 </div>
-                <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
+                {/* <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
                   <Button size="sm" block={1} onClick={addEmptyTax}>
                     <DollarIcon style={IconStyle} className="w-5 h-5" />
                     Add Delivery Charges
                   </Button>
-                </div>
+                </div> */}
               </div>
             )}
             {/* Add Tax Action Finished*/}
@@ -1635,7 +1635,7 @@ function InvoiceDetailScreen(props) {
             <div className="flex flex-col flex-wrap sm:flex-row ">
               {params.id === "new" && (
                 <div className="w-full flex-1 my-1 sm:my-1 md:my-0 px-1">
-                  <Button
+                  {/* <Button
                     outlined={1}
                     size="sm"
                     block={1}
@@ -1643,12 +1643,12 @@ function InvoiceDetailScreen(props) {
                     onClick={() => saveAs("Draft")}
                   >
                     <CheckCircleIcon className="h-5 w-5 mr-1" /> Save As Draft
-                  </Button>
+                  </Button> */}
                 </div>
               )}
               {invoiceForm?.statusIndex !== "2" && (
                 <div className="w-full flex-1 my-1 sm:my-1 md:my-0 px-1">
-                  <Button
+                  {/* <Button
                     outlined={1}
                     size="sm"
                     block={1}
@@ -1657,7 +1657,7 @@ function InvoiceDetailScreen(props) {
                   >
                     <DollarIcon className="h-5 w-5 mr-1" />{" "}
                     {params.id === "new" ? "Save" : "Update"} As Unpaid
-                  </Button>
+                  </Button> */}
                 </div>
               )}
               <div className="w-full flex-1 my-1 sm:my-1 md:my-0 px-1">

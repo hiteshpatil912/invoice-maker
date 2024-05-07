@@ -17,7 +17,7 @@ function InvoiceTopBar({
     <div className="bg-white rounded-xl px-3 py-3">
       <div className="flex flex-col flex-wrap sm:flex-row justify-between">
         <div className="w-full sm:w-1/2 md:w-1/4 my-1 sm:my-1 md:my-0 px-1 flex flex-row">
-          <div className="w-30 mr-3">
+          {/* <div className="w-30 mr-3">
             <Button size="sm" block={1} onClick={onClickBack}>
               <>
                 <svg
@@ -36,8 +36,8 @@ function InvoiceTopBar({
                 </svg>
               </>
             </Button>
-          </div>
-          <div className="flex-1">
+          </div> */}
+          {/* <div className="flex-1">
             <Button size="sm" block={1} outlined={1} onClick={onClickViewAs}>
               {!viewMode ? (
                 <>
@@ -51,12 +51,12 @@ function InvoiceTopBar({
                 </>
               )}
             </Button>
-          </div>
+          </div> */}
         </div>
         <div className="w-full sm:w-1/2 md:w-1/4 my-1 sm:my-1 md:my-0 px-1">
-          <Button size="sm" block={1} outlined={1} onClick={onClickSetting}>
+          {/* <Button size="sm" block={1} outlined={1} onClick={onClickSetting}>
             <SettingIcon className="h-4 w-4" /> Setting
-          </Button>
+          </Button> */}
         </div>
         <div className="w-full sm:w-1/2 md:w-1/4 my-1 sm:my-1 md:my-0 px-1">
           <Button size="sm" block={1} outlined={1} onClick={onClickExport}>
@@ -73,10 +73,10 @@ function InvoiceTopBar({
                 clipRule="evenodd"
               />
             </svg>
-            Export PDF
+            Export Print & PDF
           </Button>
         </div>
-        <div className="w-full sm:w-1/2 md:w-1/4 my-1 sm:my-1 md:my-0 px-1">
+        {/* <div className="w-full sm:w-1/2 md:w-1/4 my-1 sm:my-1 md:my-0 px-1">
           <Button size="sm" block={1} outlined={1} onClick={onClickDownloadImg}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -95,7 +95,7 @@ function InvoiceTopBar({
             </svg>
             Download Image
           </Button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
