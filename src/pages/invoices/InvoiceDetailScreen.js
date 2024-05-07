@@ -489,8 +489,7 @@ function InvoiceDetailScreen(props) {
 
   const addDiscount = useCallback(() => {
     console.log("Adding Discount!");
-
-    const isSomeDiscount = invoiceForm.discounts.some(
+    const isSomeDiscount = invoiceForm?.discounts?.some(
       (form) => form.type === "percentage"
     );
 
@@ -501,13 +500,12 @@ function InvoiceDetailScreen(props) {
       });
       return;
     }
+    console.log("invoiceForm", invoiceForm);
     setInvoiceForm((prev) => {
       const subTotalAmount = sumProductTotal(prev.products);
-
       // Calculate discount
       const discountPercentage = 5; // Example: 5% discount
       const discountAmount = (discountPercentage / 100) * subTotalAmount;
-
       const totalAmount = subTotalAmount - discountAmount;
 
       const discount = {
@@ -518,11 +516,11 @@ function InvoiceDetailScreen(props) {
         amount: discountAmount,
       };
 
-      const updateDiscounts = [discount, ...prev.discounts];
-
       return {
         ...prev,
-        discounts: updateDiscounts,
+        discounts: prev?.discounts
+          ? [discount, ...prev?.discounts]
+          : [discount],
         totalAmount: totalAmount,
       };
     });
@@ -1489,9 +1487,7 @@ function InvoiceDetailScreen(props) {
                               handlerDiscountsValue(e, "value", discount.id)
                             }
                           />
-                          <span className="ml-1">
-                            % 
-                          </span>
+                          <span className="ml-1">%</span>
                         </>
                       ) : (
                         <div className="text-right">{discount.title}</div>
