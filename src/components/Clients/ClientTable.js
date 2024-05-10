@@ -22,7 +22,7 @@ import EmptyBar from "../Common/EmptyBar";
 const itemsPerPage = 10;
 const emptySearchForm = {
   name: "",
-  email: "",
+  clientcategory: "",
   mobileNo: "",
 };
 
@@ -44,9 +44,9 @@ function ClientTable({ showAdvanceSearch = false }) {
       );
     }
 
-    if (searchForm.email?.trim()) {
+    if (searchForm.clientcategory?.trim()) {
       filterData = filterData.filter((client) =>
-        client.email.includes(searchForm.email)
+        client.clientcategory.includes(searchForm.clientcategory)
       );
     }
 
@@ -61,7 +61,7 @@ function ClientTable({ showAdvanceSearch = false }) {
 
   // Invoke when user click to request another page.
   const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % clients.length;
+    const newOffset = event.selected * itemsPerPage;
     setItemOffset(newOffset);
   };
 
@@ -98,7 +98,7 @@ function ClientTable({ showAdvanceSearch = false }) {
 
   return (
     <>
-      {showAdvanceSearch === true && (
+      {showAdvanceSearch && (
         <div className="bg-white rounded-xl px-3 py-3 mb-3">
           <div className="font-title mb-2">Advanced Search</div>
           <div className="flex w-full flex-col sm:flex-row">
@@ -125,7 +125,7 @@ function ClientTable({ showAdvanceSearch = false }) {
                 onChange={(e) => handlerSearchValue(e, "name")}
               />
             </div>
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row  font-title flex-1 px-2">
+            {/* <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
               <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -144,13 +144,13 @@ function ClientTable({ showAdvanceSearch = false }) {
               </div>
               <input
                 autoComplete="nope"
-                value={searchForm.email}
-                placeholder="User Email"
+                value={searchForm.clientcategory}
+                placeholder="User Client Category"
                 className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "email")}
+                onChange={(e) => handlerSearchValue(e, "clientcategory")}
               />
-            </div>
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row  font-title flex-1 px-2">
+            </div> */}
+            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
               <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -188,7 +188,7 @@ function ClientTable({ showAdvanceSearch = false }) {
             Mobile
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-            Email
+            Client Category
           </div>
           <div className="sm:text-left text-default-color font-title sm:w-11">
             Action
@@ -239,10 +239,10 @@ function ClientTable({ showAdvanceSearch = false }) {
                   </div>
                 </div>
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Email</div>
+                  <div className={defaultTdContentTitleStyle}>Client Category</div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.email}{" "}
+                      {client.clientcategory}{" "}
                     </span>
                   </div>
                 </div>
@@ -301,7 +301,7 @@ function ClientTable({ showAdvanceSearch = false }) {
               pageRangeDisplayed={1}
               pageCount={pageCount}
               previousLabel="<"
-              nextLabel={">"}
+              nextLabel=">"
               renderOnZeroPageCount={null}
             />
           )}

@@ -11,7 +11,8 @@ const initialState = {
     id: nanoid(),
     image: "",
     name: "",
-    email: "",
+    // email: "",
+    clientcategory: "", // Add clientcategory field to the form
     billingAddress: "",
     mobileNo: "",
   },
@@ -32,7 +33,8 @@ export const clientsSlice = createSlice({
         id: nanoid(),
         image: "",
         name: "",
-        email: "",
+        // email: "",
+        clientcategory: "", // Add clientcategory field to the form
         billingAddress: "",
         mobileNo: "",
       };

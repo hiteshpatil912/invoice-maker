@@ -1657,15 +1657,27 @@ function InvoiceDetailScreen(props) {
                 </div>
               )}
               <div className="w-full flex-1 my-1 sm:my-1 md:my-0 px-1">
-                <Button
-                  size="sm"
-                  block={1}
-                  success={1}
-                  onClick={() => saveAs("Paid")}
-                >
-                  <SecurityIcon className="h-5 w-5 mr-1" />{" "}
-                  {params.id === "new" ? "Save" : "Update"} As Paid
-                </Button>
+                <div className="flex flex-row space-x-2">
+                  <select
+                    className="form-select w-1/2 rounded-md font-medium border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    onChange={(e) => console.log(e.target.value)} // Handle selection change
+                  >
+                    <option value="">Select INVOICE</option>
+                    <option value="option1">CASH INVOICE</option>
+                    <option value="option2">CREDIT INVOICE</option>
+                    <option value="option3">SELL ORDER INVOICE</option>
+                    <option value="option3">SELL RETURN INVOICE</option>
+                  </select>
+                  {/* <Button
+      size="sm"
+      block={1}
+      success={1}
+      onClick={() => saveAs("Paid")}
+    >
+      <SecurityIcon className="h-5 w-5 mr-1" />{" "}
+      {params.id === "new" ? "Save" : "Update"} As Paid
+    </Button> */}
+                </div>
               </div>
             </div>
           </div>

@@ -18,11 +18,10 @@ import {
 import ReactPaginate from "react-paginate";
 import Button from "../Button/Button";
 
-// Example items, to simulate fetching from another resources.
 const itemsPerPage = 6;
 const emptySearchForm = {
   name: "",
-  email: "",
+  clientCategory: "", // Corrected field name
   mobileNo: "",
 };
 
@@ -45,9 +44,9 @@ function ClientChooseModal() {
       );
     }
 
-    if (searchForm.email?.trim()) {
+    if (searchForm.clientCategory?.trim()) { // Updated field name
       filterData = filterData.filter((client) =>
-        client.email.includes(searchForm.email)
+        client.clientCategory.includes(searchForm.clientCategory) // Updated field name
       );
     }
 
@@ -60,9 +59,8 @@ function ClientChooseModal() {
     return filterData;
   }, [allClients, searchForm]);
 
-  // Invoke when user click to request another page.
   const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % clients.length;
+    const newOffset = event.selected * itemsPerPage;
     setItemOffset(newOffset);
   };
 
@@ -83,10 +81,7 @@ function ClientChooseModal() {
   const handleSelect = useCallback(
     (item) => {
       dispatch(setClientSelector(item.id));
-
-      setTimeout(() => {
-        dispatch(setOpenClientSelector(false));
-      }, 50);
+      dispatch(setOpenClientSelector(false));
     },
     [dispatch]
   );
@@ -103,7 +98,7 @@ function ClientChooseModal() {
     } else {
       setAnimate(false);
     }
-  }, [clients, openModal]);
+  }, [openModal]);
 
   return openModal ? (
     <motion.div
@@ -129,9 +124,11 @@ function ClientChooseModal() {
           <div className="flex justify-center min-h-full p-4 text-center">
             <div className="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all my-8 flex flex-col w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 flex-1">
+                {/* Search Form */}
                 <div className="rounded-xl px-3 py-3 mb-3">
                   <div className="font-title mb-2">Advanced Search</div>
                   <div className="flex w-full flex-col sm:flex-row">
+                    {/* User Name Search */}
                     <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 sm:px-2">
                       <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                         <svg
@@ -155,31 +152,33 @@ function ClientChooseModal() {
                         onChange={(e) => handlerSearchValue(e, "name")}
                       />
                     </div>
+                    {/* Client Category Search */}
                     <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 sm:px-2">
                       <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-6 w-6 text-gray-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
                         >
                           <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
+                            clipRule="evenodd"
                           />
                         </svg>
                       </div>
                       <input
                         autoComplete="nope"
-                        value={searchForm.email}
-                        placeholder="User Email"
+                        value={searchForm.clientCategory}
+                        placeholder="Client Category"
                         className={defaultSearchStyle}
-                        onChange={(e) => handlerSearchValue(e, "email")}
+                        onChange={(e) =>
+                          handlerSearchValue(e, "clientCategory")
+                        }
                       />
                     </div>
+                    {/* Mobile Number Search */}
                     <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 sm:px-2">
                       <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                         <svg
@@ -208,6 +207,7 @@ function ClientChooseModal() {
                   </div>
                 </div>
 
+                {/* Client List */}
                 <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
                   <div className="hidden sm:flex invisible sm:visible w-full flex-col sm:flex-row  bg-gray-50 py-2 px-2 rounded-xl mb-1">
                     <div className="sm:text-left text-default-color font-title flex-1">
@@ -217,7 +217,7 @@ function ClientChooseModal() {
                       Mobile
                     </div>
                     <div className="sm:text-left text-default-color font-title flex-1">
-                      Email
+                      Client Category
                     </div>
                     <div className="sm:text-left text-default-color font-title sm:w-11">
                       Action
@@ -233,6 +233,7 @@ function ClientChooseModal() {
                               Name
                             </div>
                             <div className={defaultTdContent}>
+                              {/* Client Image */}
                               {client.image ? (
                                 <img
                                   className="object-cover h-10 w-10 rounded-2xl"
@@ -255,7 +256,7 @@ function ClientChooseModal() {
                                   </svg>
                                 </span>
                               )}
-
+                              {/* Client Name */}
                               <span className="whitespace-nowrap text-ellipsis overflow-hidden pl-1">
                                 {client.name}
                               </span>
@@ -266,6 +267,7 @@ function ClientChooseModal() {
                               Mobile
                             </div>
                             <div className={defaultTdContent}>
+                              {/* Client Mobile Number */}
                               <span className="whitespace-nowrap text-ellipsis overflow-hidden">
                                 {client.mobileNo}
                               </span>
@@ -273,11 +275,12 @@ function ClientChooseModal() {
                           </div>
                           <div className={defaultTdStyle}>
                             <div className={defaultTdContentTitleStyle}>
-                              Email
+                              Client Category
                             </div>
                             <div className={defaultTdContent}>
+                              {/* Client Category */}
                               <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                                {client.email}{" "}
+                                {client.clientCategory}
                               </span>
                             </div>
                           </div>
@@ -286,6 +289,7 @@ function ClientChooseModal() {
                               Action
                             </div>
                             <div className={defaultTdContent}>
+                              {/* Select Button */}
                               <Button
                                 size="sm"
                                 block={1}
@@ -297,7 +301,7 @@ function ClientChooseModal() {
                           </div>
                         </div>
                       ))}
-
+                    {/* Pagination */}
                     {clients.length > 0 && (
                       <ReactPaginate
                         className="inline-flex items-center -space-x-px mt-2"
@@ -308,16 +312,17 @@ function ClientChooseModal() {
                         activeLinkClassName="py-2 px-3 text-blue-600 bg-blue-50 border border-gray-300 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
                         breakLabel="..."
                         onPageChange={handlePageClick}
-                        pageRangeDisplayed={1}
                         pageCount={pageCount}
                         previousLabel="<"
-                        nextLabel={">"}
-                        renderOnZeroPageCount={null}
+                        nextLabel=">"
+                        marginPagesDisplayed={2} // Updated prop
+                        pageRangeDisplayed={5} // Updated prop
                       />
                     )}
                   </div>
                 </div>
               </div>
+              {/* Cancel Button */}
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
                   type="button"

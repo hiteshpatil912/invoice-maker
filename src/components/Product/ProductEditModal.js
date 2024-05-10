@@ -21,11 +21,13 @@ const emptyForm = {
   image: "",
   productID: "",
   name: "",
+  category: "", // Changed from 'categories'
   amount: 0,
 };
 
 function ProductEditModal(props) {
   const dispatch = useDispatch();
+  const [isInitLoading, setIsInitLoading] = useState(true); // Define isInitLoading state variable
   const editedID = useSelector(getEditedIdForm);
   const products = useSelector(getAllProductSelector);
   const [animate, setAnimate] = useState(true);
@@ -85,27 +87,31 @@ function ProductEditModal(props) {
   }, [productForm]);
 
   useEffect(() => {
-      setValidForm((prev) => ({
-        id: true,
-        image: true,
-        name: productForm?.name?.trim() ? true : false,
-        amount: productForm?.amount <= 0 ? false : true,
-      }));
+    setValidForm((prev) => ({
+      ...prev,
+      id: !!productForm.id,
+      image: productForm.image,
+      productID: !!productForm.productID,
+      name: productForm?.name?.trim() ? true : false,
+      category: productForm?.category?.trim() ? true : false, // Ensure category validation
+      amount: productForm.amount > 0,
+    }));
   }, [productForm]);
 
   useEffect(() => {
     if (editedID !== null) {
       setAnimate(true);
-      const isFindIndex = products.findIndex(
-        (client) => client.id === editedID
-      );
+      const isFindIndex = products.findIndex((client) => client.id === editedID);
       if (isFindIndex !== -1) {
         setProductForm({ ...products[isFindIndex] });
       }
+      setIsInitLoading(false); // Set isInitLoading to false when data is available
     } else {
       setAnimate(false);
+      setIsInitLoading(true); // Reset isInitLoading to true when there's no editedID
     }
   }, [products, editedID]);
+  
 
   return editedID !== null ? (
     <motion.div
@@ -183,6 +189,27 @@ function ProductEditModal(props) {
                                 onChange={(e) => handlerProductValue(e, "name")}
                               />
                             </div>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <div className="font-title text-sm text-default-color">
+                            Product Category
+                          </div>
+                          <div className="flex">
+                            <select
+                              value={productForm.category}
+                              onChange={(e) =>
+                                handlerProductValue(e, "category")
+                              } // Fixed the onChange handler
+                              className={defaultInputStyle}
+                              disabled={isInitLoading}
+                            >
+                              <option value="">Select Category</option>
+                              <option value="clothing">Clothing</option>
+                              <option value="Electronic">Electronic</option>
+                              <option value="accessories">Accessories</option>
+                              {/* Add more options as needed */}
+                            </select>
                           </div>
                         </div>
                         <div className="mt-2">

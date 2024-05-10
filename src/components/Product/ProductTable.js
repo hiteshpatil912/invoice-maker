@@ -91,6 +91,7 @@ function ProductTable({ showAdvanceSearch = false }) {
     setPageCount(Math.ceil(products.length / itemsPerPage));
   }, [products, itemOffset]);
 
+
   return (
     <>
       {showAdvanceSearch === true && (
@@ -136,6 +137,9 @@ function ProductTable({ showAdvanceSearch = false }) {
           <div className="sm:text-left text-default-color font-title flex-1">
             Amount
           </div>
+          <div className="sm:text-left text-default-color font-title flex-1">
+            Product Category
+          </div>
           <div className="sm:text-left text-default-color font-title sm:w-11">
             Action
           </div>
@@ -179,6 +183,17 @@ function ProductTable({ showAdvanceSearch = false }) {
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
                       {product.amount}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={defaultTdStyle}>
+                  <div className={defaultTdContentTitleStyle}>
+                    ProductCategory
+                  </div>
+                  <div className={defaultTdContent}>
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                      {product.category}
                     </span>
                   </div>
                 </div>

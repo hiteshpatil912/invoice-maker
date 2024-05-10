@@ -1,4 +1,3 @@
-/* eslint-disable no-useless-escape */
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
@@ -28,9 +27,10 @@ const emptyForm = {
   id: "",
   image: "",
   name: "",
-  email: "",
+  // email: "",
   billingAddress: "",
   mobileNo: "",
+  clientcategory: "", // Add clientcategory field to the form
 };
 
 function QuickAddClient({ editForm }) {
@@ -100,16 +100,17 @@ function QuickAddClient({ editForm }) {
   }, [clientForm]);
 
   useEffect(() => {
-    const isValidEmail =
-      clientForm?.email?.trim() && clientForm?.email.match(emailRegex);
+    // const isValidEmail =
+    //   clientForm?.email?.trim() && clientForm?.email.match(emailRegex);
 
     setValidForm((prev) => ({
       id: true,
       image: true,
       name: clientForm?.name?.trim() ? true : false,
-      email: isValidEmail ? true : false,
+      // email: isValidEmail ? true : false,
       billingAddress: clientForm?.billingAddress?.trim() ? true : false,
       mobileNo: clientForm?.mobileNo?.trim() ? true : false,
+      clientcategory: clientForm?.clientcategory?.trim() ? true : false, // Add clientcategory validation
     }));
   }, [clientForm]);
 
@@ -121,7 +122,7 @@ function QuickAddClient({ editForm }) {
 
   return (
     <div className="bg-white rounded-xl p-4">
-      <SectionTitle> Quick Add Client </SectionTitle>
+      <SectionTitle>Quick Add Client</SectionTitle>
       <div className="flex mt-2">
         {isInitLoading ? (
           <Skeleton className="skeleton-input-radius skeleton-image border-dashed border-2" />
@@ -155,26 +156,26 @@ function QuickAddClient({ editForm }) {
           )}
         </div>
       </div>
-      <div className="flex mt-2">
-        <div className="flex-1">
-          {isInitLoading ? (
-            <Skeleton className={defaultSkeletonNormalStyle} />
-          ) : (
-            <input
-              autoComplete="nope"
-              placeholder="Email Address"
-              className={
-                !validForm.email && isTouched
-                  ? defaultInputInvalidStyle
-                  : defaultInputStyle
-              }
-              disabled={isInitLoading}
-              value={clientForm.email}
-              onChange={(e) => handlerClientValue(e, "email")}
-            />
-          )}
+
+      <div className="mt-2">
+        <div className="font-title text-sm text-default-color">
+          Client Category
+        </div>
+        <div className="flex">
+          <select
+            value={clientForm.clientcategory} // Set value to clientcategory field
+            onChange={(e) => handlerClientValue(e, "clientcategory")} // Handle clientcategory change
+            className={defaultInputStyle}
+          >
+            <option value="">Select Category</option>
+            <option value="category1">Category 1</option>
+            <option value="category2">Category 2</option>
+            <option value="category3">Category 3</option>
+            {/* Add more options as needed */}
+          </select>
         </div>
       </div>
+
       <div className="flex mt-2">
         <div className="flex-1">
           {isInitLoading ? (
@@ -218,7 +219,7 @@ function QuickAddClient({ editForm }) {
 
       <div className="mt-3">
         <Button onClick={submitHandler} block={1}>
-          <span className="inline-block ml-2"> Submit </span>
+          <span className="inline-block ml-2">Submit</span>
         </Button>
       </div>
     </div>

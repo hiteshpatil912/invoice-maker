@@ -1,4 +1,3 @@
-/* eslint-disable no-useless-escape */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
@@ -8,6 +7,7 @@ import {
   getEditedIdForm,
   setEditedId,
   onConfirmEditClient,
+  updateNewClientFormField,
 } from "../../store/clientSlice";
 import {
   defaultInputStyle,
@@ -21,20 +21,20 @@ const emptyForm = {
   id: "",
   image: "",
   name: "",
-  email: "",
+  clientCategory: "", // Updated to include clientCategory
   billingAddress: "",
   mobileNo: "",
 };
 
-const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-
 function ClientEditModal(props) {
   const dispatch = useDispatch();
+  const [isInitLoading, setIsInitLoading] = useState(true);
   const editedID = useSelector(getEditedIdForm);
   const clients = useSelector(getAllClientsSelector);
   const [animate, setAnimate] = useState(true);
   const [clientForm, setClientForm] = useState(emptyForm);
   const [isTouched, setIsTouched] = useState(false);
+
   const [validForm, setValidForm] = useState(
     Object.keys(emptyForm).reduce((a, b) => {
       return { ...a, [b]: false };
@@ -43,7 +43,7 @@ function ClientEditModal(props) {
 
   const onEditHandler = useCallback(() => {
     setIsTouched(true);
-    const isValid = Object.keys(validForm).every((key) => validForm[key]);
+    const isValid = Object.values(validForm).every((value) => value);
 
     if (!isValid) {
       toast.error("Invalid Client Form!", {
@@ -53,7 +53,7 @@ function ClientEditModal(props) {
       return;
     }
 
-    toast.success("Wow Successfully Update Client!", {
+    toast.success("Successfully Updated Client!", {
       position: "bottom-center",
       autoClose: 2000,
     });
@@ -62,23 +62,34 @@ function ClientEditModal(props) {
     setIsTouched(false);
   }, [dispatch, validForm, clientForm]);
 
-  const handlerClientValue = useCallback((event, keyName) => {
-    const value = event.target.value;
+  const handlerClientValue = useCallback(
+    (event, keyName) => {
+      const value = event.target.value;
 
-    setClientForm((prev) => {
-      return { ...prev, [keyName]: value };
-    });
-  }, []);
+      setClientForm((prev) => ({
+        ...prev,
+        [keyName]: value,
+      }));
 
-  const onChangeImage = useCallback((str) => {
-    setClientForm((prev) => ({ ...prev, image: str }));
-  }, []);
+      // Dispatch the update for clientCategory
+      if (keyName === "clientCategory") {
+        dispatch(updateNewClientFormField({ key: keyName, value }));
+      }
+    },
+    [dispatch]
+  );
+
+  const onChangeImage = useCallback(
+    (str) => {
+      setClientForm((prev) => ({ ...prev, image: str }));
+      dispatch(updateNewClientFormField({ key: "image", value: str }));
+    },
+    [dispatch]
+  );
 
   const onCancelHandler = useCallback(() => {
     dispatch(setEditedId(null));
   }, [dispatch]);
-
-  // useCallback(() => {}, [])
 
   const imageUploadClasses = useMemo(() => {
     const defaultStyle = "rounded-xl ";
@@ -91,14 +102,12 @@ function ClientEditModal(props) {
   }, [clientForm]);
 
   useEffect(() => {
-    const isValidEmail =
-      clientForm?.email?.trim() && clientForm?.email.match(emailRegex);
-
     setValidForm((prev) => ({
+      ...prev,
       id: true,
       image: true,
       name: clientForm?.name?.trim() ? true : false,
-      email: isValidEmail ? true : false,
+      clientCategory: clientForm?.clientCategory?.trim() ? true : false, // Updated to include clientCategory
       billingAddress: clientForm?.billingAddress?.trim() ? true : false,
       mobileNo: clientForm?.mobileNo?.trim() ? true : false,
     }));
@@ -109,10 +118,19 @@ function ClientEditModal(props) {
       setAnimate(true);
       const isFindIndex = clients.findIndex((client) => client.id === editedID);
       if (isFindIndex !== -1) {
-        setClientForm({ ...clients[isFindIndex] });
+        const updatedClientForm = { ...clients[isFindIndex] };
+        // Check if any property is null and replace it with an empty string
+        for (const key in updatedClientForm) {
+          if (updatedClientForm[key] === null) {
+            updatedClientForm[key] = "";
+          }
+        }
+        setClientForm(updatedClientForm);
       }
+      setIsInitLoading(false);
     } else {
       setAnimate(false);
+      setIsInitLoading(true);
     }
   }, [clients, editedID]);
 
@@ -149,7 +167,6 @@ function ClientEditModal(props) {
                       Edited Client Form
                     </h3>
                     <div className="mt-2">
-                      {/*  */}
                       <div className="bg-white rounded-xl mt-4">
                         <div className="flex mt-2">
                           <ImageUpload
@@ -174,19 +191,18 @@ function ClientEditModal(props) {
                           </div>
                         </div>
                         <div className="flex mt-2">
-                          <div className="flex-1">
-                            <input
-                              autoComplete="nope"
-                              placeholder="Email Address"
-                              className={
-                                !validForm.email && isTouched
-                                  ? defaultInputInvalidStyle
-                                  : defaultInputStyle
-                              }
-                              value={clientForm.email}
-                              onChange={(e) => handlerClientValue(e, "email")}
-                            />
-                          </div>
+                          <select
+                            value={clientForm.clientCategory}
+                            onChange={(e) =>
+                              handlerClientValue(e, "clientCategory")
+                            } // Ensure correct keyName is passed
+                            className={defaultInputStyle}
+                          >
+                            <option value="">Select Category</option>
+                            <option value="category 1">category 1</option>
+                            <option value="category 2">category 2</option>
+                            <option value="category 3">category 3</option>
+                          </select>
                         </div>
                         <div className="flex mt-2">
                           <div className="flex-1">
@@ -223,7 +239,6 @@ function ClientEditModal(props) {
                           </div>
                         </div>
                       </div>
-                      {/*  */}
                     </div>
                   </div>
                 </div>
