@@ -21,7 +21,7 @@ import {
   updateNewClientFormField,
 } from "../../store/clientSlice";
 
-const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+// const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 
 const emptyForm = {
   id: "",
@@ -168,9 +168,9 @@ function QuickAddClient({ editForm }) {
             className={defaultInputStyle}
           >
             <option value="">Select Category</option>
-            <option value="category1">Category 1</option>
-            <option value="category2">Category 2</option>
-            <option value="category3">Category 3</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
             {/* Add more options as needed */}
           </select>
         </div>

@@ -167,6 +167,9 @@ function ProductChoosenModal() {
                     <div className="sm:text-left text-default-color font-title flex-1">
                       Amount
                     </div>
+                    <div className="sm:text-left text-default-color font-title flex-1">
+                      Product category
+                    </div>
                     <div className="sm:text-left text-default-color font-title sm:w-11">
                       Action
                     </div>
@@ -216,6 +219,16 @@ function ProductChoosenModal() {
                             <div className={defaultTdContent}>
                               <span className="whitespace-nowrap text-ellipsis overflow-hidden">
                                 {product.amount}
+                              </span>
+                            </div>
+                          </div>
+                          <div className={defaultTdStyle}>
+                            <div className={defaultTdContentTitleStyle}>
+                              Product Category
+                            </div>
+                            <div className={defaultTdContent}>
+                              <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                                {product.category}
                               </span>
                             </div>
                           </div>

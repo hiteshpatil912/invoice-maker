@@ -239,13 +239,21 @@ function ClientTable({ showAdvanceSearch = false }) {
                   </div>
                 </div>
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Client Category</div>
+                  <div className={defaultTdContentTitleStyle}>Mobile</div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.clientcategory}{" "}
+                      {client.clientcategory}
                     </span>
                   </div>
                 </div>
+                {/* <div className={defaultTdStyle}>
+                  <div className={defaultTdContentTitleStyle}>Client Category</div>
+                  <div className={defaultTdContent}>
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                      {client.clientcategory}
+                    </span>
+                  </div>
+                </div> */}
                 <div className={defaultTdActionStyle}>
                   <div className={defaultTdContentTitleStyle}>Action</div>
                   <div className={defaultTdContent}>

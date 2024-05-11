@@ -201,9 +201,9 @@ useEffect(() => {
             disabled={isInitLoading}
           >
             <option value="">Select Category</option>
-            <option value="clothing">Clothing</option>
-            <option value="Electronic">Electronic</option>
-            <option value="accessories">Accessories</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
             {/* Add more options as needed */}
           </select>
         </div>

@@ -26,7 +26,7 @@ const emptyForm = {
   mobileNo: "",
 };
 
-function ClientEditModal(props) {
+function ClientEditModal() {
   const dispatch = useDispatch();
   const [isInitLoading, setIsInitLoading] = useState(true);
   const editedID = useSelector(getEditedIdForm);
@@ -58,28 +58,45 @@ function ClientEditModal(props) {
       autoClose: 2000,
     });
 
-    dispatch(onConfirmEditClient(clientForm));
+    try {
+      dispatch(onConfirmEditClient(clientForm));
+    } catch (error) {
+      // Handle dispatch error
+      console.error("Error:", error);
+      toast.error("Failed to update client!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    }
+
     setIsTouched(false);
   }, [dispatch, validForm, clientForm]);
 
-  const handlerClientValue = useCallback(
+  const handleClientValueChange = useCallback(
     (event, keyName) => {
       const value = event.target.value;
-
-      setClientForm((prev) => ({
-        ...prev,
-        [keyName]: value,
-      }));
-
+  
+      console.log("Updating client form:", { [keyName]: value });
+  
+      setClientForm((prev) => {
+        const updatedForm = { ...prev, [keyName]: value };
+        console.log("Updated client form:", updatedForm);
+        return updatedForm;
+      });
+  
       // Dispatch the update for clientCategory
       if (keyName === "clientCategory") {
+        console.log("Dispatching update for client category:", { key: keyName, value });
         dispatch(updateNewClientFormField({ key: keyName, value }));
       }
     },
-    [dispatch]
+    [dispatch, setClientForm]
   );
+  
+  
+  
 
-  const onChangeImage = useCallback(
+  const handleImageChange = useCallback(
     (str) => {
       setClientForm((prev) => ({ ...prev, image: str }));
       dispatch(updateNewClientFormField({ key: "image", value: str }));
@@ -87,7 +104,7 @@ function ClientEditModal(props) {
     [dispatch]
   );
 
-  const onCancelHandler = useCallback(() => {
+  const handleCancel = useCallback(() => {
     dispatch(setEditedId(null));
   }, [dispatch]);
 
@@ -173,7 +190,7 @@ function ClientEditModal(props) {
                             keyName="QuickEditImageUpload"
                             className={imageUploadClasses}
                             url={clientForm.image}
-                            onChangeImage={onChangeImage}
+                            onChangeImage={handleImageChange}
                           />
 
                           <div className="flex-1 pl-3">
@@ -186,7 +203,7 @@ function ClientEditModal(props) {
                                   ? defaultInputLargeInvalidStyle
                                   : defaultInputLargeStyle
                               }
-                              onChange={(e) => handlerClientValue(e, "name")}
+                              onChange={(e) => handleClientValueChange(e, "name")}
                             />
                           </div>
                         </div>
@@ -194,14 +211,15 @@ function ClientEditModal(props) {
                           <select
                             value={clientForm.clientCategory}
                             onChange={(e) =>
-                              handlerClientValue(e, "clientCategory")
+                              handleClientValueChange(e, "clientCategory")
                             } // Ensure correct keyName is passed
                             className={defaultInputStyle}
+                            disabled={isInitLoading}
                           >
                             <option value="">Select Category</option>
-                            <option value="category 1">category 1</option>
-                            <option value="category 2">category 2</option>
-                            <option value="category 3">category 3</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
                           </select>
                         </div>
                         <div className="flex mt-2">
@@ -216,7 +234,7 @@ function ClientEditModal(props) {
                               }
                               value={clientForm.mobileNo}
                               onChange={(e) =>
-                                handlerClientValue(e, "mobileNo")
+                                handleClientValueChange(e, "mobileNo")
                               }
                             />
                           </div>
@@ -233,7 +251,7 @@ function ClientEditModal(props) {
                               }
                               value={clientForm.billingAddress}
                               onChange={(e) =>
-                                handlerClientValue(e, "billingAddress")
+                                handleClientValueChange(e, "billingAddress")
                               }
                             />
                           </div>
@@ -254,7 +272,7 @@ function ClientEditModal(props) {
                 <button
                   type="button"
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={onCancelHandler}
+                  onClick={handleCancel}
                 >
                   Cancel
                 </button>
