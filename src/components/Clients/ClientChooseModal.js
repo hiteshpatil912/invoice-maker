@@ -1,367 +1,226 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { motion } from "framer-motion";
-import {
-  getIsOpenClientSelector,
-  getAllClientsSelector,
-  setClientSelector,
-  setOpenClientSelector,
-} from "../../store/clientSlice";
-import {
-  defaultTdStyle,
-  defaultTdActionStyle,
-  defaultTdWrapperStyle,
-  defaultTdContent,
-  defaultTdContentTitleStyle,
-  defaultSearchStyle,
-} from "../../constants/defaultStyles";
-// eslint-disable-next-line no-unused-vars
-import ReactPaginate from "react-paginate";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
+import Skeleton from "react-loading-skeleton";
+import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { nanoid } from "nanoid";
 import Button from "../Button/Button";
+import ImageUpload from "../Common/ImageUpload";
+import SectionTitle from "../Common/SectionTitle";
+import {
+  defaultInputStyle,
+  defaultInputInvalidStyle,
+  //defaultInputLargeStyle,
+  //defaultSkeletonLargeStyle,
+  defaultSkeletonNormalStyle,
+} from "../../constants/defaultStyles";
+import { useAppContext } from "../../context/AppContext";
+import {
+  addNewClient,
+  getClientNewForm,
+  updateNewClientFormField,
+} from "../../store/clientSlice";
 
-// Example items, to simulate fetching from another resources.
-// eslint-disable-next-line no-unused-vars
-const itemsPerPage = 6;
-// eslint-disable-next-line no-unused-vars
-const emptySearchForm = {
+const emptyForm = {
+  id: "",
+  image: "",
   name: "",
-  // email: "",
-  clientcategory: "",
   mobileNo: "",
+  clientCategory: "",
 };
 
 function ClientChooseModal() {
   const dispatch = useDispatch();
-  const allClients = useSelector(getAllClientsSelector);
-  const openModal = useSelector(getIsOpenClientSelector);
+  const clientNewForm = useSelector(getClientNewForm);
+  const { initLoading: isInitLoading } = useAppContext();
 
-  const [animate, setAnimate] = useState(true);
-  const [searchForm, setSearchForm] = useState(emptySearchForm);
-  const [currentItems, setCurrentItems] = useState(null);
-  const [pageCount, setPageCount] = useState(0);
-  // eslint-disable-next-line no-unused-vars
-  const [itemOffset, setItemOffset] = useState(0);
+  // State variables
+  const [isTouched, setIsTouched] = useState(false);
+  const [clientForm, setClientForm] = useState(emptyForm);
+  const [validForm, setValidForm] = useState({
+    id: false,
+    image: false,
+    name: false,
+    mobileNo: false,
+    clientCategory: false,
+  });
 
-  const clients = useMemo(() => {
-    let filterData = allClients.length > 0 ? [...allClients].reverse() : [];
-    if (searchForm.name?.trim()) {
-      filterData = filterData.filter((client) =>
-        client.name.includes(searchForm.name)
-      );
-    }
-
-    if (searchForm.clientcategory?.trim()) {
-      filterData = filterData.filter((client) =>
-        client.clientcategory.includes(searchForm.clientcategory)
-      );
-    }
-
-    if (searchForm.mobileNo?.trim()) {
-      filterData = filterData.filter((client) =>
-        client.mobileNo.includes(searchForm.mobileNo)
-      );
-    }
-
-    return filterData;
-  }, [allClients, searchForm]);
-
-  // Invoke when user click to request another page.
-  const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % clients.length;
-    setItemOffset(newOffset);
-  };
-
-  const handlerSearchValue = useCallback((event, keyName) => {
-    const value = event.target.value;
-
-    setSearchForm((prev) => {
-      return { ...prev, [keyName]: value };
-    });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    setItemOffset(0);
-  }, []);
-
-  const onCancelHandler = useCallback(() => {
-    dispatch(setOpenClientSelector(false));
-  }, [dispatch]);
-
-  const handleSelect = useCallback(
-    (item) => {
-      dispatch(setClientSelector(item.id));
-
-      setTimeout(() => {
-        dispatch(setOpenClientSelector(false));
-      }, 50);
+  // Callback function to handle image change
+  const onChangeImage = useCallback(
+    (str) => {
+      setClientForm((prev) => ({ ...prev, image: str }));
+      dispatch(updateNewClientFormField({ key: "image", value: str }));
     },
     [dispatch]
   );
 
-  useEffect(() => {
-    const endOffset = itemOffset + itemsPerPage;
-    setCurrentItems(clients.slice(itemOffset, endOffset));
-    setPageCount(Math.ceil(clients.length / itemsPerPage));
-  }, [clients, itemOffset]);
+  // Callback function to handle client form field changes
+  const handlerClientValue = useCallback(
+    (event, keyName) => {
+      const value = event.target.value;
 
-  useEffect(() => {
-    if (openModal) {
-      setAnimate(true);
-    } else {
-      setAnimate(false);
+      setClientForm((prev) => {
+        return { ...prev, [keyName]: value };
+      });
+
+      setValidForm((prev) => ({
+        ...prev,
+        [keyName]: !!value.trim(),
+      }));
+
+      dispatch(updateNewClientFormField({ key: keyName, value }));
+    },
+    [dispatch]
+  );
+
+  // Form submission handler
+  const submitHandler = useCallback(() => {
+    setIsTouched(true);
+    const isValid = Object.values(validForm).every((value) => value);
+
+    if (!isValid) {
+      toast.error("Invalid Client Form!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+      return;
     }
-  }, [clients, openModal]);
 
-  return openModal ? (
-    <motion.div
-      className="modal-container"
-      aria-labelledby="modal-title"
-      role="dialog"
-      aria-modal="true"
-      initial={{
-        opacity: 0,
-      }}
-      animate={{
-        opacity: animate ? 1 : 0,
-      }}
-      transition={{
-        type: "spring",
-        damping: 18,
-      }}
-    >
-      <div className="relative">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+    toast.success("Client Added Successfully!", {
+      position: "bottom-center",
+      autoClose: 2000,
+    });
 
-        <div className="fixed z-10 inset-0 overflow-y-auto">
-          <div className="flex justify-center min-h-full p-4 text-center">
-            <div className="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all my-8 flex flex-col w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 flex-1">
-                <div className="rounded-xl px-3 py-3 mb-3">
-                  <div className="font-title mb-2">Advanced Search</div>
-                  <div className="flex w-full flex-col sm:flex-row">
-                    <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 sm:px-2">
-                      <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6 text-gray-400"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                      <input
-                        autoComplete="nope"
-                        value={searchForm.name}
-                        placeholder="User Name"
-                        className={defaultSearchStyle}
-                        onChange={(e) => handlerSearchValue(e, "name")}
-                      />
-                    </div>
-                    <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 sm:px-2">
-                      <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6 text-gray-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                      {/* <input
-                        autoComplete="nope"
-                        value={searchForm.email}
-                        placeholder="User Email"
-                        className={defaultSearchStyle}
-                        onChange={(e) => handlerSearchValue(e, "email")}
-                      /> */}
-                    </div>
-                    <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 sm:px-2">
-                      <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6 text-gray-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                      <input
-                        autoComplete="nope"
-                        value={searchForm.mobileNo}
-                        placeholder="Mobile Number"
-                        className={defaultSearchStyle}
-                        onChange={(e) => handlerSearchValue(e, "mobileNo")}
-                      />
-                    </div>
-                  </div>
-                </div>
+    dispatch(addNewClient({ ...clientForm, id: nanoid() }));
+    setIsTouched(false);
+  }, [clientForm, dispatch, validForm]);
 
-                <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
-                  <div className="hidden sm:flex invisible sm:visible w-full flex-col sm:flex-row  bg-gray-50 py-2 px-2 rounded-xl mb-1">
-                    <div className="sm:text-left text-default-color font-title flex-1">
-                      Name
-                    </div>
-                    <div className="sm:text-left text-default-color font-title flex-1">
-                      Mobile
-                    </div>
-                    <div className="sm:text-left text-default-color font-title flex-1">
-                      Client Category
-                    </div>
-                    <div className="sm:text-left text-default-color font-title sm:w-11">
-                      Action
-                    </div>
-                  </div>
+  // Memoized class for image upload
+  const imageUploadClasses = useMemo(() => {
+    const defaultStyle = "rounded-xl ";
+    return !clientForm.image
+      ? defaultStyle + " border-dashed border-2 border-indigo-400 "
+      : defaultStyle;
+  }, [clientForm.image]);
 
-                  <div>
-                    {currentItems &&
-                      currentItems.map((client) => (
-                        <><div className={defaultTdWrapperStyle} key={client.id}>
-                          <div className={defaultTdStyle}>
-                            <div className={defaultTdContentTitleStyle}>
-                              Name
-                            </div>
-                            <div className={defaultTdContent}>
-                              {client.image ? (
-                                <img
-                                  className="object-cover h-10 w-10 rounded-2xl"
-                                  src={client.image}
-                                  alt={client.name} />
-                              ) : (
-                                <span className="h-10 w-10 rounded-2xl bg-gray-100 flex justify-center items-center">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-6 w-6 text-gray-400"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                                      clipRule="evenodd" />
-                                  </svg>
-                                </span>
-                              )}
+  // Effect to update validForm when clientForm changes
+  useEffect(() => {
+    setValidForm((prev) => ({
+      ...prev,
+      id: !!clientForm.id,
+      image: clientForm.image,
+      name: clientForm?.name?.trim() ? true : false,
+      mobileNo: clientForm?.mobileNo?.trim() ? true : false,
+      clientCategory: clientForm?.clientCategory?.trim() ? true : false,
+    }));
+  }, [clientForm]);
 
-                              <span className="whitespace-nowrap text-ellipsis overflow-hidden pl-1">
-                                {client.name}
-                              </span>
-                            </div>
-                          </div>
-                          <div className={defaultTdStyle}>
-                            <div className={defaultTdContentTitleStyle}>
-                              Mobile
-                            </div>
-                            <div className={defaultTdContent}>
-                              <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                                {client.mobileNo}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="relative">
-                            <input
-                              value={searchForm.productcategory}
-                              type="text"
-                              onChange={(e) => {
-                                const newValue = e.target.value;
-                                setSearchForm((prev) => ({
-                                  ...prev,
-                                  productcategory: newValue,
-                                }));
-                              } }
-                              placeholder="Product Category"
-                              className={defaultSearchStyle} />
-                            <select
-                              value={searchForm.productcategory}
-                              onChange={(e) => {
-                                const newValue = e.target.value;
-                                setSearchForm((prev) => ({
-                                  ...prev,
-                                  productcategory: newValue,
-                                }));
-                              } }
-                              className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
-                            >
-                              <option value="">Select or Enter Product Category</option>
-                              <option value="X">X</option>
-                              <option value="Y">X</option>
-                              <option value="Z">Y</option>
-                              {/* Add more options as needed */}
-                              {Array.from(new Set([searchForm.productcategory, "X", "Y", "Z"]))
-                                .filter((cat) => cat && !["X", "Y", "Z"].includes(cat))
-                                .map((category) => (
-                                  <option key={category} value={category}>
-                                    {category}
-                                  </option>
-                                ))}
-                            </select>
-                          </div>
-                          <div className={defaultTdContent}>
-                            <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                              {client.clientcategory}{" "}
-                            </span>
-                          </div>
-                        </div><div className={defaultTdActionStyle}>
-                            <div className={defaultTdContentTitleStyle}>
-                              Action
-                            </div>
-                            <div className={defaultTdContent}>
-                              <Button
-                                size="sm"
-                                block={1}
-                                onClick={() => handleSelect(client)}
-                              >
-                                Select
-                              </Button>
-                            </div>
-                          </div></>
-                      ))}
+  // Effect to update clientForm when clientNewForm changes
+  useEffect(() => {
+    if (clientNewForm) {
+      setClientForm(clientNewForm);
+    }
+  }, [clientNewForm]);
 
-                    {clients.length > 0 && (
-                      <ReactPaginate
-                        className="inline-flex items-center -space-x-px mt-2"
-                        previousLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        nextLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        pageLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        breakClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        previousLabel={"<"}
-                        nextLabel={">"}
-                        breakLabel={"..."}
-                        pageCount={pageCount}
-                        onPageChange={handlePageClick}
-                        marginPagesDisplayed={1}
-                        pageRangeDisplayed={2}
-                        containerClassName={"pagination"}
-                        subContainerClassName={"pages pagination"}
-                        activeClassName={"active"}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+  return (
+    <div className="bg-white rounded-xl p-4">
+      <SectionTitle> Add New Client </SectionTitle>
+      <div className="flex mt-2">
+        {isInitLoading ? (
+          <Skeleton className="skeleton-input-radius skeleton-image border-dashed border-2" />
+        ) : (
+          <ImageUpload
+            keyName="ClientChooseImageUpload"
+            className={imageUploadClasses}
+            url={clientForm.image}
+            onChangeImage={onChangeImage}
+          />
+        )}
+      </div>
+      <div className="mt-2">
+        <div className="font-title text-sm text-default-color">
+          Client Name
+        </div>
+        <div className="flex">
+          <div className="flex-1">
+            {isInitLoading ? (
+              <Skeleton className={defaultSkeletonNormalStyle} />
+            ) : (
+              <input
+                autoComplete="nope"
+                placeholder="Client Name"
+                type="text"
+                className={
+                  !validForm.name && isTouched
+                    ? defaultInputInvalidStyle
+                    : defaultInputStyle
+                }
+                disabled={isInitLoading}
+                value={clientForm.name}
+                onChange={(e) => handlerClientValue(e, "name")}
+              />
+            )}
           </div>
         </div>
       </div>
-    </motion.div>
-  ) : null;
+      <div className="mt-2">
+        <div className="font-title text-sm text-default-color">
+          Mobile Number
+        </div>
+        <div className="flex">
+          <div className="flex-1">
+            {isInitLoading ? (
+              <Skeleton className={defaultSkeletonNormalStyle} />
+            ) : (
+              <input
+                autoComplete="nope"
+                placeholder="Mobile Number"
+                type="text"
+                className={
+                  !validForm.mobileNo && isTouched
+                    ? defaultInputInvalidStyle
+                    : defaultInputStyle
+                }
+                disabled={isInitLoading}
+                value={clientForm.mobileNo}
+                onChange={(e) => handlerClientValue(e, "mobileNo")}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="mt-2">
+        <div className="font-title text-sm text-default-color">
+          Client Category
+        </div>
+        <div className="relative">
+          <input
+            value={clientForm.clientCategory}
+            type="text"
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setClientForm((prev) => ({
+                ...prev,
+                clientCategory: newValue,
+              }));
+              handlerClientValue(e, "clientCategory");
+            }}
+            placeholder=""
+            className={
+              !validForm.clientCategory && isTouched
+                ? defaultInputInvalidStyle
+                : defaultInputStyle
+            }
+            disabled={isInitLoading}
+          />
+        </div>
+      </div>
+      <div className="mt-3">
+        <Button onClick={submitHandler} block={1}>
+          <span className="inline-block ml-2"> Submit </span>
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export default ClientChooseModal;
