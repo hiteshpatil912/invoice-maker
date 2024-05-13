@@ -15,11 +15,14 @@ import {
   defaultTdContentTitleStyle,
   defaultSearchStyle,
 } from "../../constants/defaultStyles";
+// eslint-disable-next-line no-unused-vars
 import ReactPaginate from "react-paginate";
 import Button from "../Button/Button";
 
 // Example items, to simulate fetching from another resources.
+// eslint-disable-next-line no-unused-vars
 const itemsPerPage = 6;
+// eslint-disable-next-line no-unused-vars
 const emptySearchForm = {
   name: "",
   // email: "",
@@ -36,6 +39,7 @@ function ClientChooseModal() {
   const [searchForm, setSearchForm] = useState(emptySearchForm);
   const [currentItems, setCurrentItems] = useState(null);
   const [pageCount, setPageCount] = useState(0);
+  // eslint-disable-next-line no-unused-vars
   const [itemOffset, setItemOffset] = useState(0);
 
   const clients = useMemo(() => {
@@ -74,6 +78,7 @@ function ClientChooseModal() {
       return { ...prev, [keyName]: value };
     });
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     setItemOffset(0);
   }, []);
 
@@ -335,28 +340,21 @@ function ClientChooseModal() {
                         previousLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                         nextLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                         pageLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        breakLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        activeLinkClassName="py-2 px-3 text-blue-600 bg-blue-50 border border-gray-300 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-                        breakLabel="..."
-                        onPageChange={handlePageClick}
-                        pageRangeDisplayed={1}
-                        pageCount={pageCount}
-                        previousLabel="<"
+                        breakClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                        previousLabel={"<"}
                         nextLabel={">"}
-                        renderOnZeroPageCount={null}
+                        breakLabel={"..."}
+                        pageCount={pageCount}
+                        onPageChange={handlePageClick}
+                        marginPagesDisplayed={1}
+                        pageRangeDisplayed={2}
+                        containerClassName={"pagination"}
+                        subContainerClassName={"pages pagination"}
+                        activeClassName={"active"}
                       />
                     )}
                   </div>
                 </div>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={onCancelHandler}
-                >
-                  Cancel
-                </button>
               </div>
             </div>
           </div>
