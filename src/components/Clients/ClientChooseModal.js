@@ -228,7 +228,7 @@ function ClientChooseModal() {
                   <div>
                     {currentItems &&
                       currentItems.map((client) => (
-                        <div className={defaultTdWrapperStyle} key={client.id}>
+                        <><div className={defaultTdWrapperStyle} key={client.id}>
                           <div className={defaultTdStyle}>
                             <div className={defaultTdContentTitleStyle}>
                               Name
@@ -238,8 +238,7 @@ function ClientChooseModal() {
                                 <img
                                   className="object-cover h-10 w-10 rounded-2xl"
                                   src={client.image}
-                                  alt={client.name}
-                                />
+                                  alt={client.name} />
                               ) : (
                                 <span className="h-10 w-10 rounded-2xl bg-gray-100 flex justify-center items-center">
                                   <svg
@@ -251,8 +250,7 @@ function ClientChooseModal() {
                                     <path
                                       fillRule="evenodd"
                                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                                      clipRule="evenodd"
-                                    />
+                                      clipRule="evenodd" />
                                   </svg>
                                 </span>
                               )}
@@ -272,17 +270,50 @@ function ClientChooseModal() {
                               </span>
                             </div>
                           </div>
-                          <div className={defaultTdStyle}>
-                            <div className={defaultTdContentTitleStyle}>
-                              client Category
-                            </div>
-                            <div className={defaultTdContent}>
-                              <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                                {client.clientcategory}{" "}
-                              </span>
-                            </div>
+                          <div className="relative">
+                            <input
+                              value={searchForm.productcategory}
+                              type="text"
+                              onChange={(e) => {
+                                const newValue = e.target.value;
+                                setSearchForm((prev) => ({
+                                  ...prev,
+                                  productcategory: newValue,
+                                }));
+                              } }
+                              placeholder="Product Category"
+                              className={defaultSearchStyle} />
+                            <select
+                              value={searchForm.productcategory}
+                              onChange={(e) => {
+                                const newValue = e.target.value;
+                                setSearchForm((prev) => ({
+                                  ...prev,
+                                  productcategory: newValue,
+                                }));
+                              } }
+                              className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
+                            >
+                              <option value="">Select or Enter Product Category</option>
+                              <option value="X">X</option>
+                              <option value="Y">X</option>
+                              <option value="Z">Y</option>
+                              {/* Add more options as needed */}
+                              {Array.from(new Set([searchForm.productcategory, "X", "Y", "Z"]))
+                                .filter((cat) => cat && !["X", "Y", "Z"].includes(cat))
+                                .map((category) => (
+                                  <option key={category} value={category}>
+                                    {category}
+                                  </option>
+                                ))}
+                            </select>
                           </div>
-                          <div className={defaultTdActionStyle}>
+                          <div className={defaultTdContent}>
+                            <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                              {client.clientcategory}{" "}
+                            </span>
+                          </div>
+                        </div><div className={defaultTdActionStyle}>
                             <div className={defaultTdContentTitleStyle}>
                               Action
                             </div>
@@ -295,8 +326,7 @@ function ClientChooseModal() {
                                 Select
                               </Button>
                             </div>
-                          </div>
-                        </div>
+                          </div></>
                       ))}
 
                     {clients.length > 0 && (
