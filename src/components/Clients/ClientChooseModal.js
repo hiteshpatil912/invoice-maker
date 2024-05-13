@@ -15,14 +15,11 @@ import {
   defaultTdContentTitleStyle,
   defaultSearchStyle,
 } from "../../constants/defaultStyles";
-// eslint-disable-next-line no-unused-vars
 import ReactPaginate from "react-paginate";
 import Button from "../Button/Button";
 
 // Example items, to simulate fetching from another resources.
-// eslint-disable-next-line no-unused-vars
 const itemsPerPage = 6;
-// eslint-disable-next-line no-unused-vars
 const emptySearchForm = {
   name: "",
   // email: "",
@@ -39,7 +36,6 @@ function ClientChooseModal() {
   const [searchForm, setSearchForm] = useState(emptySearchForm);
   const [currentItems, setCurrentItems] = useState(null);
   const [pageCount, setPageCount] = useState(0);
-  // eslint-disable-next-line no-unused-vars
   const [itemOffset, setItemOffset] = useState(0);
 
   const clients = useMemo(() => {
@@ -78,7 +74,6 @@ function ClientChooseModal() {
       return { ...prev, [keyName]: value };
     });
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     setItemOffset(0);
   }, []);
 
@@ -233,7 +228,7 @@ function ClientChooseModal() {
                   <div>
                     {currentItems &&
                       currentItems.map((client) => (
-                        <><div className={defaultTdWrapperStyle} key={client.id}>
+                        <div className={defaultTdWrapperStyle} key={client.id}>
                           <div className={defaultTdStyle}>
                             <div className={defaultTdContentTitleStyle}>
                               Name
@@ -243,7 +238,8 @@ function ClientChooseModal() {
                                 <img
                                   className="object-cover h-10 w-10 rounded-2xl"
                                   src={client.image}
-                                  alt={client.name} />
+                                  alt={client.name}
+                                />
                               ) : (
                                 <span className="h-10 w-10 rounded-2xl bg-gray-100 flex justify-center items-center">
                                   <svg
@@ -255,7 +251,8 @@ function ClientChooseModal() {
                                     <path
                                       fillRule="evenodd"
                                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                                      clipRule="evenodd" />
+                                      clipRule="evenodd"
+                                    />
                                   </svg>
                                 </span>
                               )}
@@ -275,50 +272,17 @@ function ClientChooseModal() {
                               </span>
                             </div>
                           </div>
-                          <div className="relative">
-                            <input
-                              value={searchForm.productcategory}
-                              type="text"
-                              onChange={(e) => {
-                                const newValue = e.target.value;
-                                setSearchForm((prev) => ({
-                                  ...prev,
-                                  productcategory: newValue,
-                                }));
-                              } }
-                              placeholder="Product Category"
-                              className={defaultSearchStyle} />
-                            <select
-                              value={searchForm.productcategory}
-                              onChange={(e) => {
-                                const newValue = e.target.value;
-                                setSearchForm((prev) => ({
-                                  ...prev,
-                                  productcategory: newValue,
-                                }));
-                              } }
-                              className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
-                            >
-                              <option value="">Select or Enter Product Category</option>
-                              <option value="X">X</option>
-                              <option value="Y">X</option>
-                              <option value="Z">Y</option>
-                              {/* Add more options as needed */}
-                              {Array.from(new Set([searchForm.productcategory, "X", "Y", "Z"]))
-                                .filter((cat) => cat && !["X", "Y", "Z"].includes(cat))
-                                .map((category) => (
-                                  <option key={category} value={category}>
-                                    {category}
-                                  </option>
-                                ))}
-                            </select>
+                          <div className={defaultTdStyle}>
+                            <div className={defaultTdContentTitleStyle}>
+                              client Category
+                            </div>
+                            <div className={defaultTdContent}>
+                              <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                                {client.clientcategory}{" "}
+                              </span>
+                            </div>
                           </div>
-                          <div className={defaultTdContent}>
-                            <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                              {client.clientcategory}{" "}
-                            </span>
-                          </div>
-                        </div><div className={defaultTdActionStyle}>
+                          <div className={defaultTdActionStyle}>
                             <div className={defaultTdContentTitleStyle}>
                               Action
                             </div>
@@ -331,7 +295,8 @@ function ClientChooseModal() {
                                 Select
                               </Button>
                             </div>
-                          </div></>
+                          </div>
+                        </div>
                       ))}
 
                     {clients.length > 0 && (
@@ -340,21 +305,28 @@ function ClientChooseModal() {
                         previousLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                         nextLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                         pageLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        breakClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        previousLabel={"<"}
-                        nextLabel={">"}
-                        breakLabel={"..."}
-                        pageCount={pageCount}
+                        breakLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                        activeLinkClassName="py-2 px-3 text-blue-600 bg-blue-50 border border-gray-300 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+                        breakLabel="..."
                         onPageChange={handlePageClick}
-                        marginPagesDisplayed={1}
-                        pageRangeDisplayed={2}
-                        containerClassName={"pagination"}
-                        subContainerClassName={"pages pagination"}
-                        activeClassName={"active"}
+                        pageRangeDisplayed={1}
+                        pageCount={pageCount}
+                        previousLabel="<"
+                        nextLabel={">"}
+                        renderOnZeroPageCount={null}
                       />
                     )}
                   </div>
                 </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={onCancelHandler}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
