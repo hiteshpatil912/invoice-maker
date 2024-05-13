@@ -29,7 +29,7 @@ const emptyForm = {
   amount: 0,
 };
 
-function QuickAddProduct() {
+function QuickAddCategory() {
   const dispatch = useDispatch();
   const productNewForm = useSelector(getProductNewForm);
   const { initLoading: isInitLoading } = useAppContext();
@@ -134,61 +134,25 @@ useEffect(() => {
   return (
     <div className="bg-white rounded-xl p-4">
       <SectionTitle> Quick Add Product </SectionTitle>
-      {/* <div className="flex mt-2">
-        {isInitLoading ? (
-          <Skeleton className="skeleton-input-radius skeleton-image border-dashed border-2" />
-        ) : (
-          <ImageUpload
-            keyName="QuickEditImageUpload"
-            className={imageUploadClasses}
-            url={productForm.image}
-            onChangeImage={onChangeImage}
-          />
-        )}
-
-        <div className="flex-1 pl-3">
-          {isInitLoading ? (
-            <Skeleton className={defaultSkeletonLargeStyle} />
-          ) : (
-            <div>
-              <input
-                autoComplete="nope"
-                value={productForm.productID}
-                placeholder="Product ID"
-                className={defaultInputLargeStyle}
-                onChange={(e) => handlerProductValue(e, "productID")}
-                disabled={isInitLoading}
-              />
-            </div>
-          )}
-        </div>
-      </div>
       <div className="mt-2">
         <div className="font-title text-sm text-default-color">
-          Product Name
+          Client Category
         </div>
         <div className="flex">
-          <div className="flex-1">
-            {isInitLoading ? (
-              <Skeleton className={defaultSkeletonNormalStyle} />
-            ) : (
-              <input
-                autoComplete="nope"
-                placeholder="Product Name"
-                type="text"
-                className={
-                  !validForm.name && isTouched
-                    ? defaultInputInvalidStyle
-                    : defaultInputStyle
-                }
-                disabled={isInitLoading}
-                value={productForm.name}
-                onChange={(e) => handlerProductValue(e, "name")}
-              />
-            )}
-          </div>
+          <select
+            value={productForm.category}
+            onChange={(e) => handlerProductValue(e, "category")} // Fixed the onChange handler
+            className={defaultInputStyle}
+            disabled={isInitLoading}
+          >
+            <option value="">Select Category</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            {/* Add more options as needed */}
+          </select>
         </div>
-      </div> */}
+      </div> 
       <div className="mt-2">
         <div className="font-title text-sm text-default-color">
           Product Category
@@ -269,4 +233,4 @@ useEffect(() => {
   );
 }
 
-export default QuickAddProduct;
+export default QuickAddCategory;
