@@ -198,8 +198,15 @@ useEffect(() => {
           <input
             value={productForm.category}
             type="text"
-            onChange={(e) => handlerProductValue(e, "category")}
-            placeholder="Product Category"
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setProductForm((prev) => ({
+              ...prev,
+                category: newValue,
+            }));
+            handlerProductValue(e, "category");
+          }}
+          placeholder=""
             className={
               !validForm.name && isTouched
                 ? defaultInputInvalidStyle
@@ -209,6 +216,7 @@ useEffect(() => {
           />
           {/* Spinner for predined categories*/}
           <select
+            value={productForm.category}
             onChange={(e) => {
               const newValue = e.target.value;
               setProductForm((prev) => ({
@@ -223,7 +231,13 @@ useEffect(() => {
             <option value="X">X</option>
             <option value="Y">Y</option>
             <option value="Z">Z</option>
-            {/* Add more options as needed */}
+            {Array.from(new Set([productForm.category, "X", "Y", "Z"]))
+              .filter((cat) => cat && !["X", "Y", "Z"].includes(cat))
+              .map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
           </select>
         </div>
       </div>
