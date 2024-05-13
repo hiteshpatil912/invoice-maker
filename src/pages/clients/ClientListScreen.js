@@ -1,7 +1,7 @@
 import React from "react";
 import PageTitle from "../../components/Common/PageTitle";
 import ClientTable from "../../components/Clients/ClientTable";
-import ClientTable from "../../components/Clients/QuickAddClient";
+import QuickAddClient from "../../components/Clients/QuickAddClient";
 // import QuickAddClient from "../../components/Dashboard/QuickAddClient";
 
 function ClientListScreen() {

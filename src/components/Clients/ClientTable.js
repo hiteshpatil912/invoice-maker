@@ -22,7 +22,7 @@ import EmptyBar from "../Common/EmptyBar";
 const itemsPerPage = 10;
 const emptySearchForm = {
   name: "",
-  clientcategory: "",
+ clientCategory: "",
   mobileNo: "",
 };
 
@@ -44,9 +44,9 @@ function ClientTable({ showAdvanceSearch = false }) {
       );
     }
 
-    if (searchForm.clientcategory?.trim()) {
+    if (searchForm.clientCategory?.trim()) {
       filterData = filterData.filter((client) =>
-        client.clientcategory.includes(searchForm.clientcategory)
+        client.clientCategory.includes(searchForm.clientCategory)
       );
     }
 
@@ -125,7 +125,7 @@ function ClientTable({ showAdvanceSearch = false }) {
                 onChange={(e) => handlerSearchValue(e, "name")}
               />
             </div>
-            {/* <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
+            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
               <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -144,12 +144,12 @@ function ClientTable({ showAdvanceSearch = false }) {
               </div>
               <input
                 autoComplete="nope"
-                value={searchForm.clientcategory}
+                value={searchForm.clientCategory}
                 placeholder="User Client Category"
                 className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "clientcategory")}
+                onChange={(e) => handlerSearchValue(e, "clientCategory")}
               />
-            </div> */}
+            </div>
             <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
               <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                 <svg
@@ -239,21 +239,15 @@ function ClientTable({ showAdvanceSearch = false }) {
                   </div>
                 </div>
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Client Category</div>
+                  <div className={defaultTdContentTitleStyle}>
+                    client Category
+                  </div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.clientcategory}
+                      {client.clientCategory}{" "}
                     </span>
                   </div>
                 </div>
-                {/* <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Client Category</div>
-                  <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.clientcategory}
-                    </span>
-                  </div>
-                </div> */}
                 <div className={defaultTdActionStyle}>
                   <div className={defaultTdContentTitleStyle}>Action</div>
                   <div className={defaultTdContent}>

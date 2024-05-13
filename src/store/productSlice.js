@@ -9,9 +9,10 @@ const initialState = {
   data: [],
   newForm: {
     id: nanoid(),
-    productID: "",
     image: "",
+    productID: "",
     name: "",
+    category: "",
     amount: 0,
   },
   editedID: null,
@@ -32,6 +33,7 @@ export const productSlice = createSlice({
         image: "",
         productID: "",
         name: "",
+        category: "",
         amount: 0,
       };
 
