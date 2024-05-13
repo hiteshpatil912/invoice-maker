@@ -914,13 +914,13 @@ function InvoiceDetailScreen(props) {
                   {!isViewMode ? (
                     <input
                       autoComplete="nope"
-                      placeholder="Client Email"
+                      placeholder="Client Category"
                       className={defaultInputSmStyle}
-                      value={invoiceForm?.clientDetail?.email}
-                      onChange={(e) => handlerInvoiceClientValue(e, "email")}
+                      value={invoiceForm?.clientDetail?.clientCategory}
+                      onChange={(e) => handlerInvoiceClientValue(e, "clientCategory")}
                     />
                   ) : (
-                    invoiceForm?.clientDetail?.email
+                    invoiceForm?.clientDetail?.clientCategory
                   )}
                 </div>
               </div>
@@ -976,7 +976,7 @@ function InvoiceDetailScreen(props) {
                   />
                 </div>
               </div>
-              {!isViewMode && (
+              {/* {!isViewMode && (
                 <div className="flex flex-row justify-between items-center mb-1">
                   <div className="font-title flex-1"> Change Currency </div>
                   <div className="font-title flex-1 text-right">
@@ -989,7 +989,7 @@ function InvoiceDetailScreen(props) {
                     />
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
           {/* Customer Billing Info Finished */}

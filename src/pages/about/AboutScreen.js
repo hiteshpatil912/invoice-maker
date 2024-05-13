@@ -1,43 +1,21 @@
 import React from "react";
 import PageTitle from "../../components/Common/PageTitle";
+import PageTable from "../../components/Category/CategoryTable";
+import QuickAddcategory from "../../components/Category/QuickAddCategory";
 
 function AboutScreen() {
   return (
     <div>
       <div className="p-4">
-        <div className="bg-white rounded-xl p-3 font-title">
-          <PageTitle title="About Me" />
-          {/* <div className="mt-4 mb-5 flex flex-row items-center">
-            <img
-              src="https://raw.githubusercontent.com/lwinmoepaing/lwinmoepaing/main/img/gitto.gif"
-              className="h-12 mr-3"
-              alt="Git"
-            />
-            <div>
-              <a
-                href="https://github.com/lwinmoepaing"
-                target={"_blank"}
-                className="underline cursor-pointer"
-                rel="noreferrer"
-              >
-                Hi, I'm Lwin Moe Paing
-              </a>
-              <h1> your business.</h1>
-            </div>
-          </div> */}
+        <PageTitle title="About Me" />
+      </div>
 
-          <PageTitle title="Contact" />
-          <div className="mt-2 pl-1 text-sm">
-            <a
-              href="tel:+959420059241"
-              className="underline cursor-pointer"
-              target={"_blank"}
-              rel="noreferrer"
-            >
-              {" "}
-              +959420059241
-            </a>
-          </div>
+      <div className="flex flex-wrap">
+        <div className="w-full lg:w-4/6 pl-4 pr-4 sm:pl-4 sm:pr-0 mb-4 sm:mb-1">
+          <PageTable showAdvanceSearch />
+        </div>
+        <div className="w-full lg:w-2/6 pl-4 pr-4 sm:pl-4 sm:pr-2">
+          <QuickAddcategory />
         </div>
       </div>
     </div>

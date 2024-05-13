@@ -134,7 +134,7 @@ useEffect(() => {
   return (
     <div className="bg-white rounded-xl p-4">
       <SectionTitle> Quick Add Product </SectionTitle>
-      <div className="flex mt-2">
+      {/* <div className="flex mt-2">
         {isInitLoading ? (
           <Skeleton className="skeleton-input-radius skeleton-image border-dashed border-2" />
         ) : (
@@ -188,7 +188,7 @@ useEffect(() => {
             )}
           </div>
         </div>
-      </div>
+      </div> */}
       <div className="mt-2">
         <div className="font-title text-sm text-default-color">
           Product Category
@@ -234,7 +234,7 @@ useEffect(() => {
           </div>
         </div>
       </div>
-      <div className="mt-2">
+      {/* <div className="mt-2">
         <div className="font-title text-sm text-default-color">
           Product Discription
         </div>
@@ -259,7 +259,7 @@ useEffect(() => {
             )}
           </div>
         </div>
-      </div>
+      </div> */}
       <div className="mt-3">
         <Button onClick={submitHandler} block={1}>
           <span className="inline-block ml-2"> Submit </span>

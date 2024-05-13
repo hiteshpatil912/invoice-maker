@@ -93,41 +93,11 @@ function ProductTable({ showAdvanceSearch = false }) {
 
   return (
     <>
-      {showAdvanceSearch === true && (
-        <div className="bg-white rounded-xl px-3 py-3 mb-3">
-          <div className="font-title mb-2">Advanced Search</div>
-          <div className="flex w-full flex-col sm:flex-row">
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row  font-title flex-1 px-2">
-              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center text-gray-400">
-                <ProductIDIcon />
-              </div>
-              <input
-                autoComplete="nope"
-                value={searchForm.productID}
-                placeholder="Product ID"
-                className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "productID")}
-              />
-            </div>
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
-              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center text-gray-400">
-                <ProductIcon />
-              </div>
-              <input
-                autoComplete="nope"
-                value={searchForm.name}
-                placeholder="Product Name"
-                className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "name")}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      
 
       <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
         <div className="hidden sm:flex invisible sm:visible w-full flex-col sm:flex-row">
-          <div className="sm:text-left text-default-color font-title flex-1">
+          {/* <div className="sm:text-left text-default-color font-title flex-1">
             ProductID
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
@@ -135,12 +105,18 @@ function ProductTable({ showAdvanceSearch = false }) {
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
             Amount
+          </div> */}
+          <div className="sm:text-left text-default-color font-title flex-1">
+            Client Category
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
             Product Category
           </div>
-          <div className="sm:text-left text-default-color font-title flex-1">
+          {/* <div className="sm:text-left text-default-color font-title flex-1">
             Product Description
+          </div> */}
+          <div className="sm:text-left text-default-color font-title flex-1">
+            Percentage
           </div>
           <div className="sm:text-left text-default-color font-title sm:w-11">
             Action
@@ -148,10 +124,21 @@ function ProductTable({ showAdvanceSearch = false }) {
         </div>
 
         <div>
+        {currentItems &&
+            currentItems.map((client) => (
+              <div className={defaultTdStyle}>
+              <div className={defaultTdContentTitleStyle}>Client Category</div>
+              <div className={defaultTdContent}>
+                <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                  {client.clientcategory}
+                </span>
+              </div>
+            </div>
+            ))}
           {currentItems &&
             currentItems.map((product) => (
               <div className={defaultTdWrapperStyle} key={product.id}>
-                <div className={defaultTdStyle}>
+                {/* <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>ProductID</div>
                   <div className={defaultTdContent}>
                     {product.image ? (
@@ -169,25 +156,35 @@ function ProductTable({ showAdvanceSearch = false }) {
                       {product.productID || "#"}
                     </span>
                   </div>
-                </div>
+                </div> */}
 
-                <div className={defaultTdStyle}>
+                {/* <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>Name</div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
                       {product.name}
                     </span>
                   </div>
-                </div>
+                </div> */}
 
-                <div className={defaultTdStyle}>
+                {/* <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>Amount</div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
                       {product.amount}
                     </span>
                   </div>
-                </div>
+                </div> */}
+                {/* <div className={defaultTdStyle}>
+                  <div className={defaultTdContentTitleStyle}>
+                    ClientCategory
+                  </div>
+                  <div className={defaultTdContent}>
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                      {product.clientCategory}
+                    </span>
+                  </div>
+                </div> */}
 
                 <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>

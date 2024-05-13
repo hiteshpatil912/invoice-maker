@@ -171,6 +171,11 @@ function QuickAddClient({ editForm }) {
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
+            <option value="C">C</option>
+            <option value="C">C</option>
+            <option value="C">C</option>
+            <option value="C">C</option>
+            <option value="C">C</option>
             {/* Add more options as needed */}
           </select>
         </div>

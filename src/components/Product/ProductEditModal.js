@@ -205,9 +205,9 @@ function ProductEditModal(props) {
                               disabled={isInitLoading}
                             >
                               <option value="">Select Category</option>
-                              <option value="A">A</option>
-                              <option value="B">B</option>
-                              <option value="C">C</option>
+                              <option value="X">X</option>
+                              <option value="Y">Y</option>
+                              <option value="Z">Z</option>
                               {/* Add more options as needed */}
                             </select>
                           </div>

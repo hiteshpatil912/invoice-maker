@@ -173,13 +173,13 @@ function ClientChooseModal() {
                           />
                         </svg>
                       </div>
-                      <input
+                      {/* <input
                         autoComplete="nope"
                         value={searchForm.email}
                         placeholder="User Email"
                         className={defaultSearchStyle}
                         onChange={(e) => handlerSearchValue(e, "email")}
-                      />
+                      /> */}
                     </div>
                     <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 sm:px-2">
                       <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
