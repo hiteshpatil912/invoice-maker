@@ -56,7 +56,7 @@ function QuickAddProduct() {
   );
 
   // Callback function to handle product form field changes
-  // Callback function to handle product form field changes
+
 const handlerProductValue = useCallback(
   (event, keyName) => {
     const value = event.target.value;
@@ -92,14 +92,14 @@ const submitHandler = useCallback(() => {
     return;
   }
 
-  toast.success("Product Added Successfully!", {
-    position: "bottom-center",
-    autoClose: 2000,
-  });
+    toast.success("Product Added Successfully!", {
+      position: "bottom-center",
+      autoClose: 2000,
+    });
 
-  dispatch(addNewProduct({ ...productForm, id: nanoid() }));
-  setIsTouched(false);
-}, [productForm, dispatch, validForm]);
+    dispatch(addNewProduct({ ...productForm, id: nanoid() }));
+    setIsTouched(false);
+  }, [productForm, dispatch, validForm]);
 
   // Memoized class for image upload
   const imageUploadClasses = useMemo(() => {
@@ -110,7 +110,7 @@ const submitHandler = useCallback(() => {
   }, [productForm.image]);
 
   // Effect to update validForm when productForm changes
-  // Effect to update validForm when productForm changes
+
 useEffect(() => {
   setValidForm((prev) => ({
     ...prev,
@@ -125,6 +125,7 @@ useEffect(() => {
 
 
   // Effect to update productForm when productNewForm changes
+
   useEffect(() => {
     if (productNewForm) {
       setProductForm(productNewForm);
@@ -193,12 +194,30 @@ useEffect(() => {
         <div className="font-title text-sm text-default-color">
           Product Category
         </div>
-        <div className="flex">
-          <select
+        <div className="relative">
+          <input
             value={productForm.category}
-            onChange={(e) => handlerProductValue(e, "category")} // Fixed the onChange handler
-            className={defaultInputStyle}
+            type="text"
+            onChange={(e) => handlerProductValue(e, "category")}
+            placeholder="Product Category"
+            className={
+              !validForm.name && isTouched
+                ? defaultInputInvalidStyle
+                : defaultInputStyle
+            }
             disabled={isInitLoading}
+          />
+          {/* Spinner for predined categories*/}
+          <select
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setProductForm((prev) => ({
+                ...prev,
+                category: newValue,
+              }));
+              handlerProductValue(e, "category");
+            }}
+            className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
           >
             <option value="">Select Category</option>
             <option value="X">X</option>
@@ -236,7 +255,7 @@ useEffect(() => {
       </div>
       <div className="mt-2">
         <div className="font-title text-sm text-default-color">
-          Product Discription
+          Product Description
         </div>
         <div className="flex">
           <div className="flex-1">
@@ -245,7 +264,7 @@ useEffect(() => {
             ) : (
               <input
                 autoComplete="nope"
-                placeholder="Product Discription"
+                placeholder="Product Description"
                 type="text"
                 className={
                   !validForm.name && isTouched
