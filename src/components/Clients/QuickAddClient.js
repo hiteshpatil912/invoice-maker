@@ -121,7 +121,7 @@ function QuickAddClient({ editForm }) {
       name: clientForm?.name?.trim() ? true : false,
       billingAddress: clientForm?.billingAddress?.trim() ? true : false,
       mobileNo: clientForm?.mobileNo?.trim() ? true : false,
-     clientCategory: clientForm?.clientcategory?.trim() ? true : false, // AddclientCategory validation
+     clientCategory: clientForm?.clientCategory?.trim() ? true : false, // AddclientCategory validation
     }));
   }, [clientForm]);
 
