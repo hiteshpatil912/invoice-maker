@@ -201,11 +201,11 @@ function ProductTable({ showAdvanceSearch = false }) {
                 </div>
                 <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>
-                    ProductCategory
+                    Product Discription
                   </div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {/* {product} */}
+                      {product.discription}
                     </span>
                   </div>
                 </div>

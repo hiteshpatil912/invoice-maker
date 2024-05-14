@@ -21,7 +21,7 @@ const emptyForm = {
   id: "",
   image: "",
   name: "",
-  clientCategory: "", // Updated to include clientCategory
+ clientCategory: "", // Updated to includeclientCategory
   billingAddress: "",
   mobileNo: "",
 };
@@ -84,7 +84,7 @@ function ClientEditModal() {
         return updatedForm;
       });
   
-      // Dispatch the update for clientCategory
+      // Dispatch the update forclientCategory
       if (keyName === "clientCategory") {
         console.log("Dispatching update for client category:", { key: keyName, value });
         dispatch(updateNewClientFormField({ key: keyName, value }));
@@ -93,9 +93,6 @@ function ClientEditModal() {
     [dispatch, setClientForm]
   );
   
-  
-  
-
   const handleImageChange = useCallback(
     (str) => {
       setClientForm((prev) => ({ ...prev, image: str }));
@@ -124,14 +121,14 @@ function ClientEditModal() {
       id: true,
       image: true,
       name: clientForm?.name?.trim() ? true : false,
-      clientCategory: clientForm?.clientCategory?.trim() ? true : false, // Updated to include clientCategory
+     clientCategory: clientForm?.clientCategory?.trim() ? true : false, // Updated to includeclientCategory
       billingAddress: clientForm?.billingAddress?.trim() ? true : false,
       mobileNo: clientForm?.mobileNo?.trim() ? true : false,
     }));
   }, [clientForm]);
 
   useEffect(() => {
-    if (editedID !== null) {
+    if (editedID !==  null) {
       setAnimate(true);
       const isFindIndex = clients.findIndex((client) => client.id === editedID);
       if (isFindIndex !== -1) {

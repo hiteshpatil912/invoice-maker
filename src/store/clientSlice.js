@@ -12,7 +12,7 @@ const initialState = {
     image: "",
     name: "",
     // email: "",
-    clientcategory: "", // Add clientcategory field to the form
+   clientCategory: "", // AddclientCategory field to the form
     billingAddress: "",
     mobileNo: "",
   },
@@ -34,7 +34,7 @@ export const clientsSlice = createSlice({
         image: "",
         name: "",
         // email: "",
-        clientcategory: "", // Add clientcategory field to the form
+       clientCategory: "", // AddclientCategory field to the form
         billingAddress: "",
         mobileNo: "",
       };

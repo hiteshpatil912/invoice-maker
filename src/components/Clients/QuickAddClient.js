@@ -30,14 +30,13 @@ const emptyForm = {
   // email: "",
   billingAddress: "",
   mobileNo: "",
-  clientcategory: "", // Add clientcategory field to the form
+ clientCategory: "", // AddclientCategory field to the form
 };
 
 function QuickAddClient({ editForm }) {
   const dispatch = useDispatch();
   const clientNewForm = useSelector(getClientNewForm);
   const { initLoading: isInitLoading } = useAppContext();
-
   const [isTouched, setIsTouched] = useState(false);
   const [clientForm, setClientForm] = useState(emptyForm);
   const [validForm, setValidForm] = useState(
@@ -53,19 +52,32 @@ function QuickAddClient({ editForm }) {
     },
     [dispatch]
   );
-
-  const handlerClientValue = useCallback(
-    (event, keyName) => {
-      const value = event.target.value;
+  const handlerClientValue  = useCallback((event, keyName) => {
+    const value =
+      typeof event === "string" ? new Date(event) : event?.target?.value;
 
       setClientForm((prev) => {
-        return { ...prev, [keyName]: value };
-      });
+      return {
+        ...prev,
+        clientDetail: { ...prev.clientDetail, [keyName]: value },
+      };
+    });
+          dispatch(updateNewClientFormField({ key: keyName, value }));
+  }, [dispatch]
+);
 
-      dispatch(updateNewClientFormField({ key: keyName, value }));
-    },
-    [dispatch]
-  );
+//   const handlerClientValue = useCallback(
+//     (event, keyName) => {
+//       const value = event.target.value;
+
+//       setClientForm((prev) => {
+//         return { ...prev, [keyName]: value };
+//       });
+
+//       dispatch(updateNewClientFormField({ key: keyName, value }));
+//     },
+//     [dispatch]
+//   );
 
   const submitHandler = useCallback(() => {
     setIsTouched(true);
@@ -107,10 +119,9 @@ function QuickAddClient({ editForm }) {
       id: true,
       image: true,
       name: clientForm?.name?.trim() ? true : false,
-      // email: isValidEmail ? true : false,
       billingAddress: clientForm?.billingAddress?.trim() ? true : false,
       mobileNo: clientForm?.mobileNo?.trim() ? true : false,
-      clientcategory: clientForm?.clientcategory?.trim() ? true : false, // Add clientcategory validation
+     clientCategory: clientForm?.clientcategory?.trim() ? true : false, // AddclientCategory validation
     }));
   }, [clientForm]);
 
@@ -161,24 +172,66 @@ function QuickAddClient({ editForm }) {
         <div className="font-title text-sm text-default-color">
           Client Category
         </div>
-        <div className="flex">
+        {/*  */}
+        <div className="relative">
+          <input
+            value={clientForm.clientCategory}
+            type="text"
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setClientForm((prev) => ({
+              ...prev,
+              clientCategory: newValue,
+            }));
+            handlerClientValue(e, "clientCategory");
+          }}
+          placeholder="clientCategory"
+            className={
+              !validForm.name && isTouched
+                ? defaultInputInvalidStyle
+                : defaultInputStyle
+            }
+            disabled={isInitLoading}
+          />
+          {/* Spinner for predined categories*/}
           <select
-            value={clientForm.clientcategory} // Set value to clientcategory field
-            onChange={(e) => handlerClientValue(e, "clientcategory")} // Handle clientcategory change
+            value={clientForm.clientCategory}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setClientForm((prev) => ({
+                ...prev,
+                category: newValue,
+              }));
+              handlerClientValue(e, "clientCategory");
+            }}
+            className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500 focus:outline-none"
+          >
+            <option value="">Select Category</option>
+            <option value="X">X</option>
+            <option value="Y">Y</option>
+            <option value="Z">Z</option>
+            {Array.from(new Set([clientForm.clientCategory, "X", "Y", "Z"]))
+              .filter((cat) => cat && !["X", "Y", "Z"].includes(cat))
+              .map((clientCategory) => (
+                <option key={clientCategory} value={clientCategory}>
+                  {clientCategory}
+                </option>
+              ))}
+          </select>
+        </div>
+        {/*  */}
+        {/* <div className="flex">
+          <select
+            value={clientForm.clientcategory} // Set value toclientCategory field
+            onChange={(e) => handlerClientValue(e, "clientcategory")} // HandleclientCategory change
             className={defaultInputStyle}
           >
             <option value="">Select Category</option>
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
-            <option value="C">C</option>
-            <option value="C">C</option>
-            <option value="C">C</option>
-            <option value="C">C</option>
-            <option value="C">C</option>
-            {/* Add more options as needed */}
           </select>
-        </div>
+        </div> */}
       </div>
 
       <div className="flex mt-2">
