@@ -5,60 +5,41 @@ import { nanoid } from "nanoid";
 import Button from "../Button/Button";
 import SectionTitle from "../Common/SectionTitle";
 
-import { addNewClient } from "../../store/clientSlice"; // Importing addNewClient action creator
-import { addNewProduct } from "../../store/productSlice"; // Importing addNewProduct action creator
-
+import { addNewCategory } from "../../store/categorySlice"; // Importing addNewCategory action creator
 
 const emptyForm ={
-  clientCategories: "" ,
-  productCategories:""
+  clientCategory: "" ,
+  productCategory: ""
 }
 
-const clientemptyForm = {
-  image: "",
-  name: "",
-  category: "", // Changed from 'categories'
-  mobileNo:"",
-  billingAddress: ""
-};
-const productemptyForm ={
-  id: "",
-  image: "",
-  name: "",
-  category: "", // Changed from 'categories'
-  productID: "",
-  amount: 0,
-}
+const categoryemptyForm ={
+    id: "",
+    clientCategory: "",
+    productCategory: "",
+    amount: 0,
+  }
 
 function QuickAddCategory() {
   const dispatch = useDispatch();
 
-  const [clientForm, setClientForm] = useState(clientemptyForm);
-  const [productForm, setProductForm] = useState(productemptyForm);
+  const [categoryForm, setCategoryForm] = useState(categoryemptyForm);
 
   const clientCategories = ["Client Category 1", "Client Category 2", "Client Category 3"];
   const productCategories = ["Product Category 1", "Product Category 2", "Product Category 3"];
 
-  const handlerClientValue = useCallback((event, keyName) => {
-    const value =
-      typeof event === "string" ? new Date(event) : event?.target?.value;
-    setClientForm((prev) => ({
+  
+  const handlerCategoryValue = useCallback((event, keyName) => {
+    const value = event.target.value;
+    setCategoryForm((prev) => ({
       ...prev,
       [keyName]: value,
     }));
   }, []);
 
-  const handlerProductValue = useCallback((event, keyName) => {
-    const value =
-      typeof event === "string" ? new Date(event) : event?.target?.value;
-    setProductForm((prev) => ({
-      ...prev,
-      [keyName]: value,
-    }));
-  }, []);
 
   const submitHandler = useCallback(() => {
-    if (!clientForm.category || !productForm.category) {
+    console.log(categoryForm);
+    if (!categoryForm.clientCategory || !categoryForm.productCategory) {
       toast.error("Please select both client and product categories", {
         position: "bottom-center",
         autoClose: 2000,
@@ -66,30 +47,22 @@ function QuickAddCategory() {
       return;
     }
 
-    const clientData = {
-      ...clientForm,
+    const categoryData = {
+      ...categoryForm,
       id: nanoid(),
-      category: clientForm.category, // adding category to the form data before dispatching
     };
 
-    const productData = {
-      ...productForm,
-      id: nanoid(),
-      category: productForm.category, // adding category to the form data before dispatching
-    };
+    
+    dispatch(addNewCategory(categoryData));
 
-    dispatch(addNewClient(clientData));
-    dispatch(addNewProduct(productData));
+    // Reset form after submission
+    setCategoryForm(emptyForm);
 
-    // Reset forms after submission
-    setClientForm(emptyForm);
-    setProductForm(emptyForm);
-
-    toast.success("Client and Product Added Successfully!", {
+    toast.success("Category added Successfully!", {
       position: "bottom-center",
       autoClose: 2000,
     });
-  }, [clientForm, productForm, dispatch]);
+  }, [categoryForm, dispatch]);
 
   return (
     <div className="bg-white rounded-xl p-4">
@@ -98,14 +71,14 @@ function QuickAddCategory() {
         <div className="font-title text-sm text-default-color">Client Category</div>
         <div className="relative">
           <select
-            value={clientForm.clientCategories}
-            onChange={(e) => handlerClientValue(e, "clientCategories")}
+            value={categoryForm.clientCategory}
+            onChange={(e) => handlerCategoryValue(e, "clientCategory")}
             className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl p-x2 focus:outline-none border-indigo-400 h-12 flex-1"
           >
             <option value="">Select Category</option>
-            {clientCategories.map((clientCategories) => (
-              <option key={clientCategories} value={clientCategories}>
-                {clientCategories}
+            {clientCategories.map((clientCategory) => (
+              <option key={clientCategory} value={clientCategory}>
+                {clientCategory}
               </option>
             ))}
           </select>
@@ -115,14 +88,14 @@ function QuickAddCategory() {
         <div className="font-title text-sm text-default-color">Product Category</div>
         <div className="relative">
           <select
-            value={productForm.productCategories}
-            onChange={(e) => handlerProductValue(e, "productCategories")}
+            value={categoryForm.productCategory}
+            onChange={(e) => handlerCategoryValue(e, "productCategory")}
             className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl p-x2 focus:outline-none border-indigo-400 h-12 flex-1"
           >
             <option value="">Select Category</option>
-            {productCategories.map((productCategories) => (
-              <option key={productCategories} value={productCategories}>
-                {productCategories}
+            {productCategories.map((productCategory) => (
+              <option key={productCategory} value={productCategory}>
+                {productCategory}
               </option>
             ))}
           </select>
@@ -140,6 +113,8 @@ function QuickAddCategory() {
                 placeholder="Amount"
                 type="number"
                 className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl p-x2 focus:outline-none border-indigo-400 h-12 flex-1"
+                value={categoryForm.amount}
+                onChange={(e) => handlerCategoryValue(e, "amount")}
               />
           </div>
         </div>

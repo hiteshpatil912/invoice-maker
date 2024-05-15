@@ -1,15 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  getAllClientsSelector,
-  // setDeleteId,
-  // setEditedId,
-} from "../../store/clientSlice";
-import {
-  getAllProductSelector,
-  // setDeleteId,
-  // setEditedId,
-} from "../../store/productSlice";
+  getAllCategorysSelector,
+  setDeleteId,
+  setEditedId,
+} from "../../store/categorySlice";
 import { Menu, MenuItem, MenuButton } from "@szhsin/react-menu";
 import {
   defaultTdStyle,
@@ -20,77 +15,178 @@ import {
   defaultSearchStyle,
 } from "../../constants/defaultStyles";
 import ReactPaginate from "react-paginate";
-import ProductIcon from "../Icons/ProductIcon";
-import ProductIDIcon from "../Icons/ProductIDIcon";
-import EmptyBar from "../Common/EmptyBar";
 import { useAppContext } from "../../context/AppContext";
+import EmptyBar from "../Common/EmptyBar";
 
 // Example items, to simulate fetching from another resources.
 const itemsPerPage = 10;
 const emptySearchForm = {
- clientCategory: "",
-  category: "",
+  amount: "",
+  clientCategory: "",
+  productCategory: "",
 };
 
-function DiscountTable({ showAdvanceSearch = false }) {
-
-  const [currentItems, setCurrentItems] = useState(null);
-  const [searchForm, setSearchForm] = useState(emptySearchForm);
-  const allClients = useSelector(getAllClientsSelector);
-  const allProducts = useSelector(getAllProductSelector);
-
+function CategoryTable({ showAdvanceSearch = false }) {
   const { initLoading } = useAppContext();
+  const dispatch = useDispatch();
+  const allCategorys = useSelector(getAllCategorysSelector);
 
-  const clients = useMemo(() => {
-    let filterData = allClients.length > 0 ? [...allClients].reverse() : [];
-    if (searchForm.name?.trim()) {
-      filterData = filterData.filter((client) =>
-        client.name.includes(searchForm.name)
+  const [searchForm, setSearchForm] = useState(emptySearchForm);
+  const [currentItems, setCurrentItems] = useState(null);
+  const [pageCount, setPageCount] = useState(0);
+  const [itemOffset, setItemOffset] = useState(0);
+
+  const categorys = useMemo(() => {
+    let filterData = allCategorys.length > 0 ? [...allCategorys].reverse() : [];
+    if (searchForm.amount?.trim()) {
+      filterData = filterData.filter((category) =>
+        category.amount.includes(searchForm.amount)
       );
     }
 
     if (searchForm.clientCategory?.trim()) {
-      filterData = filterData.filter((client) =>
-        client.clientCategory.includes(searchForm.clientCategory)
+      filterData = filterData.filter((category) =>
+        category.clientCategory.includes(searchForm.clientCategory)
       );
     }
 
-    if (searchForm.mobileNo?.trim()) {
-      filterData = filterData.filter((client) =>
-        client.mobileNo.includes(searchForm.mobileNo)
-      );
-    }
-
-    return filterData;
-  }, [allClients,searchForm]);  
-
-  const products = useMemo(() => {
-    let filterData = allProducts.length > 0 ? [...allProducts].reverse() : [];
-    if (searchForm.name?.trim()) {
-      filterData = filterData.filter((product) =>
-        product.name.includes(searchForm.name)
-      );
-    }
-
-    if (searchForm.productID?.trim()) {
-      filterData = filterData.filter((product) =>
-        product.productID.includes(searchForm.productID)
+    if (searchForm.productCategory?.trim()) {
+      filterData = filterData.filter((category) =>
+        category.productCategory.includes(searchForm.productCategory)
       );
     }
 
     return filterData;
-  }, [allProducts, searchForm]);
+  }, [allCategorys, searchForm]);
 
+  // Invoke when user click to request another page.
+  const handlePageClick = (event) => {
+    const newOffset = event.selected * itemsPerPage;
+    setItemOffset(newOffset);
+  };
+
+  const handleDelete = useCallback(
+    (item) => {
+      dispatch(setDeleteId(item.id));
+    },
+    [dispatch]
+  );
+
+  const handleEdit = useCallback(
+    (item) => {
+      dispatch(setEditedId(item.id));
+    },
+    [dispatch]
+  );
+
+  const handlerSearchValue = useCallback((event, keyName) => {
+    const value = event.target.value;
+
+    setSearchForm((prev) => {
+      return { ...prev, [keyName]: value };
+    });
+
+    setItemOffset(0);
+  }, []);
+
+  useEffect(() => {
+    // Fetch items from another resources.
+    const endOffset = itemOffset + itemsPerPage;
+    setCurrentItems(categorys.slice(itemOffset, endOffset));
+    setPageCount(Math.ceil(categorys.length / itemsPerPage));
+  }, [categorys, itemOffset]);
 
   return (
     <>
+      {showAdvanceSearch && (
+        <div className="bg-white rounded-xl px-3 py-3 mb-3">
+          <div className="font-title mb-2">Advanced Search</div>
+          <div className="flex w-full flex-col sm:flex-row">
+          <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
+              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <input
+                autoComplete="nope"
+                value={searchForm.clientCategory}
+                placeholder="User Client Category"
+                className={defaultSearchStyle}
+                onChange={(e) => handlerSearchValue(e, "clientCategory")}
+              />
+            </div>
+            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
+              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <input
+                autoComplete="nope"
+                value={searchForm.productCategory}
+                placeholder="Product category"
+                className={defaultSearchStyle}
+                onChange={(e) => handlerSearchValue(e, "productCategory")}
+              />
+            </div>
+            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
+              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <input
+                autoComplete="nope"
+                value={searchForm.amount}
+                placeholder="percentage"
+                className={defaultSearchStyle}
+                onChange={(e) => handlerSearchValue(e, "amount")}
+              />
+            </div>
+           
+          </div>
+        </div>
+      )}
+
       <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
         <div className="hidden sm:flex invisible sm:visible w-full flex-col sm:flex-row">
           <div className="sm:text-left text-default-color font-title flex-1">
-            Client Category
+          Client Category
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-            Product Category
+          Product Category
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
             Percentage
@@ -99,21 +195,40 @@ function DiscountTable({ showAdvanceSearch = false }) {
             Action
           </div>
         </div>
+
         <div>
           {currentItems &&
             currentItems.map((client) => (
-              <div className={defaultTdWrapperStyle}>
+              <div className={defaultTdWrapperStyle} key={client.id}>
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>
-                    client Category
-                  </div>
+                  <div className={defaultTdContentTitleStyle}>Client Category</div>
                   <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.clientCategory}{" "}
+                   
+
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden pl-1">
+                      {client.clientCategory}
                     </span>
                   </div>
                 </div>
-                {/* <div className={defaultTdActionStyle}>
+                <div className={defaultTdStyle}>
+                  <div className={defaultTdContentTitleStyle}>Product category</div>
+                  <div className={defaultTdContent}>
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                      {client.productCategory}
+                    </span>
+                  </div>
+                </div>
+                <div className={defaultTdStyle}>
+                  <div className={defaultTdContentTitleStyle}>
+                    Percentage
+                  </div>
+                  <div className={defaultTdContent}>
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                      {client.amount}{"%"}
+                    </span>
+                  </div>
+                </div>
+                <div className={defaultTdActionStyle}>
                   <div className={defaultTdContentTitleStyle}>Action</div>
                   <div className={defaultTdContent}>
                     <Menu
@@ -147,52 +262,15 @@ function DiscountTable({ showAdvanceSearch = false }) {
                       </MenuItem>
                     </Menu>
                   </div>
-                </div> */}
-              </div>
-            ))}
-
-          {clients.length <= 0 && !initLoading && (
-            <EmptyBar title="Client Data" />
-          )}
-
-          {clients.length > 0 && (
-            <ReactPaginate
-              className="inline-flex items-center -space-x-px mt-2"
-              previousLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              nextLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              pageLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              breakLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              activeLinkClassName="py-2 px-3 text-blue-600 bg-blue-50 border border-gray-300 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-              breakLabel="..."
-              // onPageChange={handlePageClick}
-              pageRangeDisplayed={1}
-              // pageCount={pageCount}
-              previousLabel="<"
-              nextLabel=">"
-              renderOnZeroPageCount={null}
-            />
-          )}
-        </div>
-        <div>
-        {currentItems &&
-            currentItems.map((product) => (
-              <div className={defaultTdWrapperStyle}>
-                <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>
-                    ProductCategory
-                  </div>
-                  <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {product.category}
-                    </span>
-                  </div>
                 </div>
               </div>
             ))}
 
-          {products.length <= 0 && !initLoading && <EmptyBar />}
+          {categorys.length <= 0 && !initLoading && (
+            <EmptyBar title="Category Data" />
+          )}
 
-          {products.length > 0 && (
+          {categorys.length > 0 && (
             <ReactPaginate
               className="inline-flex items-center -space-x-px mt-2"
               previousLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
@@ -201,11 +279,11 @@ function DiscountTable({ showAdvanceSearch = false }) {
               breakLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
               activeLinkClassName="py-2 px-3 text-blue-600 bg-blue-50 border border-gray-300 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
               breakLabel="..."
-              // onPageChange={handlePageClick}
+              onPageChange={handlePageClick}
               pageRangeDisplayed={1}
-              // pageCount={pageCount}
+              pageCount={pageCount}
               previousLabel="<"
-              nextLabel={">"}
+              nextLabel=">"
               renderOnZeroPageCount={null}
             />
           )}
@@ -215,4 +293,4 @@ function DiscountTable({ showAdvanceSearch = false }) {
   );
 }
 
-export default DiscountTable;
+export default CategoryTable;
