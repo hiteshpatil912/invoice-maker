@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,8 +9,8 @@ import { useAppContext } from "../../context/AppContext";
 import {
   defaultInputStyle,
   defaultInputInvalidStyle,
-  defaultInputLargeStyle,
-  defaultSkeletonLargeStyle,
+  //defaultInputLargeStyle,
+  //defaultSkeletonLargeStyle,
   defaultSkeletonNormalStyle,
 } from "../../constants/defaultStyles";
 import {
@@ -27,7 +27,7 @@ const emptyForm = {
   billingAddress: "",
 };
 
-function Add() {
+function QuickAddClient() {
   const dispatch = useDispatch();
   const clientNewForm = useSelector(getClientNewForm);
   const { initLoading: isInitLoading } = useAppContext();
@@ -42,6 +42,7 @@ function Add() {
     mobileNumber: false,
     billingAddress: false,
   });
+  const [categories, setCategories] = useState(["A", "B", "C"]); // Initial categories
 
   // Callback function to handle client form field changes
   const handlerClientValue = useCallback(
@@ -58,11 +59,16 @@ function Add() {
           ...prev,
           [keyName]: !!value.trim(), // Validate the clientCategory field
         }));
+
+        // Add the new category if it doesn't exist
+        if (value.trim() && !categories.includes(value.trim())) {
+          setCategories((prevCategories) => [...prevCategories, value.trim()]);
+        }
       } else {
         dispatch(updateNewClientFormField({ key: keyName, value }));
       }
     },
-    [dispatch]
+    [dispatch, categories]
   );
 
   // Form submission handler
@@ -171,16 +177,11 @@ function Add() {
             className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
           >
             <option value="">Select Category</option>
-            <option value="A">A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-            {Array.from(new Set([clientForm.clientCategory, "A", "B", "C"]))
-              .filter((cat) => cat && !["A", "B", "C"].includes(cat))
-              .map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -245,4 +246,4 @@ function Add() {
   );
 }
 
-export default Quickadd;
+export default QuickAddClient;
