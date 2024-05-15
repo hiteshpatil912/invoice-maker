@@ -46,6 +46,8 @@ function QuickAddProduct() {
     amount: false,
   });
 
+  const [productCategories, setProductCategories] = useState(["X", "Y", "Z"]); // Initial product categories
+
   // Callback function to handle image change
   const onChangeImage = useCallback(
     (str) => {
@@ -56,41 +58,43 @@ function QuickAddProduct() {
   );
 
   // Callback function to handle product form field changes
+  const handlerProductValue = useCallback(
+    (event, keyName) => {
+      const value = event.target.value;
 
-const handlerProductValue = useCallback(
-  (event, keyName) => {
-    const value = event.target.value;
+      setProductForm((prev) => {
+        return { ...prev, [keyName]: value };
+      });
 
-    setProductForm((prev) => {
-      return { ...prev, [keyName]: value };
-    });
+      // Include a condition to check if the keyName is "category"
+      if (keyName === "category") {
+        setValidForm((prev) => ({
+          ...prev,
+          [keyName]: !!value.trim(), // Validate the category field
+        }));
 
-    // Include a condition to check if the keyName is "category"
-    if (keyName === "category") {
-      setValidForm((prev) => ({
-        ...prev,
-        [keyName]: !!value.trim(), // Validate the category field
-      }));
-    } else {
-      dispatch(updateNewProductFormField({ key: keyName, value }));
-    }
-  },
-  [dispatch]
-);
-
+        if (value.trim() && !productCategories.includes(value.trim())) {
+          setProductCategories((prevCategories) => [...prevCategories, value.trim()]);
+        }
+      } else {
+        dispatch(updateNewProductFormField({ key: keyName, value }));
+      }
+    },
+    [dispatch, productCategories]
+  );
 
   // Form submission handler
-const submitHandler = useCallback(() => {
-  setIsTouched(true);
-  const isValid = Object.values(validForm).every((value) => value);
+  const submitHandler = useCallback(() => {
+    setIsTouched(true);
+    const isValid = Object.values(validForm).every((value) => value);
 
-  if (!isValid) {
-    toast.error("Invalid Product Form!", {
-      position: "bottom-center",
-      autoClose: 2000,
-    });
-    return;
-  }
+    if (!isValid) {
+      toast.error("Invalid Product Form!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+      return;
+    }
 
     toast.success("Product Added Successfully!", {
       position: "bottom-center",
@@ -110,22 +114,19 @@ const submitHandler = useCallback(() => {
   }, [productForm.image]);
 
   // Effect to update validForm when productForm changes
-
-useEffect(() => {
-  setValidForm((prev) => ({
-    ...prev,
-    id: !!productForm.id,
-    image: productForm.image,
-    productID: !!productForm.productID,
-    name: productForm?.name?.trim() ? true : false,
-    category: productForm?.category?.trim() ? true : false, // Ensure category validation
-    amount: productForm.amount > 0,
-  }));
-}, [productForm]);
-
+  useEffect(() => {
+    setValidForm((prev) => ({
+      ...prev,
+      id: !!productForm.id,
+      image: productForm.image,
+      productID: !!productForm.productID,
+      name: productForm?.name?.trim() ? true : false,
+      category: productForm?.category?.trim() ? true : false, // Ensure category validation
+      amount: productForm.amount > 0,
+    }));
+  }, [productForm]);
 
   // Effect to update productForm when productNewForm changes
-
   useEffect(() => {
     if (productNewForm) {
       setProductForm(productNewForm);
@@ -201,20 +202,20 @@ useEffect(() => {
             onChange={(e) => {
               const newValue = e.target.value;
               setProductForm((prev) => ({
-              ...prev,
+                ...prev,
                 category: newValue,
-            }));
-            handlerProductValue(e, "category");
-          }}
-          placeholder=""
+              }));
+              handlerProductValue(e, "category");
+            }}
+            placeholder=""
             className={
-              !validForm.name && isTouched
+              !validForm.category && isTouched
                 ? defaultInputInvalidStyle
                 : defaultInputStyle
             }
             disabled={isInitLoading}
           />
-          {/* Spinner for predined categories*/}
+          {/* Spinner for predefined categories */}
           <select
             value={productForm.category}
             onChange={(e) => {
@@ -228,16 +229,11 @@ useEffect(() => {
             className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
           >
             <option value="">Select Category</option>
-            <option value="X">X</option>
-            <option value="Y">Y</option>
-            <option value="Z">Z</option>
-            {Array.from(new Set([productForm.category, "X", "Y", "Z"]))
-              .filter((cat) => cat && !["X", "Y", "Z"].includes(cat))
-              .map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
+            {productCategories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
           </select>
         </div>
       </div>
