@@ -23,7 +23,7 @@ const itemsPerPage = 6;
 const emptySearchForm = {
   name: "",
   // email: "",
-  clientcategory: "",
+ clientCategory: "",
   mobileNo: "",
 };
 
