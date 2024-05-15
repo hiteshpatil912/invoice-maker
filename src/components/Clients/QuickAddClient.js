@@ -1,18 +1,16 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { nanoid } from "nanoid";
 import Button from "../Button/Button";
-import ImageUpload from "../Common/ImageUpload";
 import SectionTitle from "../Common/SectionTitle";
 import { useAppContext } from "../../context/AppContext";
 import {
   defaultInputStyle,
   defaultInputInvalidStyle,
-  defaultInputLargeStyle,
-  defaultInputLargeInvalidStyle,
-  defaultSkeletonLargeStyle,
+  //defaultInputLargeStyle,
+  //defaultSkeletonLargeStyle,
   defaultSkeletonNormalStyle,
 } from "../../constants/defaultStyles";
 import {
@@ -21,68 +19,62 @@ import {
   updateNewClientFormField,
 } from "../../store/clientSlice";
 
-// const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-
 const emptyForm = {
   id: "",
-  image: "",
   name: "",
-  // email: "",
+  clientCategory: "",
+  mobileNumber: "",
   billingAddress: "",
-  mobileNo: "",
- clientCategory: "", // AddclientCategory field to the form
 };
 
-function QuickAddClient({ editForm }) {
+function QuickAddClient() {
   const dispatch = useDispatch();
   const clientNewForm = useSelector(getClientNewForm);
   const { initLoading: isInitLoading } = useAppContext();
+
+  // State variables
   const [isTouched, setIsTouched] = useState(false);
   const [clientForm, setClientForm] = useState(emptyForm);
-  const [validForm, setValidForm] = useState(
-    Object.keys(emptyForm).reduce((a, b) => {
-      return { ...a, [b]: false };
-    }, {})
-  );
+  const [validForm, setValidForm] = useState({
+    id: false,
+    name: false,
+    clientCategory: false,
+    mobileNumber: false,
+    billingAddress: false,
+  });
+  const [categories, setCategories] = useState(["A", "B", "C"]); // Initial categories
 
-  const onChangeImage = useCallback(
-    (str) => {
-      setClientForm((prev) => ({ ...prev, image: str }));
-      dispatch(updateNewClientFormField({ key: "image", value: str }));
-    },
-    [dispatch]
-  );
-  const handlerClientValue  = useCallback((event, keyName) => {
-    const value =
-      typeof event === "string" ? new Date(event) : event?.target?.value;
+  // Callback function to handle client form field changes
+  const handlerClientValue = useCallback(
+    (event, keyName) => {
+      const value = event.target.value;
 
       setClientForm((prev) => {
-      return {
-        ...prev,
-        clientDetail: { ...prev.clientDetail, [keyName]: value },
-      };
-    });
-          dispatch(updateNewClientFormField({ key: keyName, value }));
-  }, [dispatch]
-);
+        return { ...prev, [keyName]: value };
+      });
 
-//   const handlerClientValue = useCallback(
-//     (event, keyName) => {
-//       const value = event.target.value;
+      // Include a condition to check if the keyName is "clientCategory"
+      if (keyName === "clientCategory") {
+        setValidForm((prev) => ({
+          ...prev,
+          [keyName]: !!value.trim(), // Validate the clientCategory field
+        }));
 
-//       setClientForm((prev) => {
-//         return { ...prev, [keyName]: value };
-//       });
+        // Add the new category if it doesn't exist
+        if (value.trim() && !categories.includes(value.trim())) {
+          setCategories((prevCategories) => [...prevCategories, value.trim()]);
+        }
+      } else {
+        dispatch(updateNewClientFormField({ key: keyName, value }));
+      }
+    },
+    [dispatch, categories]
+  );
 
-//       dispatch(updateNewClientFormField({ key: keyName, value }));
-//     },
-//     [dispatch]
-//   );
-
+  // Form submission handler
   const submitHandler = useCallback(() => {
     setIsTouched(true);
-
-    const isValid = Object.keys(validForm).every((key) => validForm[key]);
+    const isValid = Object.values(validForm).every((value) => value);
 
     if (!isValid) {
       toast.error("Invalid Client Form!", {
@@ -92,7 +84,7 @@ function QuickAddClient({ editForm }) {
       return;
     }
 
-    toast.success("Wow so easy to Update!", {
+    toast.success("Client Added Successfully!", {
       position: "bottom-center",
       autoClose: 2000,
     });
@@ -101,30 +93,19 @@ function QuickAddClient({ editForm }) {
     setIsTouched(false);
   }, [clientForm, dispatch, validForm]);
 
-  const imageUploadClasses = useMemo(() => {
-    const defaultStyle = "rounded-xl ";
-
-    if (!clientForm.image) {
-      return defaultStyle + " border-dashed border-2 border-indigo-400 ";
-    }
-
-    return defaultStyle;
-  }, [clientForm]);
-
+  // Effect to update validForm when clientForm changes
   useEffect(() => {
-    // const isValidEmail =
-    //   clientForm?.email?.trim() && clientForm?.email.match(emailRegex);
-
     setValidForm((prev) => ({
-      id: true,
-      image: true,
+      ...prev,
+      id: !!clientForm.id,
       name: clientForm?.name?.trim() ? true : false,
+      clientCategory: clientForm?.clientCategory?.trim() ? true : false, // Ensure clientCategory validation
+      mobileNumber: !!clientForm.mobileNumber,
       billingAddress: clientForm?.billingAddress?.trim() ? true : false,
-      mobileNo: clientForm?.mobileNo?.trim() ? true : false,
-     clientCategory: clientForm?.clientcategory?.trim() ? true : false, // AddclientCategory validation
     }));
   }, [clientForm]);
 
+  // Effect to update clientForm when clientNewForm changes
   useEffect(() => {
     if (clientNewForm) {
       setClientForm(clientNewForm);
@@ -133,46 +114,35 @@ function QuickAddClient({ editForm }) {
 
   return (
     <div className="bg-white rounded-xl p-4">
-      <SectionTitle>Quick Add Client</SectionTitle>
-      <div className="flex mt-2">
-        {isInitLoading ? (
-          <Skeleton className="skeleton-input-radius skeleton-image border-dashed border-2" />
-        ) : (
-          <ImageUpload
-            keyName="QuickEditImageUpload"
-            className={imageUploadClasses}
-            url={clientForm.image}
-            onChangeImage={onChangeImage}
-          />
-        )}
-
-        <div className="flex-1 pl-3">
-          {isInitLoading ? (
-            <Skeleton className={defaultSkeletonLargeStyle} />
-          ) : (
-            <div>
+      <SectionTitle> Add Client </SectionTitle>
+      <div className="mt-2">
+        <div className="font-title text-sm text-default-color">Client Name</div>
+        <div className="flex">
+          <div className="flex-1">
+            {isInitLoading ? (
+              <Skeleton className={defaultSkeletonNormalStyle} />
+            ) : (
               <input
                 autoComplete="nope"
-                value={clientForm.name}
-                placeholder="User Name"
+                placeholder="Client Name"
+                type="text"
                 className={
                   !validForm.name && isTouched
-                    ? defaultInputLargeInvalidStyle
-                    : defaultInputLargeStyle
+                    ? defaultInputInvalidStyle
+                    : defaultInputStyle
                 }
-                onChange={(e) => handlerClientValue(e, "name")}
                 disabled={isInitLoading}
+                value={clientForm.name}
+                onChange={(e) => handlerClientValue(e, "name")}
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-
       <div className="mt-2">
         <div className="font-title text-sm text-default-color">
           Client Category
         </div>
-        {/*  */}
         <div className="relative">
           <input
             value={clientForm.clientCategory}
@@ -180,104 +150,96 @@ function QuickAddClient({ editForm }) {
             onChange={(e) => {
               const newValue = e.target.value;
               setClientForm((prev) => ({
-              ...prev,
-              clientCategory: newValue,
-            }));
-            handlerClientValue(e, "clientCategory");
-          }}
-          placeholder="clientCategory"
+                ...prev,
+                clientCategory: newValue,
+              }));
+              handlerClientValue(e, "clientCategory");
+            }}
+            placeholder=""
             className={
-              !validForm.name && isTouched
+              !validForm.clientCategory && isTouched
                 ? defaultInputInvalidStyle
                 : defaultInputStyle
             }
             disabled={isInitLoading}
           />
-          {/* Spinner for predined categories*/}
+          {/* Spinner for predefined categories*/}
           <select
             value={clientForm.clientCategory}
             onChange={(e) => {
               const newValue = e.target.value;
               setClientForm((prev) => ({
                 ...prev,
-                category: newValue,
+                clientCategory: newValue,
               }));
               handlerClientValue(e, "clientCategory");
             }}
-            className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500 focus:outline-none"
+            className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
           >
             <option value="">Select Category</option>
-            <option value="X">X</option>
-            <option value="Y">Y</option>
-            <option value="Z">Z</option>
-            {Array.from(new Set([clientForm.clientCategory, "X", "Y", "Z"]))
-              .filter((cat) => cat && !["X", "Y", "Z"].includes(cat))
-              .map((clientCategory) => (
-                <option key={clientCategory} value={clientCategory}>
-                  {clientCategory}
-                </option>
-              ))}
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
           </select>
         </div>
-        {/*  */}
-        {/* <div className="flex">
-          <select
-            value={clientForm.clientcategory} // Set value toclientCategory field
-            onChange={(e) => handlerClientValue(e, "clientcategory")} // HandleclientCategory change
-            className={defaultInputStyle}
-          >
-            <option value="">Select Category</option>
-            <option value="A">A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-          </select>
-        </div> */}
       </div>
-
-      <div className="flex mt-2">
-        <div className="flex-1">
-          {isInitLoading ? (
-            <Skeleton className={defaultSkeletonNormalStyle} />
-          ) : (
-            <input
-              autoComplete="nope"
-              placeholder="Mobile No"
-              className={
-                !validForm.mobileNo && isTouched
-                  ? defaultInputInvalidStyle
-                  : defaultInputStyle
-              }
-              disabled={isInitLoading}
-              value={clientForm.mobileNo}
-              onChange={(e) => handlerClientValue(e, "mobileNo")}
-            />
-          )}
+      <div className="mt-2">
+        <div className="font-title text-sm text-default-color">
+          Mobile Number
+        </div>
+        <div className="flex">
+          <div className="flex-1">
+            {isInitLoading ? (
+              <Skeleton className={defaultSkeletonNormalStyle} />
+            ) : (
+              <input
+                autoComplete="nope"
+                placeholder="Mobile Number"
+                type="text"
+                className={
+                  !validForm.mobileNumber && isTouched
+                    ? defaultInputInvalidStyle
+                    : defaultInputStyle
+                }
+                disabled={isInitLoading}
+                value={clientForm.mobileNumber}
+                onChange={(e) => handlerClientValue(e, "mobileNumber")}
+              />
+            )}
+          </div>
         </div>
       </div>
-      <div className="flex mt-2">
-        <div className="flex-1">
-          {isInitLoading ? (
-            <Skeleton className={defaultSkeletonNormalStyle} />
-          ) : (
-            <input
-              autoComplete="nope"
-              placeholder="Billing Address"
-              className={
-                !validForm.billingAddress && isTouched
-                  ? defaultInputInvalidStyle
-                  : defaultInputStyle
-              }
-              disabled={isInitLoading}
-              value={clientForm.billingAddress}
-              onChange={(e) => handlerClientValue(e, "billingAddress")}
-            />
-          )}
+      <div className="mt-2">
+        <div className="font-title text-sm text-default-color">
+          Billing Address
+        </div>
+        <div className="flex">
+          <div className="flex-1">
+            {isInitLoading ? (
+              <Skeleton className={defaultSkeletonNormalStyle} />
+            ) : (
+              <input
+                autoComplete="nope"
+                placeholder="Billing Address"
+                type="text"
+                className={
+                  !validForm.billingAddress && isTouched
+                    ? defaultInputInvalidStyle
+                    : defaultInputStyle
+                }
+                disabled={isInitLoading}
+                value={clientForm.billingAddress}
+                onChange={(e) => handlerClientValue(e, "billingAddress")}
+              />
+            )}
+          </div>
         </div>
       </div>
-
       <div className="mt-3">
         <Button onClick={submitHandler} block={1}>
-          <span className="inline-block ml-2">Submit</span>
+          <span className="inline-block ml-2"> Submit </span>
         </Button>
       </div>
     </div>
