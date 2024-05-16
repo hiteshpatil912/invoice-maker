@@ -66,17 +66,17 @@ function InvoiceDetailScreen(props) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedClientId, setSelectedClientId] = useState('');
+  //const [selectedCategory, setSelectedCategory] = useState('');
+  //const [selectedClientId, setSelectedClientId] = useState('');
       
-  const invoiceForm = useSelector((state) => state.invoiceForm); // Assuming invoiceForm is stored in Redux state
+  //const invoiceForm = useSelector((state) => state.invoiceForm); // Assuming invoiceForm is stored in Redux state
   
   const openChooseProduct = useCallback(() => {
-    setSelectedCategory(invoiceForm?.clientDetail?.clientCategory);
-    setSelectedClientId(invoiceForm?.clientDetail?.id);
+    setSelectedCategory(invoiceForm?.productDetail?.productCategory);
+    setSelectedClientId(invoiceForm?.productDetail?.id);
     dispatch(setOpenProductSelector(true));
   }, [dispatch, invoiceForm]);
-}
+
   const componentRef = useRef(null);
   const reactToPrintContent = useCallback(() => {
     return componentRef.current;
@@ -99,15 +99,15 @@ function InvoiceDetailScreen(props) {
   const currentBg = useSelector(getCurrentBGImage);
   const currentColor = useSelector(getCurrentColor);
   const isConfirm = useSelector(getIsConfirm);
-  const openChooseProduct = useSelector(getProductNewForm)
+  //const openChooseProduct = useSelector(getProductNewForm)
 
   const [invoiceForm, setInvoiceForm] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [statusData, setStatusData] = useState({
     statusName: "Draft",
-    statusIndex: 1,
-  });
+    statusIndex: 1,
+  });
 
   const handleExport = useCallback(() => {
     if (showNavbar) {
@@ -1028,11 +1028,11 @@ function InvoiceDetailScreen(props) {
                 </div>
               )} */}
             </div>
-          </div>
+          
+      
 
-      {/* Customer Billing Info Finished */}
-
-          {/* Products */}
+     
+          
           <div className="py-2 px-4">
             <div
               className={
@@ -1659,9 +1659,9 @@ function InvoiceDetailScreen(props) {
             </div>
             {/* Subtotal Finished */}
           </div>
-          {/* Products Finished */}
+          
         </div>
-      )};
+      )}
 
       {invoiceForm && invoiceForm?.statusIndex !== "3" && (
         <div className="px-4 pt-3">
