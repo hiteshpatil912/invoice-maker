@@ -42,6 +42,7 @@ import PlusCircleIcon from "../../components/Icons/PlusCircleIcon";
 import { nanoid } from "nanoid";
 import DeleteIcon from "../../components/Icons/DeleteIcon";
 import {
+  getProductNewForm,
   getSelectedProduct,
   setOpenProductSelector,
 } from "../../store/productSlice";
@@ -64,7 +65,18 @@ function InvoiceDetailScreen(props) {
   const params = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState('');
+      
+  const invoiceForm = useSelector((state) => state.invoiceForm); // Assuming invoiceForm is stored in Redux state
+  
+  const openChooseProduct = useCallback(() => {
+    setSelectedCategory(invoiceForm?.clientDetail?.clientCategory);
+    setSelectedClientId(invoiceForm?.clientDetail?.id);
+    dispatch(setOpenProductSelector(true));
+  }, [dispatch, invoiceForm]);
+}
   const componentRef = useRef(null);
   const reactToPrintContent = useCallback(() => {
     return componentRef.current;
@@ -87,6 +99,7 @@ function InvoiceDetailScreen(props) {
   const currentBg = useSelector(getCurrentBGImage);
   const currentColor = useSelector(getCurrentColor);
   const isConfirm = useSelector(getIsConfirm);
+  const openChooseProduct = useSelector(getProductNewForm)
 
   const [invoiceForm, setInvoiceForm] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
@@ -163,9 +176,9 @@ function InvoiceDetailScreen(props) {
     dispatch(setOpenClientSelector(true));
   }, [dispatch]);
 
-  const openChooseProduct = useCallback(() => {
+  {/* const openChooseProduct = useCallback(() => {
     dispatch(setOpenProductSelector(true));
-  }, [dispatch]);
+  }, [dispatch]); */}
 
   const addEmptyProduct = useCallback(() => {
     const emptyProduct = {
@@ -751,9 +764,11 @@ function InvoiceDetailScreen(props) {
               {params.id === "new"
                 ? "New Invoice"
                 : `Invoice Detail ${invoiceForm?.statusName}`}
+                
             </>
           }
         />
+      
       </div>
       <div className="px-4 pb-3">
         <InvoiceTopBar
@@ -925,6 +940,28 @@ function InvoiceDetailScreen(props) {
                 </div>
               </div>
             </div>
+
+            <div className="py-2 px-4">
+              <div className="font-title flex-1">
+                <input
+                  autoComplete="nope"
+                  value={selectedCategory}
+                  placeholder="Product Category"
+                  className={defaultInputSmStyle + " text-right"}
+                  onChange={(e) => handlerProductValue(e, "category")}
+                />
+              </div>
+              <div className="font-title flex-1"></div>
+                <input
+                  autoComplete="nope"
+                  value={selectedClientId}
+                  placeholder="Product ID"
+                  className={defaultInputSmStyle + " text-right"}
+                  onChange={(e) => handlerProductValue(e, "id")}
+                />
+              </div>
+            </div>
+                
             <div className="flex-1">
               <div className="flex flex-row justify-between items-center mb-1">
                 <div className="font-title flex-1"> INVOICE # </div>
@@ -992,7 +1029,8 @@ function InvoiceDetailScreen(props) {
               )} */}
             </div>
           </div>
-          {/* Customer Billing Info Finished */}
+
+      {/* Customer Billing Info Finished */}
 
           {/* Products */}
           <div className="py-2 px-4">
@@ -1623,7 +1661,7 @@ function InvoiceDetailScreen(props) {
           </div>
           {/* Products Finished */}
         </div>
-      )}
+      )};
 
       {invoiceForm && invoiceForm?.statusIndex !== "3" && (
         <div className="px-4 pt-3">
@@ -1699,5 +1737,4 @@ function InvoiceDetailScreen(props) {
     </div>
   );
 }
-
 export default InvoiceDetailScreen;
