@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useRef,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import { useReactToPrint } from "react-to-print";
@@ -14,65 +8,26 @@ import { NumberFormatBase } from "react-number-format";
 import { toast } from "react-toastify";
 import domtoimage from "dom-to-image";
 import InvoiceTopBar from "../../components/Invoice/InvoiceTopBar";
-import {
-  getAllInvoiceDetailSelector,
-  getCurrentBGImage,
-  getCurrentColor,
-  getInvoiceNewForm,
-  getIsConfirm,
-  setConfirmModalOpen,
-  setDefaultBackground,
-  setDefaultColor,
-  setIsConfirm,
-  setNewInvoices,
-  setSettingModalOpen,
-  updateExisitingInvoiceForm,
-  updateNewInvoiceForm,
-} from "../../store/invoiceSlice";
-import {
-  getSelectedClient,
-  setOpenClientSelector,
-} from "../../store/clientSlice";
+import { getAllInvoiceDetailSelector, getCurrentBGImage, getCurrentColor, getInvoiceNewForm, getIsConfirm, setDefaultBackground, setDefaultColor, setIsConfirm, setNewInvoices, setSettingModalOpen, updateExisitingInvoiceForm, updateNewInvoiceForm,} from "../../store/invoiceSlice";
+import { getSelectedClient,setOpenClientSelector,} from "../../store/clientSlice";
 import { getCompanyData } from "../../store/companySlice";
 import { defaultInputSmStyle, IconStyle } from "../../constants/defaultStyles";
 import Button from "../../components/Button/Button";
 import ClientPlusIcon from "../../components/Icons/ClientPlusIcon";
 import InvoiceIcon from "../../components/Icons/InvoiceIcon";
-import PlusCircleIcon from "../../components/Icons/PlusCircleIcon";
 import { nanoid } from "nanoid";
 import DeleteIcon from "../../components/Icons/DeleteIcon";
-import {
-  getSelectedProduct,
-  setOpenProductSelector,
-} from "../../store/productSlice";
+import { getSelectedProduct,setOpenProductSelector,} from "../../store/productSlice";
 import { useAppContext } from "../../context/AppContext";
 import TaxesIcon from "../../components/Icons/TaxesIcon";
-import DollarIcon from "../../components/Icons/DollarIcon";
-import CheckCircleIcon from "../../components/Icons/CheckCircleIcon";
-import SecurityIcon from "../../components/Icons/SecurityIcon";
-import {
-  getTotalTaxesWithPercent,
-  sumProductTotal,
-  sumTotalAmount,
-  sumTotalTaxes,
-} from "../../utils/match";
-import {
-  defaultTdStyle,
-  defaultTdActionStyle,
-  defaultTdWrapperStyle,
-  defaultTdContent,
-  defaultTdContentTitleStyle,
-  defaultSearchStyle,
-} from "../../constants/defaultStyles";
+import { getTotalTaxesWithPercent, sumProductTotal, sumTotalAmount, sumTotalTaxes,} from "../../utils/match";
 import PageTitle from "../../components/Common/PageTitle";
-
-function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
-  const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
-    useAppContext();
+import ProductChoosenModal from "../../components/Product/ProductChoosenModal";
+function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
+  const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } = useAppContext();
   const params = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const componentRef = useRef(null);
   const reactToPrintContent = useCallback(() => {
     return componentRef.current;
@@ -86,7 +41,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     }, [setEscapeOverflow]),
     removeAfterPrint: true,
   });
-
   const invoiceNewForm = useSelector(getInvoiceNewForm);
   const allInvoiceDetails = useSelector(getAllInvoiceDetailSelector);
   const company = useSelector(getCompanyData);
@@ -95,7 +49,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
   const currentBg = useSelector(getCurrentBGImage);
   const currentColor = useSelector(getCurrentColor);
   const isConfirm = useSelector(getIsConfirm);
-
   const [invoiceForm, setInvoiceForm] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -103,39 +56,20 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     statusName: "Draft",
     statusIndex: 1,
   });
- 
   const itemsPerPage = 10;
-  const emptySearchForm = {
-    name: "",
-    productID: "",
-    category: "",
-  };
+  const emptySearchForm = { name: "", productID: "",    category: "",  };
   const [searchForm, setSearchForm] = useState(emptySearchForm);
-
   const allProducts = useSelector((state) => state.products.allProducts);
-  // const searchForm = useSelector((state) => state.searchForm);
-  const [itemOffset, setItemOffset] = useState(0);
-
   const products = useMemo(() => {
     if (!allProducts) return []; // Handle the case where allProducts is undefined
-  
     let filterData = allProducts.length > 0 ? [...allProducts].reverse() : [];
-  
     if (searchForm.category?.trim()) {
       filterData = filterData.filter((product) =>
         product.category.includes(searchForm.category)
       );
     }
-  
     return filterData;
   }, [allProducts, searchForm]);
-
-  const handlerSearchValue = useCallback((event, keyName) => {
-    const value = event.target.value;
-    setSearchForm((prev) => ({ ...prev, [keyName]: value }));
-    setItemOffset(0);
-  }, []);
-
   const handleExport = useCallback(() => {
     if (showNavbar) {
       toggleNavbar();
@@ -147,7 +81,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
       handlePrint();
     }, 3000);
   }, [handlePrint, setEscapeOverflow, showNavbar, toggleNavbar]);
-
   const handleDownloadImg = useCallback(() => {
     if (showNavbar) {
       toggleNavbar();
@@ -176,7 +109,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
         }
       });
   }, [setEscapeOverflow, showNavbar, toggleNavbar]);
-
   const toggleViewMode = useCallback(() => {
     if (invoiceForm.statusIndex !== "1" && isViewMode) {
       toast.warn("You can only edit on Draft Mode", {
@@ -187,7 +119,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     }
     setIsViewMode((prev) => !prev);
   }, [invoiceForm, isViewMode]);
-
   const openSettingModal = useCallback(() => {
     if (invoiceForm.statusIndex !== "1" && isViewMode) {
       toast.warn("You can only change Setting on Draft Mode", {
@@ -203,174 +134,19 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     dispatch(setOpenClientSelector(true));
   }, [dispatch]);
 
-  const openChooseProduct = useCallback(() => {
+  const openChooseProduct = useCallback((category) => {
+    setSelectedCategory(category);
     dispatch(setOpenProductSelector(true));
   }, [dispatch]);
-
-  const addEmptyProduct = useCallback(() => {
-    const emptyProduct = {
-      id: nanoid(),
-      name: "",
-      productID: "",
-      amount: 1,
-      quantity: 1,
-    };
-
-    setInvoiceForm((prev) => {
-      let updatedData = { ...prev };
-      const updateProducts = [...prev.products, emptyProduct];
-      const subTotalAmount = sumProductTotal(updateProducts);
-      const updateTaxes = getTotalTaxesWithPercent(prev.taxes, subTotalAmount);
-      updatedData.products = updateProducts;
-      updatedData.taxes = updateTaxes;
-      updatedData.totalAmount = sumTotalAmount(
-        subTotalAmount,
-        sumTotalTaxes(updateTaxes)
-      );
-      return updatedData;
-    });
-  }, []);
-
-  const onDeleteProduct = useCallback((prodID) => {
-    setInvoiceForm((prev) => {
-      let updatedData = { ...prev };
-      const updateProducts = prev.products.filter((prod) => prod.id !== prodID);
-      const subTotalAmount = sumProductTotal(updateProducts);
-      const updateTaxes = getTotalTaxesWithPercent(prev.taxes, subTotalAmount);
-      // const updateDiscount =getTotalDiscountwithPercent(0);
-      updatedData.products = updateProducts;
-      updatedData.taxes = updateTaxes;
-      // updatedData.taxes = updateDiscount;
-      updatedData.totalAmount = sumTotalAmount(
-        subTotalAmount,
-        sumTotalTaxes(updateTaxes)
-      );
-      return updatedData;
-    });
-  }, []);
+  
 
   const handlerInvoiceValue = useCallback((event, keyName) => {
     const value =
       typeof event === "string" ? new Date(event) : event?.target?.value;
-
     setInvoiceForm((prev) => {
       return { ...prev, [keyName]: value };
     });
   }, []);
-
-  const handlerProductValue = useCallback(
-    (event, keyName, productID) => {
-      const value = event.target.value;
-
-      // If Keyname Price or Quantity must be only number
-      if (keyName === "quantity") {
-        if (!`${value}`.match(/^\d+$/)) {
-          return;
-        }
-      }
-
-      if (keyName === "amount") {
-        if (!`${value}`.match(/^[0-9]\d*(\.\d+)?$/)) {
-          return;
-        }
-      }
-
-      // Quantity Zero Case
-      if ((keyName === "quantity" || keyName === "amount") && value <= 0) {
-        return;
-      }
-
-      let updatedData = { ...invoiceForm };
-      let updateProducts = [...invoiceForm.products];
-
-      const isFindIndex = updateProducts.findIndex(
-        (prod) => prod.id === productID
-      );
-
-      if (isFindIndex !== -1) {
-        updateProducts[isFindIndex] = {
-          ...updateProducts[isFindIndex],
-          [keyName]: value,
-        };
-
-        updatedData.products = [...updateProducts];
-      }
-
-      if (keyName === "quantity" || keyName === "amount") {
-        const subTotalAmount = sumProductTotal(updateProducts);
-        const updateTaxes = getTotalTaxesWithPercent(
-          invoiceForm.taxes,
-          subTotalAmount
-        );
-        updatedData.taxes = updateTaxes;
-        updatedData.totalAmount = sumTotalAmount(
-          subTotalAmount,
-          sumTotalTaxes(updateTaxes)
-        );
-      }
-      setInvoiceForm(updatedData);
-    },
-    [invoiceForm]
-  );
-
-  const handlerTaxesValue = useCallback(
-    (event, keyName, taxID) => {
-      const value = event.target.value;
-      let updateTaxes = [...invoiceForm.taxes];
-      const isFindIndex = updateTaxes.findIndex((prod) => prod.id === taxID);
-      if (isFindIndex === -1) {
-        return;
-      }
-      const currentTax = updateTaxes[isFindIndex];
-
-      if (currentTax.type === "percentage" && keyName === "value") {
-        if (!`${value}`.match(/^[0-9]\d*(\.\d+)?$/)) {
-          return;
-        }
-
-        if (value <= 0 || value > 100) {
-          return;
-        }
-      }
-
-      if (currentTax.type === "flat" && keyName === "value") {
-        if (!`${value}`.match(/^[0-9]\d*(\.\d+)?$/)) {
-          return;
-        }
-
-        if (value <= 0) {
-          return;
-        }
-      }
-
-      setInvoiceForm((prev) => {
-        let taxes = [...prev.taxes];
-
-        if (keyName === "value") {
-          const subTotalAmount = sumProductTotal(prev.products);
-          const amount = (value / 100) * subTotalAmount;
-          taxes[isFindIndex] = {
-            ...taxes[isFindIndex],
-            [keyName]: value,
-            amount: currentTax.type !== "percentage" ? value : amount,
-          };
-          const totalAmount = sumTotalAmount(
-            subTotalAmount,
-            sumTotalTaxes(taxes)
-          );
-          return { ...prev, taxes: taxes, totalAmount: totalAmount };
-        } else {
-          taxes[isFindIndex] = {
-            ...taxes[isFindIndex],
-            [keyName]: value,
-          };
-          return { ...prev, taxes: taxes };
-        }
-      });
-    },
-    [invoiceForm]
-  );
-
   // abc
   const handlerDiscountsValue = useCallback(
     (event, keyName, discountID) => {
@@ -441,7 +217,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     },
     [invoiceForm]
   );
-
   const handlerInvoiceClientValue = useCallback((event, keyName) => {
     const value =
       typeof event === "string" ? new Date(event) : event?.target?.value;
@@ -453,7 +228,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
       };
     });
   }, []);
-
   // Calculation for Showing
   const subTotal = useMemo(() => {
     if (!invoiceForm) {
@@ -465,68 +239,7 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     }
     return sumProductTotal(invoiceForm.products);
   }, [invoiceForm]);
-
-  const totalPercentTax = useMemo(() => {
-    const isSomeTax = invoiceForm?.taxes?.some(
-      (tax) => tax.type === "percentage"
-    );
-
-    if (!isSomeTax) {
-      return 0;
-    }
-
-    const findIndex = invoiceForm?.taxes?.findIndex(
-      (tax) => tax.type === "percentage"
-    );
-
-    return findIndex !== -1
-      ? Number.isInteger(invoiceForm.taxes[findIndex].amount)
-        ? invoiceForm.taxes[findIndex].amount
-        : invoiceForm.taxes[findIndex].amount.toFixed(4).toString().slice(0, -2)
-      : 0;
-  }, [invoiceForm]);
-
-  const addPercentageTax = useCallback(() => {
-    console.log(" hello hitesh!");
-
-    const isSomeTaxes = invoiceForm.taxes.some(
-      (form) => form.type === "percentage"
-    );
-
-    if (isSomeTaxes) {
-      toast.error("Already Have Percentage Taxes!", {
-        position: "bottom-center",
-        autoClose: 2000,
-      });
-      return;
-    }
-
-    setInvoiceForm((prev) => {
-      const subTotalAmount = sumProductTotal(prev.products);
-      const amount = (10 / 100) * subTotalAmount;
-      const percentageTax = {
-        id: nanoid(),
-        title: "Tax %",
-        type: "percentage",
-        value: 10,
-        amount,
-      };
-      const updateTaxes = [percentageTax, ...prev.taxes];
-      const totalAmount = sumTotalAmount(
-        subTotalAmount,
-        sumTotalTaxes(updateTaxes)
-      );
-
-      return {
-        ...prev,
-        taxes: updateTaxes,
-        totalAmount: totalAmount,
-      };
-    });
-  }, [invoiceForm]);
-
   // abc
-
   const addDiscount = useCallback(() => {
     console.log("Adding Discount!");
     const isSomeDiscount = invoiceForm?.discounts?.some(
@@ -565,42 +278,7 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
       };
     });
   }, [invoiceForm]);
-
   // xyz
-
-  const addEmptyTax = useCallback(() => {
-    setInvoiceForm((prev) => {
-      const subTotalAmount = sumProductTotal(prev.products);
-      const emptyTax = {
-        id: nanoid(),
-        title: "Delivery Charges",
-        type: "flat",
-        value: 1,
-        amount: 1,
-      };
-      const updateTaxes = [...prev.taxes, emptyTax];
-      const totalAmount = sumTotalAmount(
-        subTotalAmount,
-        sumTotalTaxes(updateTaxes)
-      );
-      return { ...prev, taxes: updateTaxes, totalAmount };
-    });
-  }, []);
-
-  const onDeleteTax = useCallback((taxID) => {
-    setInvoiceForm((prev) => {
-      const updateTaxes = prev.taxes.filter((prod) => prod.id !== taxID);
-      let updatedData = { ...prev, taxes: updateTaxes };
-      const subTotalAmount = sumProductTotal(prev.products);
-      const totalAmount = sumTotalAmount(
-        subTotalAmount,
-        sumTotalTaxes(updateTaxes)
-      );
-      updatedData.totalAmount = totalAmount;
-      return updatedData;
-    });
-  }, []);
-
   const onDeleteDiscount = (discountID) => {
     // Filter out the discount with the given ID
     const updatedDiscounts = invoiceForm.discounts.filter(
@@ -614,18 +292,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
       // You might need to recalculate the total amount here
     }));
   };
-
-  const saveAs = useCallback(
-    (status) => {
-      setStatusData({
-        statusIndex: status === "Draft" ? "1" : status === "Unpaid" ? "2" : "3",
-        statusName: status,
-      });
-      dispatch(setConfirmModalOpen(true));
-    },
-    [dispatch]
-  );
-
   const goInvoiceList = useCallback(() => {
     navigate("/invoices");
   }, [navigate]);
@@ -634,14 +300,7 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     if (selectedProduct !== null) {
       // If Choosen Exisiting Client And This form is news
       const { name, productID, amount } = selectedProduct;
-      const newProduct = {
-        id: nanoid(),
-        name,
-        productID,
-        amount,
-        quantity: 1,
-      };
-
+      const newProduct = { id: nanoid(), name, productID, amount, quantity: 1, };
       setInvoiceForm((prev) => {
         let updatedData = { ...prev };
         const updateProducts = [...prev.products, newProduct];
@@ -713,7 +372,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     dispatch,
     allInvoiceDetails,
   ]);
-
   useEffect(() => {
     if (selectedClient !== null) {
       // If Choosen Exisiting Client And This form is news
@@ -744,7 +402,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
       }));
     }
   }, [currentBg, currentColor, initLoading]);
-
   // On Confirm Dependencies
   useEffect(() => {
     if (isConfirm) {
@@ -781,6 +438,25 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
       }
     }
   }, [dispatch, invoiceForm, isConfirm, navigate, params, statusData]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [product, setProduct] = useState([]);
+  const categories = [
+    { id: 1, name: "Electronics" },
+    { id: 2, name: "Books" },
+    { id: 3, name: "Clothing" },
+    // Add more categories as needed
+  ];
+  const handleCategoryChange = (event) => {
+    setSelectedCategory(event.target.value);
+    // console.log(selectedCategory)
+  };
+  const fetchProducts = () => {
+    const filteredProducts = allProducts.filter(
+      (product) => product.category === selectedCategory
+    );
+    setProduct(filteredProducts);
+  };
+
 
   return (
     <div>
@@ -805,7 +481,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
           onClickDownloadImg={handleDownloadImg}
         />
       </div>
-
       {invoiceForm && (
         <div
           className={
@@ -968,15 +643,22 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
               </div>
             </div>
             <div className="flex-1">
-                <div className="font-title font-bold">Add Product Category</div>
+              <div className="font-title font-bold">Add Product Category</div>
               <div className="flex flex-row">
                 <div className="w-1/2 relative" style={{ top: "-3px" }}>
-                  {!isViewMode && (
-                    <Button size="sm" outlined={1} onClick={openChooseProduct}>
-                      <ClientPlusIcon className="w-4 h-4" /> Exisiting Product
-                      Category
-                    </Button>
-                  )}
+                  <div>
+                    <select
+                      value={selectedCategory}
+                      onChange={handleCategoryChange}
+                    >
+                      <option value="">Select a category</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.name}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1061,267 +743,43 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
               style={{ backgroundColor: invoiceForm.color }}
             >
               <div
-                className={
-                  "font-title " +
-                  (isExporting
-                    ? " text-sm w-1/4 text-right pr-10"
-                    : " w-full sm:w-1/4 text-right sm:pr-10")
-                }
-              >
-                <span className="inline-block">Product Name</span>
-              </div>
+                className={ "font-title " + (isExporting ? " text-sm w-1/4 text-right pr-10" : " w-full sm:w-1/4 text-right sm:pr-10")}>
+                <span className="inline-block">Product Name</span>              </div>
               <div
-                className={
-                  "font-title " +
-                  (isExporting
-                    ? " text-sm  w-1/4 text-right pr-10"
-                    : " w-full sm:w-1/4 text-right sm:pr-10")
-                }
-              >
-                Price
-              </div>
+                className={ "font-title " + (isExporting ? " text-sm  w-1/4 text-right pr-10" : " w-full sm:w-1/4 text-right sm:pr-10") } >
+                Price              </div>
               <div
-                className={
-                  "font-title " +
-                  (isExporting
-                    ? " text-sm  w-1/4 text-right pr-10"
-                    : " w-full sm:w-1/4 text-right sm:pr-10")
-                }
-              >
-                Qty
-              </div>
-              <div
-                className={
-                  "font-title" +
-                  (isExporting
-                    ? " text-sm w-1/4 text-right pr-10"
-                    : "  w-full sm:w-1/4 text-right sm:pr-10")
-                }
-              >
-                Total
-              </div>
+                className={ "font-title " + (isExporting ? " text-sm  w-1/4 text-right pr-10" : " w-full sm:w-1/4 text-right sm:pr-10")}>
+                Qty              </div>
+              <div className={ "font-title" + (isExporting ? " text-sm w-1/4 text-right pr-10" : "  w-full sm:w-1/4 text-right sm:pr-10") }>
+                Total              </div>
             </div>
-
-            {invoiceForm?.products?.map((product, index) => (
-              <div
-                key={`${index}_${product.id}`}
-                className={
-                  (isExporting
-                    ? "flex flex-row rounded-lg w-full px-4 py-1 items-center relative text-sm"
-                    : "flex flex-col sm:flex-row rounded-lg sm:visible w-full px-4 py-2 items-center relative") +
-                  (index % 2 !== 0 ? " bg-gray-50 " : "")
-                }
-              >
-                <div
-                  className={
-                    isExporting
-                      ? "font-title w-1/4 text-right pr-8 flex flex-row block"
-                      : "font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block"
-                  }
-                >
-                  {!isExporting && (
-                    <span className="sm:hidden w-1/2 flex flex-row items-center">
-                      Product_name
-                    </span>
-                  )}
-                  <span
-                    className={
-                      isExporting
-                        ? "inline-block w-full mb-0"
-                        : "inline-block w-1/2 sm:w-full mb-1 sm:mb-0"
-                    }
-                  >
-                    {!isViewMode ? (
-                      <input
-                        autoComplete="nope"
-                        value={product.name}
-                        placeholder="Product Name"
-                        className={defaultInputSmStyle + " text-right"}
-                        onChange={(e) =>
-                          handlerProductValue(e, "name", product.id)
-                        }
-                      />
-                    ) : (
-                      <span className="pr-3">{product.name}</span>
-                    )}
-                  </span>
-                </div>
-                <div
-                  className={
-                    isExporting
-                      ? "font-title w-1/4 text-right pr-8 flex flex-row block"
-                      : "font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block"
-                  }
-                >
-                  {!isExporting && (
-                    <span className="sm:hidden w-1/2 flex flex-row items-center">
-                      Price
-                    </span>
-                  )}
-                  <span
-                    className={
-                      isExporting
-                        ? "inline-block w-full mb-0"
-                        : "inline-block w-1/2 sm:w-full mb-1 sm:mb-0"
-                    }
-                  >
-                    {!isViewMode ? (
-                      <input
-                        autoComplete="nope"
-                        value={product.amount}
-                        placeholder="Price"
-                        type={"number"}
-                        className={defaultInputSmStyle + " text-right"}
-                        onChange={(e) =>
-                          handlerProductValue(e, "amount", product.id)
-                        }
-                      />
-                    ) : (
-                      <span className="pr-3">
-                        <NumberFormatBase
-                          value={product.amount}
-                          className=""
-                          displayType={"text"}
-                          renderText={(value, props) => (
-                            <span {...props}>{value}</span>
-                          )}
-                        />
-                      </span>
-                    )}
-                  </span>
-                </div>
-                <div
-                  className={
-                    isExporting
-                      ? "font-title w-1/4 text-right pr-8 flex flex-row block"
-                      : "font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block"
-                  }
-                >
-                  {!isExporting && (
-                    <span className="sm:hidden w-1/2 flex flex-row items-center">
-                      Quantity
-                    </span>
-                  )}
-                  <span
-                    className={
-                      isExporting
-                        ? "inline-block w-full mb-0"
-                        : "inline-block w-1/2 sm:w-full mb-1 sm:mb-0"
-                    }
-                  >
-                    {!isViewMode ? (
-                      <input
-                        autoComplete="nope"
-                        value={product.quantity}
-                        type={"number"}
-                        placeholder="Quantity"
-                        className={defaultInputSmStyle + " text-right"}
-                        onChange={(e) =>
-                          handlerProductValue(e, "quantity", product.id)
-                        }
-                      />
-                    ) : (
-                      <span className="pr-3">
-                        <NumberFormatBase
-                          value={product.quantity}
-                          className=""
-                          displayType={"text"}
-                          renderText={(value, props) => (
-                            <span {...props}>{value}</span>
-                          )}
-                        />
-                      </span>
-                    )}
-                  </span>
-                </div>
-                <div
-                  className={
-                    isExporting
-                      ? "font-title w-1/4 text-right pr-9 flex flex-row `1block"
-                      : "font-title w-full sm:w-1/4 text-right sm:pr-9 flex flex-row sm:block"
-                  }
-                >
-                  {!isExporting && (
-                    <span className="sm:hidden w-1/2 flex flex-row items-center">
-                      Total
-                    </span>
-                  )}
-
-                  <span
-                    className={
-                      isExporting
-                        ? "inline-block w-full "
-                        : "inline-block w-1/2 sm:w-full"
-                    }
-                  >
-                    <NumberFormatBase
-                      value={
-                        Number.isInteger(product.quantity * product.amount)
-                          ? product.quantity * product.amount
-                          : (product.quantity * product.amount)
-                              .toFixed(4)
-                              .toString()
-                              .slice(0, -2)
-                      }
-                      className=""
-                      displayType={"text"}
-                      renderText={(value, props) => (
-                        <span {...props}>{value}</span>
-                      )}
-                    />{" "}
-                    {invoiceForm?.currencyUnit}
-                  </span>
-                </div>
-                {!isViewMode && (
-                  <div
-                    className="w-full sm:w-10 sm:absolute sm:right-0"
-                    onClick={() => onDeleteProduct(product.id)}
-                  >
-                    <div className="w-full text-red-500 font-title h-8 sm:h-8 sm:w-8 cursor-pointer rounded-2xl bg-red-200 mr-2 flex justify-center items-center">
-                      <DeleteIcon className="h-4 w-4" style={IconStyle} />
-                      <span className="block sm:hidden">Delete Product</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-
             {/* Add Product Actions */}
             {!isViewMode && (
               <div className="flex flex-col sm:flex-row rounded-lg sm:visible w-full px-4 py-2 items-center sm:justify-end">
-                {/* <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
-                  <Button size="sm" block={1} onClick={addEmptyProduct}>
-                    <PlusCircleIcon style={IconStyle} className="h-5 w-5" />
-                    Add Empty Product
-                  </Button>
-                </div> */}
                 <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
-                  <Button size="sm" block={1} onClick={openChooseProduct}>
+                  <Button
+                    size="sm"
+                    block={1}
+                    onClick={() => openChooseProduct(selectedCategory)}
+                  >
                     <InvoiceIcon style={IconStyle} className="w-5 h-5" />
-                    Add Exisiting Product
+                    Add Existing Product
                   </Button>
+
+                  {selectedCategory && (
+                    <ProductChoosenModal selectedCategory={selectedCategory} />
+                  )}
+
                 </div>
               </div>
             )}
-            {/* Add Product Actions Finished*/}
-
             {/* Subtotal Start */}
             <div
-              className={
-                isExporting
-                  ? "flex flex-row rounded-lg w-full px-4 py-1 justify-end items-end relative text-sm"
-                  : "flex flex-row sm:flex-row sm:justify-end rounded-lg sm:visible w-full px-4 py-1 items-center "
-              }
-            >
+              className={ isExporting ? "flex flex-row rounded-lg w-full px-4 py-1 justify-end items-end relative text-sm" : "flex flex-row sm:flex-row sm:justify-end rounded-lg sm:visible w-full px-4 py-1 items-center "}>
               <div
-                className={
-                  isExporting
-                    ? "font-title w-1/4 text-right pr-9 flex flex-row block justify-end text-sm "
-                    : "font-title w-1/2 sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1 sm:mb-0"
-                }
-              >
-                Subtotal
-              </div>
+                className={ isExporting  ? "font-title w-1/4 text-right pr-9 flex flex-row block justify-end text-sm " : "font-title w-1/2 sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1 sm:mb-0" } >
+                Subtotal              </div>
               <div
                 className={
                   isExporting
@@ -1341,141 +799,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
                 />
               </div>
             </div>
-            {/* Subtotal Finished */}
-
-            {/* Taxes */}
-            {invoiceForm?.taxes?.map((tax, index) => (
-              <div
-                key={`${index}_${tax.id}`}
-                className={
-                  isExporting
-                    ? "flex flex-row justify-end rounded-lg w-full px-4 py-1 items-center relative"
-                    : "flex flex-col sm:flex-row sm:justify-end rounded-lg sm:visible w-full px-4 py-1 items-center relative"
-                }
-              >
-                <div
-                  className={
-                    isExporting
-                      ? "font-title w-3/5 text-right pr-8 flex flex-row block"
-                      : "font-title w-full sm:w-3/5 text-right sm:pr-8 flex flex-row sm:block"
-                  }
-                >
-                  {!isExporting && (
-                    <div className="sm:hidden w-1/3 flex flex-row items-center">
-                      Tax Type
-                    </div>
-                  )}
-                  <div
-                    className={
-                      isExporting
-                        ? "w-full mb-0 flex flex-row items-center justify-end"
-                        : "w-2/3 sm:w-full mb-1 sm:mb-0 flex flex-row items-center sm:justify-end"
-                    }
-                  >
-                    <div
-                      className={
-                        isExporting ? "w-1/3 pr-1" : "w-1/2 sm:w-1/3 pr-1"
-                      }
-                    >
-                      {!isViewMode && (
-                        <input
-                          autoComplete="nope"
-                          value={tax.title}
-                          type={"text"}
-                          placeholder="Tax Title"
-                          className={defaultInputSmStyle + " text-right"}
-                          onChange={(e) =>
-                            handlerTaxesValue(e, "title", tax.id)
-                          }
-                        />
-                      )}
-                    </div>
-                    <div
-                      className={
-                        (isExporting
-                          ? "w-1/3 relative flex flex-row items-center text-sm"
-                          : "w-1/2 sm:w-1/3 relative flex flex-row items-center") +
-                        (isViewMode ? " justify-end" : " pr-4")
-                      }
-                    >
-                      {!isViewMode ? (
-                        <>
-                          <input
-                            autoComplete="nope"
-                            value={tax.value}
-                            type={"number"}
-                            placeholder="Percentage"
-                            className={defaultInputSmStyle + " text-right"}
-                            onChange={(e) =>
-                              handlerTaxesValue(e, "value", tax.id)
-                            }
-                          />
-                          <span className="ml-1">
-                            {tax.type === "percentage"
-                              ? "%"
-                              : invoiceForm.currencyUnit}
-                          </span>
-                        </>
-                      ) : (
-                        <div className="text-right">{tax.title}</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className={
-                    isExporting
-                      ? "font-title w-1/4 text-right pr-9 flex flex-row text-sm"
-                      : "font-title w-full sm:w-1/4 text-right sm:pr-9 flex flex-row sm:block"
-                  }
-                >
-                  {!isExporting && (
-                    <span className="sm:hidden w-1/2 flex flex-row items-center">
-                      Amount
-                    </span>
-                  )}
-                  <span
-                    className={
-                      isExporting
-                        ? "inline-block w-full"
-                        : "inline-block w-1/2 sm:w-full"
-                    }
-                  >
-                    <>
-                      <div className="w-full">
-                        <NumberFormatBase
-                          value={
-                            tax.type === "percentage"
-                              ? totalPercentTax
-                              : tax.amount
-                          }
-                          className=""
-                          displayType={"text"}
-                          renderText={(value, props) => (
-                            <span {...props}>
-                              {value} {invoiceForm?.currencyUnit}
-                            </span>
-                          )}
-                        />
-                      </div>
-                    </>
-                  </span>
-                </div>
-                {!isViewMode && (
-                  <div
-                    className="w-full sm:w-10 sm:absolute sm:right-0"
-                    onClick={() => onDeleteTax(tax.id)}
-                  >
-                    <div className="w-full text-red-500 font-title h-8 sm:h-8 sm:w-8 cursor-pointer rounded-2xl bg-red-200 mr-2 flex justify-center items-center">
-                      <DeleteIcon className="h-4 w-4" style={IconStyle} />
-                      <span className="block sm:hidden">Delete Tax</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-            {/* Taxes Finished*/}
-
             {/* Discounts */}
             {invoiceForm?.discounts?.map((discount, index) => (
               <div
@@ -1599,34 +922,17 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
                 )}
               </div>
             ))}
-
-            {/* Discounts Finished*/}
-
             {/* Add Tax Action */}
             {!isViewMode && (
               <div className="flex flex-col sm:flex-row rounded-lg sm:visible w-full px-4 py-2 items-center sm:justify-end">
-                {/* <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
-                  <Button size="sm" block={1} onClick={addPercentageTax}>
-                    <TaxesIcon style={IconStyle} className="h-5 w-5" />
-                    Add Taxes (%)
-                  </Button>
-                </div> */}
                 <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
                   <Button size="sm" block={1} onClick={addDiscount}>
                     <TaxesIcon style={IconStyle} className="h-5 w-5" />
                     Add Discount (%)
                   </Button>
                 </div>
-                {/* <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
-                  <Button size="sm" block={1} onClick={addEmptyTax}>
-                    <DollarIcon style={IconStyle} className="w-5 h-5" />
-                    Add Delivery Charges
-                  </Button>
-                </div> */}
               </div>
             )}
-            {/* Add Tax Action Finished*/}
-
             {/* Subtotal Start */}
             <div
               className={
@@ -1675,78 +981,13 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
                 </div>
               </div>
             </div>
-            {/* Subtotal Finished */}
           </div>
           {/* Products Finished */}
         </div>
       )}
-
-      {invoiceForm && invoiceForm?.statusIndex !== "3" && (
-        <div className="px-4 pt-3">
-          <div className="bg-white rounded-xl px-3 py-3 text-gray-800">
-            <div className="flex flex-col flex-wrap sm:flex-row ">
-              {params.id === "new" && (
-                <div className="w-full flex-1 my-1 sm:my-1 md:my-0 px-1">
-                  {/* <Button
-                    outlined={1}
-                    size="sm"
-                    block={1}
-                    secondary={1}
-                    onClick={() => saveAs("Draft")}
-                  >
-                    <CheckCircleIcon className="h-5 w-5 mr-1" /> Save As Draft
-                  </Button> */}
-                </div>
-              )}
-              {invoiceForm?.statusIndex !== "2" && (
-                <div className="w-full flex-1 my-1 sm:my-1 md:my-0 px-1">
-                  {/* <Button
-                    outlined={1}
-                    size="sm"
-                    block={1}
-                    danger={1}
-                    onClick={() => saveAs("Unpaid")}
-                  >
-                    <DollarIcon className="h-5 w-5 mr-1" />{" "}
-                    {params.id === "new" ? "Save" : "Update"} As Unpaid
-                  </Button> */}
-                </div>
-              )}
-              <div className="w-full flex-1 my-1 sm:my-1 md:my-0 px-1">
-                <div className="flex flex-row space-x-2">
-                  <select
-                    className="form-select w-1/2 rounded-md font-medium border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                    onChange={(e) => console.log(e.target.value)} // Handle selection change
-                  >
-                    <option value="">Select INVOICE</option>
-                    <option value="option1">CASH INVOICE</option>
-                    <option value="option2">CREDIT INVOICE</option>
-                    <option value="option3">SELL ORDER INVOICE</option>
-                    <option value="option3">SELL RETURN INVOICE</option>
-                  </select>
-                  {/* <Button
-      size="sm"
-      block={1}
-      success={1}
-      onClick={() => saveAs("Paid")}
-    >
-      <SecurityIcon className="h-5 w-5 mr-1" />{" "}
-      {params.id === "new" ? "Save" : "Update"} As Paid
-    </Button> */}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {invoiceForm && (
         <div className="p-4">
           <InvoiceTopBar
-            onClickBack={goInvoiceList}
-            viewMode={isViewMode}
-            onClickViewAs={toggleViewMode}
-            onClickSetting={openSettingModal}
             onClickExport={handleExport}
             onClickDownloadImg={handleDownloadImg}
           />
@@ -1755,5 +996,4 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     </div>
   );
 }
-
 export default InvoiceDetailScreen;

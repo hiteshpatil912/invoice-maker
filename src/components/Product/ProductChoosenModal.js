@@ -28,7 +28,10 @@ const emptySearchForm = {
   mobileNo: "",
 };
 
-function ProductChoosenModal() {
+
+
+function ProductChoosenModal({ selectedCategory }) {
+
   const dispatch = useDispatch();
   const allProducts = useSelector(getAllProductSelector);
   const openModal = useSelector(getIsOpenProductSelector);
@@ -38,29 +41,39 @@ function ProductChoosenModal() {
   const [currentItems, setCurrentItems] = useState(null);
   const [pageCount, setPageCount] = useState(0);
   const [itemOffset, setItemOffset] = useState(0);
+  const [data, setData] = useState([]);
+  const [filterRecords, setRecords] = useState([]);
 
-  const products = useMemo(() => {
-    let filterData = allProducts.length > 0 ? [...allProducts].reverse() : [];
-    if (searchForm.name?.trim()) {
-      filterData = filterData.filter((product) =>
-        product.name.includes(searchForm.name)
-      );
-    }
 
-    if (searchForm.productID?.trim()) {
-      filterData = filterData.filter((product) =>
-        product.productID.includes(searchForm.productID)
-      );
-    }
+  useEffect(() => {
+    const filteredProducts = allProducts.filter(
+      (product) => product.category === selectedCategory
+    );
+    setRecords(filteredProducts);
+    console.log("filteredProducts", filteredProducts)
+  }, [selectedCategory, allProducts]);
+  
+  // const products = useMemo(() => {
+  //   let filterData = allProducts.length > 0 ? [...allProducts].reverse() : [];
+  //   if (searchForm.name?.trim()) {
+  //     filterData = filterData.filter((product) =>
+  //       product.name.includes(searchForm.name)
+  //     );
+  //   }
 
-    return filterData;
-  }, [allProducts, searchForm]);
+  //   if (searchForm.productID?.trim()) {
+  //     filterData = filterData.filter((product) =>
+  //       product.productID.includes(searchForm.productID)
+  //     );
+  //   }
 
-  // Invoke when user click to request another page.
-  const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % products.length;
-    setItemOffset(newOffset);
-  };
+  //   return filterData;
+  // }, [allProducts, searchForm]);
+
+  // const handlePageClick = (event) => {
+  //   const newOffset = (event.selected * itemsPerPage) % products.length;
+  //   setItemOffset(newOffset);
+  // };
 
   const handleSelect = useCallback(
     (item) => {
@@ -87,20 +100,24 @@ function ProductChoosenModal() {
     setItemOffset(0);
   }, []);
 
-  useEffect(() => {
-    // Fetch items from another resources.
-    const endOffset = itemOffset + itemsPerPage;
-    setCurrentItems(products.slice(itemOffset, endOffset));
-    setPageCount(Math.ceil(products.length / itemsPerPage));
-  }, [products, itemOffset]);
+  // useEffect(() => {
+  //   if (openModal) {
+  //     setAnimate(true);
+  //   } else {
+  //     setAnimate(false);
+  //   }
+  // }, [products, openModal]);
 
-  useEffect(() => {
-    if (openModal) {
-      setAnimate(true);
-    } else {
-      setAnimate(false);
-    }
-  }, [products, openModal]);
+
+  // const handleCategoryChange = (event) => {
+  //   setSelectedCategory(event.target.value);
+  // };
+
+  // Example openChooseProduct function, modify as needed
+  // const openChooseProduct = (category) => {
+  //   console.log("Selected category:", category);
+  //   // Your code to open the product chooser modal with the selected category
+  // };
 
   return openModal ? (
     <motion.div
@@ -121,7 +138,6 @@ function ProductChoosenModal() {
     >
       <div className="relative">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-
         <div className="fixed z-10 inset-0 overflow-y-auto">
           <div className="flex justify-center min-h-full p-4 text-center">
             <div className="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all my-8 flex flex-col w-full">
@@ -129,7 +145,7 @@ function ProductChoosenModal() {
                 <div className="rounded-xl px-3 py-3 mb-3">
                   <div className="font-title mb-2">Advanced Search</div>
                   <div className="flex w-full flex-col sm:flex-row">
-                    <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row  font-title flex-1 px-2">
+                    <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
                       <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center text-gray-400">
                         <ProductIDIcon />
                       </div>
@@ -176,8 +192,8 @@ function ProductChoosenModal() {
                   </div>
 
                   <div>
-                    {currentItems &&
-                      currentItems.map((product) => (
+                    {filterRecords &&
+                      filterRecords.map((product) => (
                         <div className={defaultTdWrapperStyle} key={product.id}>
                           <div className={defaultTdStyle}>
                             <div className={defaultTdContentTitleStyle}>
@@ -246,23 +262,7 @@ function ProductChoosenModal() {
                         </div>
                       ))}
 
-                    {products.length > 0 && (
-                      <ReactPaginate
-                        className="inline-flex items-center -space-x-px mt-2"
-                        previousLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        nextLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        pageLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        breakLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                        activeLinkClassName="py-2 px-3 text-blue-600 bg-blue-50 border border-gray-300 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-                        breakLabel="..."
-                        onPageChange={handlePageClick}
-                        pageRangeDisplayed={1}
-                        pageCount={pageCount}
-                        previousLabel="<"
-                        nextLabel={">"}
-                        renderOnZeroPageCount={null}
-                      />
-                    )}
+                   
                   </div>
                 </div>
               </div>

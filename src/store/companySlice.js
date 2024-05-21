@@ -23,13 +23,13 @@ export const companySlice = createSlice({
           image,
           billingAddress,
           companyName,
-          companyEmail,
+          // companyEmail,
           companyMobile,
         } = action.payload;
         state.data.image = image ? image : "";
         state.data.billingAddress = billingAddress ? billingAddress : "";
         state.data.companyName = companyName ? companyName : "";
-        state.data.companyEmail = companyEmail ? companyEmail : "";
+        // state.data.companyEmail = companyEmail ? companyEmail : "";
         state.data.companyMobile = companyMobile ? companyMobile : "";
         localforage.setItem(COMPANY_KEY, action.payload);
       } catch (e) {
