@@ -42,7 +42,6 @@ import PlusCircleIcon from "../../components/Icons/PlusCircleIcon";
 import { nanoid } from "nanoid";
 import DeleteIcon from "../../components/Icons/DeleteIcon";
 import {
-  getProductNewForm,
   getSelectedProduct,
   setOpenProductSelector,
 } from "../../store/productSlice";
@@ -73,17 +72,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
   const params = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
-  //const [selectedCategory, setSelectedCategory] = useState('');
-  //const [selectedClientId, setSelectedClientId] = useState('');
-      
-  //const invoiceForm = useSelector((state) => state.invoiceForm); // Assuming invoiceForm is stored in Redux state
-  
-  const openChooseProduct = useCallback(() => {
-    setSelectedCategory(invoiceForm?.productDetail?.productCategory);
-    setSelectedClientId(invoiceForm?.productDetail?.id);
-    dispatch(setOpenProductSelector(true));
-  }, [dispatch, invoiceForm]);
 
   const componentRef = useRef(null);
   const reactToPrintContent = useCallback(() => {
@@ -107,7 +95,6 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
   const currentBg = useSelector(getCurrentBGImage);
   const currentColor = useSelector(getCurrentColor);
   const isConfirm = useSelector(getIsConfirm);
-  //const openChooseProduct = useSelector(getProductNewForm)
 
   const [invoiceForm, setInvoiceForm] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
@@ -116,6 +103,38 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     statusName: "Draft",
     statusIndex: 1,
   });
+ 
+  const itemsPerPage = 10;
+  const emptySearchForm = {
+    name: "",
+    productID: "",
+    category: "",
+  };
+  const [searchForm, setSearchForm] = useState(emptySearchForm);
+
+  const allProducts = useSelector((state) => state.products.allProducts);
+  // const searchForm = useSelector((state) => state.searchForm);
+  const [itemOffset, setItemOffset] = useState(0);
+
+  const products = useMemo(() => {
+    if (!allProducts) return []; // Handle the case where allProducts is undefined
+  
+    let filterData = allProducts.length > 0 ? [...allProducts].reverse() : [];
+  
+    if (searchForm.category?.trim()) {
+      filterData = filterData.filter((product) =>
+        product.category.includes(searchForm.category)
+      );
+    }
+  
+    return filterData;
+  }, [allProducts, searchForm]);
+
+  const handlerSearchValue = useCallback((event, keyName) => {
+    const value = event.target.value;
+    setSearchForm((prev) => ({ ...prev, [keyName]: value }));
+    setItemOffset(0);
+  }, []);
 
   const handleExport = useCallback(() => {
     if (showNavbar) {
@@ -184,9 +203,9 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     dispatch(setOpenClientSelector(true));
   }, [dispatch]);
 
-  {/* const openChooseProduct = useCallback(() => {
+  const openChooseProduct = useCallback(() => {
     dispatch(setOpenProductSelector(true));
-  }, [dispatch]); */}
+  }, [dispatch]);
 
   const addEmptyProduct = useCallback(() => {
     const emptyProduct = {
@@ -772,11 +791,9 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
               {params.id === "new"
                 ? "New Invoice"
                 : `Invoice Detail ${invoiceForm?.statusName}`}
-                
             </>
           }
         />
-      
       </div>
       <div className="px-4 pb-3">
         <InvoiceTopBar
@@ -951,6 +968,20 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
               </div>
             </div>
             <div className="flex-1">
+                <div className="font-title font-bold">Add Product Category</div>
+              <div className="flex flex-row">
+                <div className="w-1/2 relative" style={{ top: "-3px" }}>
+                  {!isViewMode && (
+                    <Button size="sm" outlined={1} onClick={openChooseProduct}>
+                      <ClientPlusIcon className="w-4 h-4" /> Exisiting Product
+                      Category
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1">
               <div className="flex flex-row justify-between items-center mb-1">
                 <div className="font-title flex-1"> INVOICE # </div>
                 <div className="font-title flex-1 text-right">
@@ -1016,11 +1047,10 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
                 </div>
               )} */}
             </div>
-          
-      
+          </div>
+          {/* Customer Billing Info Finished */}
 
-     
-          
+          {/* Products */}
           <div className="py-2 px-4">
             <div
               className={
@@ -1647,7 +1677,7 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
             </div>
             {/* Subtotal Finished */}
           </div>
-          
+          {/* Products Finished */}
         </div>
       )}
 
@@ -1725,4 +1755,5 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
     </div>
   );
 }
+
 export default InvoiceDetailScreen;
