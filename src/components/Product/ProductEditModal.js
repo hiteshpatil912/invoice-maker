@@ -22,6 +22,7 @@ const emptyForm = {
   productID: "",
   name: "",
   category: "", // Changed from 'categories'
+  description: "",
   amount: 0,
 };
 
@@ -94,6 +95,7 @@ function ProductEditModal(props) {
       productID: !!productForm.productID,
       name: productForm?.name?.trim() ? true : false,
       category: productForm?.category?.trim() ? true : false, // Ensure category validation
+      description: productForm?.description?.trim() ? true : false,
       amount: productForm.amount > 0,
     }));
   }, [productForm]);
@@ -210,6 +212,27 @@ function ProductEditModal(props) {
                               <option value="Z">Z</option>
                               {/* Add more options as needed */}
                             </select>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <div className="font-title text-sm text-default-color">
+                            Product Name
+                          </div>
+                          <div className="flex">
+                            <div className="flex-1">
+                              <input
+                                autoComplete="nope"
+                                placeholder="Product Description"
+                                type="text"
+                                className={
+                                  !validForm.description && isTouched
+                                    ? defaultInputInvalidStyle
+                                    : defaultInputStyle
+                                }
+                                value={productForm.description}
+                                onChange={(e) => handlerProductValue(e, "description")}
+                              />
+                            </div>
                           </div>
                         </div>
                         <div className="mt-2">

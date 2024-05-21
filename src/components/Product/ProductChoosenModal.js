@@ -24,7 +24,7 @@ import ProductIcon from "../Icons/ProductIcon";
 const itemsPerPage = 6;
 const emptySearchForm = {
   name: "",
-  email: "",
+  // email: "",
   mobileNo: "",
 };
 

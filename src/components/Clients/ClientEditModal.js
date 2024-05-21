@@ -183,14 +183,14 @@ function ClientEditModal() {
                     <div className="mt-2">
                       <div className="bg-white rounded-xl mt-4">
                         <div className="flex mt-2">
-                          <ImageUpload
+                          {/* <ImageUpload
                             keyName="QuickEditImageUpload"
                             className={imageUploadClasses}
                             url={clientForm.image}
                             onChangeImage={handleImageChange}
-                          />
+                          /> */}
 
-                          <div className="flex-1 pl-3">
+                          <div className="flex-1 ">
                             <input
                               autoComplete="nope"
                               value={clientForm.name}

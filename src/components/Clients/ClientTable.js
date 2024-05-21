@@ -202,7 +202,7 @@ function ClientTable({ showAdvanceSearch = false }) {
                 <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>Name</div>
                   <div className={defaultTdContent}>
-                    {client.image ? (
+                    {/* {client.image ? (
                       <img
                         className="object-cover h-10 w-10 rounded-2xl"
                         src={client.image}
@@ -223,7 +223,7 @@ function ClientTable({ showAdvanceSearch = false }) {
                           />
                         </svg>
                       </span>
-                    )}
+                    )} */}
 
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden pl-1">
                       {client.name}

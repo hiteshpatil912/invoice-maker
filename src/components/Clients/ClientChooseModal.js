@@ -46,9 +46,9 @@ function ClientChooseModal() {
       );
     }
 
-    if (searchForm.clientcategory?.trim()) {
+    if (searchForm.clientCategory?.trim()) {
       filterData = filterData.filter((client) =>
-        client.clientcategory.includes(searchForm.clientcategory)
+        client.clientCategory.includes(searchForm.clientCategory)
       );
     }
 
@@ -278,7 +278,7 @@ function ClientChooseModal() {
                             </div>
                             <div className={defaultTdContent}>
                               <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                                {client.clientcategory}{" "}
+                                {client.clientCategory}{" "}
                               </span>
                             </div>
                           </div>

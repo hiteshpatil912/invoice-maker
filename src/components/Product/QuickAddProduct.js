@@ -25,7 +25,8 @@ const emptyForm = {
   image: "",
   productID: "",
   name: "",
-  category: "", // Changed from 'categories'
+  category: "",
+  description: "",
   amount: 0,
 };
 
@@ -43,10 +44,11 @@ function QuickAddProduct() {
     productID: false,
     name: false,
     category: false,
+    description: false,
     amount: false,
   });
 
-  const [productCategories, setProductCategories] = useState(["X", "Y", "Z"]); // Initial product categories
+  const [productCategories, setProductCategories] = useState(["X", "Y", "Z"]);
 
   // Callback function to handle image change
   const onChangeImage = useCallback(
@@ -62,15 +64,12 @@ function QuickAddProduct() {
     (event, keyName) => {
       const value = event.target.value;
 
-      setProductForm((prev) => {
-        return { ...prev, [keyName]: value };
-      });
+      setProductForm((prev) => ({ ...prev, [keyName]: value }));
 
-      // Include a condition to check if the keyName is "category"
       if (keyName === "category") {
         setValidForm((prev) => ({
           ...prev,
-          [keyName]: !!value.trim(), // Validate the category field
+          [keyName]: !!value.trim(),
         }));
 
         if (value.trim() && !productCategories.includes(value.trim())) {
@@ -121,7 +120,8 @@ function QuickAddProduct() {
       image: productForm.image,
       productID: !!productForm.productID,
       name: productForm?.name?.trim() ? true : false,
-      category: productForm?.category?.trim() ? true : false, // Ensure category validation
+      category: productForm?.category?.trim() ? true : false,
+      description: productForm?.description?.trim() ? true : false,
       amount: productForm.amount > 0,
     }));
   }, [productForm]);
@@ -166,9 +166,7 @@ function QuickAddProduct() {
         </div>
       </div>
       <div className="mt-2">
-        <div className="font-title text-sm text-default-color">
-          Product Name
-        </div>
+        <div className="font-title text-sm text-default-color">Product Name</div>
         <div className="flex">
           <div className="flex-1">
             {isInitLoading ? (
@@ -199,15 +197,8 @@ function QuickAddProduct() {
           <input
             value={productForm.category}
             type="text"
-            onChange={(e) => {
-              const newValue = e.target.value;
-              setProductForm((prev) => ({
-                ...prev,
-                category: newValue,
-              }));
-              handlerProductValue(e, "category");
-            }}
-            placeholder=""
+            onChange={(e) => handlerProductValue(e, "category")}
+            placeholder="Category"
             className={
               !validForm.category && isTouched
                 ? defaultInputInvalidStyle
@@ -215,17 +206,9 @@ function QuickAddProduct() {
             }
             disabled={isInitLoading}
           />
-          {/* Spinner for predefined categories */}
           <select
             value={productForm.category}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              setProductForm((prev) => ({
-                ...prev,
-                category: newValue,
-              }));
-              handlerProductValue(e, "category");
-            }}
+            onChange={(e) => handlerProductValue(e, "category")}
             className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
           >
             <option value="">Select Category</option>
@@ -238,9 +221,7 @@ function QuickAddProduct() {
         </div>
       </div>
       <div className="mt-2">
-        <div className="font-title text-sm text-default-color">
-          Product Amount
-        </div>
+        <div className="font-title text-sm text-default-color">Product Amount</div>
         <div className="flex">
           <div className="flex-1">
             {isInitLoading ? (
@@ -277,13 +258,13 @@ function QuickAddProduct() {
                 placeholder="Product Description"
                 type="text"
                 className={
-                  !validForm.name && isTouched
+                  !validForm.description && isTouched
                     ? defaultInputInvalidStyle
                     : defaultInputStyle
                 }
                 disabled={isInitLoading}
-                value={productForm.name}
-                onChange={(e) => handlerProductValue(e, "name")}
+                value={productForm.description}
+                onChange={(e) => handlerProductValue(e, "description")}
               />
             )}
           </div>

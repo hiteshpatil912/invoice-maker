@@ -20,11 +20,11 @@ import ProductIDIcon from "../Icons/ProductIDIcon";
 import EmptyBar from "../Common/EmptyBar";
 import { useAppContext } from "../../context/AppContext";
 
-// Example items, to simulate fetching from another resources.
 const itemsPerPage = 10;
 const emptySearchForm = {
   name: "",
   productID: "",
+  category: "",
 };
 
 function ProductTable({ showAdvanceSearch = false }) {
@@ -51,10 +51,15 @@ function ProductTable({ showAdvanceSearch = false }) {
       );
     }
 
+    if (searchForm.category?.trim()) {
+      filterData = filterData.filter((product) =>
+        product.category.includes(searchForm.category)
+      );
+    }
+
     return filterData;
   }, [allProducts, searchForm]);
 
-  // Invoke when user click to request another page.
   const handlePageClick = (event) => {
     const newOffset = (event.selected * itemsPerPage) % products.length;
     setItemOffset(newOffset);
@@ -76,16 +81,11 @@ function ProductTable({ showAdvanceSearch = false }) {
 
   const handlerSearchValue = useCallback((event, keyName) => {
     const value = event.target.value;
-
-    setSearchForm((prev) => {
-      return { ...prev, [keyName]: value };
-    });
-
+    setSearchForm((prev) => ({ ...prev, [keyName]: value }));
     setItemOffset(0);
   }, []);
 
   useEffect(() => {
-    // Fetch items from another resources.
     const endOffset = itemOffset + itemsPerPage;
     setCurrentItems(products.slice(itemOffset, endOffset));
     setPageCount(Math.ceil(products.length / itemsPerPage));
@@ -97,7 +97,7 @@ function ProductTable({ showAdvanceSearch = false }) {
         <div className="bg-white rounded-xl px-3 py-3 mb-3">
           <div className="font-title mb-2">Advanced Search</div>
           <div className="flex w-full flex-col sm:flex-row">
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row  font-title flex-1 px-2">
+            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
               <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center text-gray-400">
                 <ProductIDIcon />
               </div>
@@ -107,6 +107,31 @@ function ProductTable({ showAdvanceSearch = false }) {
                 placeholder="Product ID"
                 className={defaultSearchStyle}
                 onChange={(e) => handlerSearchValue(e, "productID")}
+              />
+            </div>
+            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
+              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <input
+                autoComplete="nope"
+                value={searchForm.category}
+                placeholder="Product Category"
+                className={defaultSearchStyle}
+                onChange={(e) => handlerSearchValue(e, "category")}
               />
             </div>
             <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
@@ -126,9 +151,9 @@ function ProductTable({ showAdvanceSearch = false }) {
       )}
 
       <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
-        <div className="hidden sm:flex invisible sm:visible w-full flex-col sm:flex-row">
+        <div className="hidden sm:flex w-full flex-col sm:flex-row">
           <div className="sm:text-left text-default-color font-title flex-1">
-            ProductID
+            Product ID
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
             Name
@@ -137,10 +162,10 @@ function ProductTable({ showAdvanceSearch = false }) {
             Amount
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-            Product Category
+            Category
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-            Product Description
+            Description
           </div>
           <div className="sm:text-left text-default-color font-title sm:w-11">
             Action
@@ -152,7 +177,7 @@ function ProductTable({ showAdvanceSearch = false }) {
             currentItems.map((product) => (
               <div className={defaultTdWrapperStyle} key={product.id}>
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>ProductID</div>
+                  <div className={defaultTdContentTitleStyle}>Product ID</div>
                   <div className={defaultTdContent}>
                     {product.image ? (
                       <img
@@ -190,9 +215,7 @@ function ProductTable({ showAdvanceSearch = false }) {
                 </div>
 
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>
-                    ProductCategory
-                  </div>
+                  <div className={defaultTdContentTitleStyle}>Category</div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
                       {product.category}
@@ -200,12 +223,10 @@ function ProductTable({ showAdvanceSearch = false }) {
                   </div>
                 </div>
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>
-                    Product Discription
-                  </div>
+                  <div className={defaultTdContentTitleStyle}>Description</div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {product.discription}
+                      {product.description}
                     </span>
                   </div>
                 </div>
@@ -236,9 +257,7 @@ function ProductTable({ showAdvanceSearch = false }) {
                       }
                       transition
                     >
-                      <MenuItem onClick={() => handleEdit(product)}>
-                        Edit
-                      </MenuItem>
+                      <MenuItem onClick={() => handleEdit(product)}>Edit</MenuItem>
                       <MenuItem onClick={() => handleDelete(product)}>
                         Delete
                       </MenuItem>

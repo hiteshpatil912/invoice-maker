@@ -12,7 +12,7 @@ const initialState = {
     image: "",
     name: "",
     // email: "",
-   clientCategory: "", // AddclientCategory field to the form
+    clientCategory: "", // AddclientCategory field to the form
     billingAddress: "",
     mobileNo: "",
   },
@@ -33,8 +33,7 @@ export const clientsSlice = createSlice({
         id: nanoid(),
         image: "",
         name: "",
-        // email: "",
-       clientCategory: "", // AddclientCategory field to the form
+        clientCategory: "", // AddclientCategory field to the form
         billingAddress: "",
         mobileNo: "",
       };

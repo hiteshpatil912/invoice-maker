@@ -56,9 +56,17 @@ import {
   sumTotalAmount,
   sumTotalTaxes,
 } from "../../utils/match";
+import {
+  defaultTdStyle,
+  defaultTdActionStyle,
+  defaultTdWrapperStyle,
+  defaultTdContent,
+  defaultTdContentTitleStyle,
+  defaultSearchStyle,
+} from "../../constants/defaultStyles";
 import PageTitle from "../../components/Common/PageTitle";
 
-function InvoiceDetailScreen(props) {
+function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
     useAppContext();
   const params = useParams();
@@ -95,6 +103,38 @@ function InvoiceDetailScreen(props) {
     statusName: "Draft",
     statusIndex: 1,
   });
+ 
+  const itemsPerPage = 10;
+  const emptySearchForm = {
+    name: "",
+    productID: "",
+    category: "",
+  };
+  const [searchForm, setSearchForm] = useState(emptySearchForm);
+
+  const allProducts = useSelector((state) => state.products.allProducts);
+  // const searchForm = useSelector((state) => state.searchForm);
+  const [itemOffset, setItemOffset] = useState(0);
+
+  const products = useMemo(() => {
+    if (!allProducts) return []; // Handle the case where allProducts is undefined
+  
+    let filterData = allProducts.length > 0 ? [...allProducts].reverse() : [];
+  
+    if (searchForm.category?.trim()) {
+      filterData = filterData.filter((product) =>
+        product.category.includes(searchForm.category)
+      );
+    }
+  
+    return filterData;
+  }, [allProducts, searchForm]);
+
+  const handlerSearchValue = useCallback((event, keyName) => {
+    const value = event.target.value;
+    setSearchForm((prev) => ({ ...prev, [keyName]: value }));
+    setItemOffset(0);
+  }, []);
 
   const handleExport = useCallback(() => {
     if (showNavbar) {
@@ -917,7 +957,9 @@ function InvoiceDetailScreen(props) {
                       placeholder="Client Category"
                       className={defaultInputSmStyle}
                       value={invoiceForm?.clientDetail?.clientCategory}
-                      onChange={(e) => handlerInvoiceClientValue(e, "clientCategory")}
+                      onChange={(e) =>
+                        handlerInvoiceClientValue(e, "clientCategory")
+                      }
                     />
                   ) : (
                     invoiceForm?.clientDetail?.clientCategory
@@ -925,6 +967,20 @@ function InvoiceDetailScreen(props) {
                 </div>
               </div>
             </div>
+            <div className="flex-1">
+                <div className="font-title font-bold m-2">Add Product Category</div>
+              <div className="flex flex-row">
+                <div className="w-1/2 relative" style={{ top: "-3px" }}>
+                  {!isViewMode && (
+                    <Button size="sm" outlined={1} onClick={openChooseProduct}>
+                      <ClientPlusIcon className="w-4 h-4" /> Exisiting Product
+                      Category
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="flex-1">
               <div className="flex flex-row justify-between items-center mb-1">
                 <div className="font-title flex-1"> INVOICE # </div>
@@ -1012,7 +1068,7 @@ function InvoiceDetailScreen(props) {
                     : " w-full sm:w-1/4 text-right sm:pr-10")
                 }
               >
-                <span className="inline-block">Description</span>
+                <span className="inline-block">Product Name</span>
               </div>
               <div
                 className={
@@ -1065,7 +1121,7 @@ function InvoiceDetailScreen(props) {
                 >
                   {!isExporting && (
                     <span className="sm:hidden w-1/2 flex flex-row items-center">
-                      Description
+                      Product_name
                     </span>
                   )}
                   <span

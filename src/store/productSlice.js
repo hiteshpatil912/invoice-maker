@@ -13,6 +13,7 @@ const initialState = {
     productID: "",
     name: "",
     category: "",
+    description:"",
     amount: 0,
   },
   editedID: null,
@@ -34,6 +35,7 @@ export const productSlice = createSlice({
         productID: "",
         name: "",
         category: "",
+        description:"",
         amount: 0,
       };
 
