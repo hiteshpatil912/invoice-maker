@@ -116,6 +116,31 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
   // const searchForm = useSelector((state) => state.searchForm);
   const [itemOffset, setItemOffset] = useState(0);
 
+  const [productCategories, setProductCategories] = useState([]);
+  const [productsByCategory, setProductsByCategory] = useState({});
+
+  useEffect(() => {
+    const fetchProductCategories = async () => {
+      try {
+        const response = await fetch('/api/productCategories\\');
+        const categoryProducts = await response.json();
+        setProductCategories(categoryProducts);
+
+        const products = {};
+        for (const category of categoryProducts) {
+          const productResponse = await fetch(`/api/products?category=${category}`);
+          const productData = await productResponse.json();
+          products[category] = productData;
+        }
+        setProductsByCategory(products);
+      } catch (error) {
+        console.error('Error fetching product categories:', error);
+      }
+    };
+
+    fetchProductCategories();
+  }, []);
+
   const products = useMemo(() => {
     if (!allProducts) return []; // Handle the case where allProducts is undefined
   
@@ -973,14 +998,25 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
                 <div className="w-1/2 relative" style={{ top: "-3px" }}>
                   {!isViewMode && (
                     <Button size="sm" outlined={1} onClick={openChooseProduct}>
-                      <ClientPlusIcon className="w-4 h-4" /> Exisiting Product
-                      Category
-                    </Button>
+                      <ClientPlusIcon className="w-4 h-4" /> Exisiting Product Category
+                      </Button>
+
                   )}
                 </div>
               </div>
             </div>
-
+            <div className="mt-4">
+            {categoryProducts.length > 0 ? (
+              <ul>
+                 {categoryProducts.map(product => (
+                  <li key={product.id}>{product.name}</li>
+                ))}
+              </ul>
+           ) : (
+            <p>No products available in this category</p>
+          )}
+          </div>
+        </div>
             <div className="flex-1">
               <div className="flex flex-row justify-between items-center mb-1">
                 <div className="font-title flex-1"> INVOICE # </div>
@@ -1048,9 +1084,13 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
               )} */}
             </div>
           </div>
-          {/* Customer Billing Info Finished */}
+      )
+          /*Customer Billing Info Finished */
+        }
 
-          {/* Products */}
+          {
+            /*Products*/
+          }
           <div className="py-2 px-4">
             <div
               className={
@@ -1733,12 +1773,13 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
       <SecurityIcon className="h-5 w-5 mr-1" />{" "}
       {params.id === "new" ? "Save" : "Update"} As Paid
     </Button> */}
+  
                 </div>
               </div>
             </div>
           </div>
         </div>
-      )}
+      )} 
 
       {invoiceForm && (
         <div className="p-4">
@@ -1752,8 +1793,5 @@ function InvoiceDetailScreen(props,{showAdvanceSearch = false}) {
           />
         </div>
       )}
-    </div>
-  );
-}
 
 export default InvoiceDetailScreen;
