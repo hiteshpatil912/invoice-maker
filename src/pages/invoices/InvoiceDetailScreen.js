@@ -1,15 +1,45 @@
-import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import { useReactToPrint } from "react-to-print";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  defaultTdStyle,
+  defaultTdActionStyle,
+  defaultTdWrapperStyle,
+  defaultTdContent,
+  defaultTdContentTitleStyle,
+  defaultSearchStyle,
+} from "../../constants/defaultStyles";
 // import NumberFormat from "react-number-format";
 import { NumberFormatBase } from "react-number-format";
 import { toast } from "react-toastify";
 import domtoimage from "dom-to-image";
 import InvoiceTopBar from "../../components/Invoice/InvoiceTopBar";
-import { getAllInvoiceDetailSelector, getCurrentBGImage, getCurrentColor, getInvoiceNewForm, getIsConfirm, setDefaultBackground, setDefaultColor, setIsConfirm, setNewInvoices, setSettingModalOpen, updateExisitingInvoiceForm, updateNewInvoiceForm,} from "../../store/invoiceSlice";
-import { getSelectedClient,setOpenClientSelector,} from "../../store/clientSlice";
+import {
+  getAllInvoiceDetailSelector,
+  getCurrentBGImage,
+  getCurrentColor,
+  getInvoiceNewForm,
+  getIsConfirm,
+  setDefaultBackground,
+  setDefaultColor,
+  setIsConfirm,
+  setNewInvoices,
+  setSettingModalOpen,
+  updateExisitingInvoiceForm,
+  updateNewInvoiceForm,
+} from "../../store/invoiceSlice";
+import {
+  getSelectedClient,
+  setOpenClientSelector,
+} from "../../store/clientSlice";
 import { getCompanyData } from "../../store/companySlice";
 import { defaultInputSmStyle, IconStyle } from "../../constants/defaultStyles";
 import Button from "../../components/Button/Button";
@@ -17,14 +47,24 @@ import ClientPlusIcon from "../../components/Icons/ClientPlusIcon";
 import InvoiceIcon from "../../components/Icons/InvoiceIcon";
 import { nanoid } from "nanoid";
 import DeleteIcon from "../../components/Icons/DeleteIcon";
-import { getSelectedProduct,setOpenProductSelector,} from "../../store/productSlice";
+import Modal from "../../components/Modal";
+import {
+  getSelectedProduct,
+  setOpenProductSelector,
+} from "../../store/productSlice";
 import { useAppContext } from "../../context/AppContext";
 import TaxesIcon from "../../components/Icons/TaxesIcon";
-import { getTotalTaxesWithPercent, sumProductTotal, sumTotalAmount, sumTotalTaxes,} from "../../utils/match";
+import {
+  getTotalTaxesWithPercent,
+  sumProductTotal,
+  sumTotalAmount,
+  sumTotalTaxes,
+} from "../../utils/match";
 import PageTitle from "../../components/Common/PageTitle";
 import ProductChoosenModal from "../../components/Product/ProductChoosenModal";
 function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
-  const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } = useAppContext();
+  const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
+    useAppContext();
   const params = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -57,7 +97,8 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     statusIndex: 1,
   });
   const itemsPerPage = 10;
-  const emptySearchForm = { name: "", productID: "",    category: "",  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const emptySearchForm = { name: "", productID: "", category: "" };
   const [searchForm, setSearchForm] = useState(emptySearchForm);
   const allProducts = useSelector((state) => state.products.allProducts);
   const products = useMemo(() => {
@@ -134,11 +175,19 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     dispatch(setOpenClientSelector(true));
   }, [dispatch]);
 
-  const openChooseProduct = useCallback((category) => {
-    setSelectedCategory(category);
-    dispatch(setOpenProductSelector(true));
-  }, [dispatch]);
-  
+  const openChooseProduct = useCallback(
+    (category) => {
+      setSelectedCategory(category);
+      dispatch(setOpenProductSelector(true));
+      setIsModalOpen(true);
+    },
+    [dispatch]
+  );
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    // setSelectedCategory(null);
+  };
 
   const handlerInvoiceValue = useCallback((event, keyName) => {
     const value =
@@ -147,6 +196,80 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
       return { ...prev, [keyName]: value };
     });
   }, []);
+
+  const handlerProductValue = useCallback(
+    (event, keyName, productID) => {
+      const value = event.target.value;
+
+      // If Keyname Price or Quantity must be only number
+      if (keyName === "quantity") {
+        if (!`${value}`.match(/^\d+$/)) {
+          return;
+        }
+      }
+
+      if (keyName === "amount") {
+        if (!`${value}`.match(/^[0-9]\d*(\.\d+)?$/)) {
+          return;
+        }
+      }
+
+      // Quantity Zero Case
+      if ((keyName === "quantity" || keyName === "amount") && value <= 0) {
+        return;
+      }
+
+      let updatedData = { ...invoiceForm };
+      let updateProducts = [...invoiceForm.products];
+
+      const isFindIndex = updateProducts.findIndex(
+        (prod) => prod.id === productID
+      );
+
+      if (isFindIndex !== -1) {
+        updateProducts[isFindIndex] = {
+          ...updateProducts[isFindIndex],
+          [keyName]: value,
+        };
+
+        updatedData.products = [...updateProducts];
+      }
+
+      if (keyName === "quantity" || keyName === "amount") {
+        const subTotalAmount = sumProductTotal(updateProducts);
+        const updateTaxes = getTotalTaxesWithPercent(
+          invoiceForm.taxes,
+          subTotalAmount
+        );
+        updatedData.taxes = updateTaxes;
+        updatedData.totalAmount = sumTotalAmount(
+          subTotalAmount,
+          sumTotalTaxes(updateTaxes)
+        );
+      }
+      setInvoiceForm(updatedData);
+    },
+    [invoiceForm]
+  );
+
+  const onDeleteProduct = useCallback((prodID) => {
+    setInvoiceForm((prev) => {
+      let updatedData = { ...prev };
+      const updateProducts = prev.products.filter((prod) => prod.id !== prodID);
+      const subTotalAmount = sumProductTotal(updateProducts);
+      const updateTaxes = getTotalTaxesWithPercent(prev.taxes, subTotalAmount);
+      // const updateDiscount =getTotalDiscountwithPercent(0);
+      updatedData.products = updateProducts;
+      updatedData.taxes = updateTaxes;
+      // updatedData.taxes = updateDiscount;
+      updatedData.totalAmount = sumTotalAmount(
+        subTotalAmount,
+        sumTotalTaxes(updateTaxes)
+      );
+      return updatedData;
+    });
+  }, []);
+
   // abc
   const handlerDiscountsValue = useCallback(
     (event, keyName, discountID) => {
@@ -300,7 +423,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     if (selectedProduct !== null) {
       // If Choosen Exisiting Client And This form is news
       const { name, productID, amount } = selectedProduct;
-      const newProduct = { id: nanoid(), name, productID, amount, quantity: 1, };
+      const newProduct = { id: nanoid(), name, productID, amount, quantity: 1 };
       setInvoiceForm((prev) => {
         let updatedData = { ...prev };
         const updateProducts = [...prev.products, newProduct];
@@ -438,6 +561,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
       }
     }
   }, [dispatch, invoiceForm, isConfirm, navigate, params, statusData]);
+
   const [selectedCategory, setSelectedCategory] = useState("");
   const [product, setProduct] = useState([]);
   const categories = [
@@ -448,15 +572,14 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   ];
   const handleCategoryChange = (event) => {
     setSelectedCategory(event.target.value);
-    // console.log(selectedCategory)
   };
+
   const fetchProducts = () => {
     const filteredProducts = allProducts.filter(
       (product) => product.category === selectedCategory
     );
     setProduct(filteredProducts);
   };
-
 
   return (
     <div>
@@ -573,84 +696,42 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                     "font-medium " + (isExporting ? "text-xs" : "text-sm mb-1")
                   }
                 >
-                  {!isViewMode ? (
-                    <input
-                      autoComplete="nope"
-                      placeholder="Client Name"
-                      className={defaultInputSmStyle}
-                      value={invoiceForm?.clientDetail?.name}
-                      onChange={(e) => handlerInvoiceClientValue(e, "name")}
-                    />
-                  ) : (
-                    invoiceForm?.clientDetail?.name
-                  )}
+                  {invoiceForm?.clientDetail?.name}
                 </div>
                 <div
                   className={
                     "font-medium " + (isExporting ? "text-xs" : "text-sm mb-1")
                   }
                 >
-                  {!isViewMode ? (
-                    <input
-                      autoComplete="nope"
-                      placeholder="Client Address"
-                      className={defaultInputSmStyle}
-                      value={invoiceForm?.clientDetail?.billingAddress}
-                      onChange={(e) =>
-                        handlerInvoiceClientValue(e, "billingAddress")
-                      }
-                    />
-                  ) : (
-                    invoiceForm?.clientDetail?.billingAddress
-                  )}
+                  {invoiceForm?.clientDetail?.billingAddress}
                 </div>
                 <div
                   className={
                     "font-medium " + (isExporting ? "text-xs" : "text-sm mb-1")
                   }
                 >
-                  {!isViewMode ? (
-                    <input
-                      autoComplete="nope"
-                      placeholder="Client Mobile"
-                      className={defaultInputSmStyle}
-                      value={invoiceForm?.clientDetail?.mobileNo}
-                      onChange={(e) => handlerInvoiceClientValue(e, "mobileNo")}
-                    />
-                  ) : (
-                    invoiceForm?.clientDetail?.mobileNo
-                  )}
+                  {invoiceForm?.clientDetail?.mobileNo}
                 </div>
                 <div
                   className={
                     "font-medium " + (isExporting ? "text-xs" : "text-sm mb-1")
                   }
                 >
-                  {!isViewMode ? (
-                    <input
-                      autoComplete="nope"
-                      placeholder="Client Category"
-                      className={defaultInputSmStyle}
-                      value={invoiceForm?.clientDetail?.clientCategory}
-                      onChange={(e) =>
-                        handlerInvoiceClientValue(e, "clientCategory")
-                      }
-                    />
-                  ) : (
-                    invoiceForm?.clientDetail?.clientCategory
-                  )}
+                  {invoiceForm?.clientDetail?.clientCategory}
                 </div>
               </div>
             </div>
             <div className="flex-1">
               <div className="font-title font-bold">Add Product Category</div>
               <div className="flex flex-row">
-                <div className="w-1/2 relative" style={{ top: "-3px" }}>
+                <div className="w-1/2 relative mt-2">
                   <div>
                     <select
                       value={selectedCategory}
                       onChange={handleCategoryChange}
+                      className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl p-x2 focus:outline-none border-indigo-300 h-8 text-sm flex-1"
                     >
+                      <div className="overflow-y h-12"></div>
                       <option value="">Select a category</option>
                       {categories.map((category) => (
                         <option key={category.id} value={category.name}>
@@ -714,7 +795,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                   />
                 </div>
               </div>
-              {/* {!isViewMode && (
+              {!isViewMode && (
                 <div className="flex flex-row justify-between items-center mb-1">
                   <div className="font-title flex-1"> Change Currency </div>
                   <div className="font-title flex-1 text-right">
@@ -727,7 +808,8 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                     />
                   </div>
                 </div>
-              )} */}
+              )}
+              
             </div>
           </div>
           {/* Customer Billing Info Finished */}
@@ -743,18 +825,46 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
               style={{ backgroundColor: invoiceForm.color }}
             >
               <div
-                className={ "font-title " + (isExporting ? " text-sm w-1/4 text-right pr-10" : " w-full sm:w-1/4 text-right sm:pr-10")}>
-                <span className="inline-block">Product Name</span>              </div>
+                className={
+                  "font-title " +
+                  (isExporting
+                    ? " text-sm w-1/4 text-right pr-10"
+                    : " w-full sm:w-1/4 text-right sm:pr-10")
+                }
+              >
+                <span className="inline-block">Product Name</span>{" "}
+              </div>
               <div
-                className={ "font-title " + (isExporting ? " text-sm  w-1/4 text-right pr-10" : " w-full sm:w-1/4 text-right sm:pr-10") } >
-                Price              </div>
+                className={
+                  "font-title " +
+                  (isExporting
+                    ? " text-sm  w-1/4 text-right pr-10"
+                    : " w-full sm:w-1/4 text-right sm:pr-10")
+                }
+              >
+                Price{" "}
+              </div>
               <div
-                className={ "font-title " + (isExporting ? " text-sm  w-1/4 text-right pr-10" : " w-full sm:w-1/4 text-right sm:pr-10")}>
-                Qty              </div>
-              <div className={ "font-title" + (isExporting ? " text-sm w-1/4 text-right pr-10" : "  w-full sm:w-1/4 text-right sm:pr-10") }>
-                Total              </div>
+                className={
+                  "font-title " +
+                  (isExporting
+                    ? " text-sm  w-1/4 text-right pr-10"
+                    : " w-full sm:w-1/4 text-right sm:pr-10")
+                }
+              >
+                Qty{" "}
+              </div>
+              <div
+                className={
+                  "font-title" +
+                  (isExporting
+                    ? " text-sm w-1/4 text-right pr-10"
+                    : "  w-full sm:w-1/4 text-right sm:pr-10")
+                }
+              >
+                Total{" "}
+              </div>
             </div>
-            {/* Add Product Actions */}
             {!isViewMode && (
               <div className="flex flex-col sm:flex-row rounded-lg sm:visible w-full px-4 py-2 items-center sm:justify-end">
                 <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
@@ -767,19 +877,252 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                     Add Existing Product
                   </Button>
 
-                  {selectedCategory && (
-                    <ProductChoosenModal selectedCategory={selectedCategory} />
-                  )}
-
+                  <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
+                    {selectedCategory && (
+                      <ProductChoosenModal
+                        onClose={handleCloseModal}
+                        selectedCategory={selectedCategory}
+                      />
+                    )}
+                  </Modal>
                 </div>
               </div>
             )}
+
+            {/* Add Product Actions */}
+
+            {invoiceForm?.products?.map((product, index) => (
+              <div
+                key={`${index}_${product.id}`}
+                className={
+                  (isExporting
+                    ? "flex flex-row rounded-lg w-full px-4 py-1 items-center relative text-sm"
+                    : "flex flex-col sm:flex-row rounded-lg sm:visible w-full px-4 py-2 items-center relative") +
+                  (index % 2 !== 0 ? " bg-gray-50 " : "")
+                }
+              >
+                <div
+                  className={
+                    isExporting
+                      ? "font-title w-1/4 text-right pr-8 flex flex-row block"
+                      : "font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block"
+                  }
+                >
+                  {!isExporting && (
+                    <span className="sm:hidden w-1/2 flex flex-row items-center">
+                      Product_name
+                    </span>
+                  )}
+                  <span
+                    className={
+                      isExporting
+                        ? "inline-block w-full mb-0"
+                        : "inline-block w-1/2 sm:w-full mb-1 sm:mb-0"
+                    }
+                  >
+                    {!isViewMode ? (
+                      <input
+                        autoComplete="nope"
+                        value={product.name}
+                        placeholder="Product Name"
+                        className={defaultInputSmStyle + " text-right"}
+                        onChange={(e) =>
+                          handlerProductValue(e, "name", product.id)
+                        }
+                      />
+                    ) : (
+                      <span className="pr-3">{product.name}</span>
+                    )}
+                  </span>
+                </div>
+                <div
+                  className={
+                    isExporting
+                      ? "font-title w-1/4 text-right pr-8 flex flex-row block"
+                      : "font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block"
+                  }
+                >
+                  {!isExporting && (
+                    <span className="sm:hidden w-1/2 flex flex-row items-center">
+                      Price
+                    </span>
+                  )}
+                  <span
+                    className={
+                      isExporting
+                        ? "inline-block w-full mb-0"
+                        : "inline-block w-1/2 sm:w-full mb-1 sm:mb-0"
+                    }
+                  >
+                    {!isViewMode ? (
+                      <input
+                        autoComplete="nope"
+                        value={product.amount}
+                        placeholder="Price"
+                        type={"number"}
+                        className={defaultInputSmStyle + " text-right"}
+                        onChange={(e) =>
+                          handlerProductValue(e, "amount", product.id)
+                        }
+                      />
+                    ) : (
+                      <span className="pr-3">
+                        <NumberFormatBase
+                          value={product.amount}
+                          className=""
+                          displayType={"text"}
+                          renderText={(value, props) => (
+                            <span {...props}>{value}</span>
+                          )}
+                        />
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div
+                  className={
+                    isExporting
+                      ? "font-title w-1/4 text-right pr-8 flex flex-row block"
+                      : "font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block"
+                  }
+                >
+                  {!isExporting && (
+                    <span className="sm:hidden w-1/2 flex flex-row items-center">
+                      Quantity
+                    </span>
+                  )}
+                  <span
+                    className={
+                      isExporting
+                        ? "inline-block w-full mb-0"
+                        : "inline-block w-1/2 sm:w-full mb-1 sm:mb-0"
+                    }
+                  >
+                    {!isViewMode ? (
+                      <input
+                        autoComplete="nope"
+                        value={product.quantity}
+                        type={"number"}
+                        placeholder="Quantity"
+                        className={defaultInputSmStyle + " text-right"}
+                        onChange={(e) =>
+                          handlerProductValue(e, "quantity", product.id)
+                        }
+                      />
+                    ) : (
+                      <span className="pr-3">
+                        <NumberFormatBase
+                          value={product.quantity}
+                          className=""
+                          displayType={"text"}
+                          renderText={(value, props) => (
+                            <span {...props}>{value}</span>
+                          )}
+                        />
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div
+                  className={
+                    isExporting
+                      ? "font-title w-1/4 text-right pr-9 flex flex-row `1block"
+                      : "font-title w-full sm:w-1/4 text-right sm:pr-9 flex flex-row sm:block"
+                  }
+                >
+                  {!isExporting && (
+                    <span className="sm:hidden w-1/2 flex flex-row items-center">
+                      Total
+                    </span>
+                  )}
+
+                  <span
+                    className={
+                      isExporting
+                        ? "inline-block w-full "
+                        : "inline-block w-1/2 sm:w-full"
+                    }
+                  >
+                    <NumberFormatBase
+                      value={
+                        Number.isInteger(product.quantity * product.amount)
+                          ? product.quantity * product.amount
+                          : (product.quantity * product.amount)
+                              .toFixed(4)
+                              .toString()
+                              .slice(0, -2)
+                      }
+                      className=""
+                      displayType={"text"}
+                      renderText={(value, props) => (
+                        <span {...props}>{value}</span>
+                      )}
+                    />{" "}
+                    {invoiceForm?.currencyUnit}
+                  </span>
+                </div>
+                {!isViewMode && (
+                  <div
+                    className="w-full sm:w-10 sm:absolute sm:right-0"
+                    onClick={() => onDeleteProduct(product.id)}
+                  >
+                    <div className="w-full text-red-500 font-title h-8 sm:h-8 sm:w-8 cursor-pointer rounded-2xl bg-red-200 mr-2 flex justify-center items-center">
+                      <DeleteIcon className="h-4 w-4" style={IconStyle} />
+                      <span className="block sm:hidden">Delete Product</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* {invoiceForm &&
+              invoiceForm?.products.map((product) => (
+                <div key={product.id}>
+                  <div className="flex justify-evenly">
+                    <div>
+                      <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                        {product.name}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                        {product.amount}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                        {product.quantity}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                        {product.total}
+                      </span>
+                    </div>
+                    <div>
+                      <Button>Remove</Button>
+                    </div>
+                  </div>
+                </div>
+              ))} */}
             {/* Subtotal Start */}
             <div
-              className={ isExporting ? "flex flex-row rounded-lg w-full px-4 py-1 justify-end items-end relative text-sm" : "flex flex-row sm:flex-row sm:justify-end rounded-lg sm:visible w-full px-4 py-1 items-center "}>
+              className={
+                isExporting
+                  ? "flex flex-row rounded-lg w-full px-4 py-1 justify-end items-end relative text-sm"
+                  : "flex flex-row sm:flex-row sm:justify-end rounded-lg sm:visible w-full px-4 py-1 items-center "
+              }
+            >
               <div
-                className={ isExporting  ? "font-title w-1/4 text-right pr-9 flex flex-row block justify-end text-sm " : "font-title w-1/2 sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1 sm:mb-0" } >
-                Subtotal              </div>
+                className={
+                  isExporting
+                    ? "font-title w-1/4 text-right pr-9 flex flex-row block justify-end text-sm "
+                    : "font-title w-1/2 sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1 sm:mb-0"
+                }
+              >
+                Subtotal{" "}
+              </div>
               <div
                 className={
                   isExporting

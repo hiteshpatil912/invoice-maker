@@ -188,38 +188,7 @@ function QuickAddProduct() {
             )}
           </div>
         </div>
-      </div>
-      <div className="mt-2">
-        <div className="font-title text-sm text-default-color">
-          Product Category
-        </div>
-        <div className="relative">
-          <input
-            value={productForm.category}
-            type="text"
-            onChange={(e) => handlerProductValue(e, "category")}
-            placeholder="Category"
-            className={
-              !validForm.category && isTouched
-                ? defaultInputInvalidStyle
-                : defaultInputStyle
-            }
-            disabled={isInitLoading}
-          />
-          <select
-            value={productForm.category}
-            onChange={(e) => handlerProductValue(e, "category")}
-            className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
-          >
-            <option value="">Select Category</option>
-            {productCategories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      </div>      
       <div className="mt-2">
         <div className="font-title text-sm text-default-color">Product Amount</div>
         <div className="flex">
@@ -268,6 +237,37 @@ function QuickAddProduct() {
               />
             )}
           </div>
+        </div>
+      </div>
+      <div className="mt-2">
+        <div className="font-title text-sm text-default-color">
+          Product Category
+        </div>
+        <div className="relative">
+          <input
+            value={productForm.category}
+            type="text"
+            onChange={(e) => handlerProductValue(e, "category")}
+            placeholder="Category"
+            className={
+              !validForm.category && isTouched
+                ? defaultInputInvalidStyle
+                : defaultInputStyle
+            }
+            disabled={isInitLoading}
+          />
+          <select
+            value={productForm.category}
+            onChange={(e) => handlerProductValue(e, "category")}
+            className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
+          >
+            <option value="">Select Category</option>
+            {productCategories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="mt-3">
