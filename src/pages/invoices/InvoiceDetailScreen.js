@@ -28,6 +28,7 @@ import {
   getCurrentColor,
   getInvoiceNewForm,
   getIsConfirm,
+  setConfirmModalOpen,
   setDefaultBackground,
   setDefaultColor,
   setIsConfirm,
@@ -62,6 +63,8 @@ import {
 } from "../../utils/match";
 import PageTitle from "../../components/Common/PageTitle";
 import ProductChoosenModal from "../../components/Product/ProductChoosenModal";
+import { jsPDF } from "jspdf";
+
 function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
     useAppContext();
@@ -111,6 +114,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     }
     return filterData;
   }, [allProducts, searchForm]);
+
   const handleExport = useCallback(() => {
     if (showNavbar) {
       toggleNavbar();
@@ -122,34 +126,65 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
       handlePrint();
     }, 3000);
   }, [handlePrint, setEscapeOverflow, showNavbar, toggleNavbar]);
-  const handleDownloadImg = useCallback(() => {
+
+  const handleDownloadPdf = useCallback(() => {
     if (showNavbar) {
       toggleNavbar();
     }
     setEscapeOverflow(true);
     setIsViewMode(true);
     setIsExporting(true);
-    domtoimage
-      .toJpeg(componentRef.current, { quality: 1 })
-      .then(async (dataUrl) => {
-        try {
-          const res = await fetch(dataUrl);
-          const blob = await res.blob();
-          let a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = "invoice.jpeg";
-          a.hidden = true;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-        } catch (e) {
-          console.log(e);
-        } finally {
-          setIsExporting(false);
-          setEscapeOverflow(false);
-        }
-      });
+
+    domtoimage.toPng(componentRef.current).then((dataUrl) => {
+      try {
+        const pdf = new jsPDF("p", "mm", "a4");
+        const img = new Image();
+        img.src = dataUrl;
+        img.onload = () => {
+          const imgWidth = pdf.internal.pageSize.getWidth();
+          const imgHeight = (img.height * imgWidth) / img.width;
+
+          pdf.addImage(dataUrl, "PNG", 0, 0, imgWidth, imgHeight);
+          pdf.save("invoice.pdf");
+        };
+      } catch (e) {
+        console.log(e);
+      } finally {
+        setIsExporting(false);
+        setEscapeOverflow(false);
+      }
+    });
   }, [setEscapeOverflow, showNavbar, toggleNavbar]);
+
+  // const handleDownloadImg = useCallback(() => {
+  //   if (showNavbar) {
+  //     toggleNavbar();
+  //   }
+  //   setEscapeOverflow(true);
+  //   setIsViewMode(true);
+  //   setIsExporting(true);
+  //   domtoimage
+  //     .toJpeg(componentRef.current, { quality: 1 })
+  //     .then(async (dataUrl) => {
+  //       try {
+  //         const res = await fetch(dataUrl);
+  //         const blob = await res.blob();
+  //         let a = document.createElement("a");
+  //         a.href = URL.createObjectURL(blob);
+  //         a.download = "invoice.jpeg";
+  //         a.hidden = true;
+  //         document.body.appendChild(a);
+  //         a.click();
+  //         a.remove();
+  //       } catch (e) {
+  //         console.log(e);
+  //       } finally {
+  //         setIsExporting(false);
+  //         setEscapeOverflow(false);
+  //       }
+  //     });
+  // }, [setEscapeOverflow, showNavbar, toggleNavbar]);
+
   const toggleViewMode = useCallback(() => {
     if (invoiceForm.statusIndex !== "1" && isViewMode) {
       toast.warn("You can only edit on Draft Mode", {
@@ -363,45 +398,101 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     return sumProductTotal(invoiceForm.products);
   }, [invoiceForm]);
   // abc
-  const addDiscount = useCallback(() => {
-    console.log("Adding Discount!");
+  // const addDiscount = useCallback((category, client) => {
+
+  //   console.log("Adding Discount!", category, client);
+    
+  //   const isSomeDiscount = invoiceForm?.discounts?.some(
+  //     (form) => form.type === "percentage"
+  //   );
+
+  //   if (isSomeDiscount) {
+  //     toast.error("Already Have Percentage Discounts!", {
+  //       position: "bottom-center",
+  //       autoClose: 2000,
+  //     });
+  //     return;
+  //   }
+  //   console.log("invoiceForm", invoiceForm);
+  //   setInvoiceForm((prev) => {
+  //     const subTotalAmount = sumProductTotal(prev.products);
+
+  //     // // find the discount using client and product category id
+  //     // ccid=clintid;
+  //     // pcid=pcid;
+  //     // findDscount(cciid,pcid);
+  //     // // set discountPercentage
+
+  //     // Calculate discount
+  //     const discountPercentage = 5; // Example: 5% discount
+  //     const discountAmount = (discountPercentage / 100) * subTotalAmount;
+  //     const totalAmount = subTotalAmount - discountAmount;
+
+  //     const discount = {
+  //       id: nanoid(),
+  //       title: "Discount",
+  //       type: "percentage",
+  //       value: discountPercentage,
+  //       amount: discountAmount,
+  //     };
+
+  //     return {
+  //       ...prev,
+  //       discounts: prev?.discounts
+  //         ? [discount, ...prev?.discounts]
+  //         : [discount],
+  //       totalAmount: totalAmount,
+  //     };
+  //   });
+  // }, [invoiceForm]);
+
+// rozy
+
+  const addDiscount = useCallback((category, client) => {
+    console.log("Adding Discount!", category, client);
+
     const isSomeDiscount = invoiceForm?.discounts?.some(
       (form) => form.type === "percentage"
     );
 
-    if (isSomeDiscount) {
-      toast.error("Already Have Percentage Discounts!", {
-        position: "bottom-center",
-        autoClose: 2000,
-      });
-      return;
-    }
-    console.log("invoiceForm", invoiceForm);
-    setInvoiceForm((prev) => {
-      const subTotalAmount = sumProductTotal(prev.products);
-      // Calculate discount
-      const discountPercentage = 5; // Example: 5% discount
-      const discountAmount = (discountPercentage / 100) * subTotalAmount;
-      const totalAmount = subTotalAmount - discountAmount;
-
-      const discount = {
-        id: nanoid(),
-        title: "Discount",
-        type: "percentage",
-        value: discountPercentage,
-        amount: discountAmount,
-      };
-
-      return {
-        ...prev,
-        discounts: prev?.discounts
-          ? [discount, ...prev?.discounts]
-          : [discount],
-        totalAmount: totalAmount,
-      };
-    });
+  //   if (isSomeDiscount) {
+  //     return category?.map((product) => {
+  //       // Assuming you have a discount value and you want to apply it
+  //       const discountRate = 0.1; // 10% discount, for example
+  //       return {
+  //         ...product,
+  //         price: product.price - (product.price * discountRate)
+  //       };
+  //     });
+    // }
+    return category;
   }, [invoiceForm]);
+  // useEffect(() => {
+  //   if (category && category) {
+  //     let filteredcategory = category.filter(
+  //       (product) => product.category === category && client.category === category
+  //     );
+
+  //     // Apply discount if necessary
+  //     filteredcategory = addDiscount(filteredcategory, client);
+
+  //     setRecords(filteredcategory);
+  //     console.log("filteredcategory with potential discount", filteredcategory);
+  //   }
+  // }, [category, client, addDiscount]);
+
   // xyz
+  const saveAs = useCallback(
+    (status) => {
+      setStatusData({
+        statusIndex: status === "Draft" ? "1" : status === "Unpaid" ? "2" : "3",
+        statusName: status,
+      });
+      dispatch(setConfirmModalOpen(true));
+    },
+    [dispatch]
+  );
+
   const onDeleteDiscount = (discountID) => {
     // Filter out the discount with the given ID
     const updatedDiscounts = invoiceForm.discounts.filter(
@@ -594,7 +685,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
           }
         />
       </div>
-      <div className="px-4 pb-3">
+      {/* <div className="px-4 pb-3">
         <InvoiceTopBar
           onClickBack={goInvoiceList}
           viewMode={isViewMode}
@@ -603,7 +694,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
           onClickExport={handleExport}
           onClickDownloadImg={handleDownloadImg}
         />
-      </div>
+      </div> */}
       {invoiceForm && (
         <div
           className={
@@ -809,7 +900,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                   </div>
                 </div>
               )}
-              
             </div>
           </div>
           {/* Customer Billing Info Finished */}
@@ -1074,38 +1164,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                 )}
               </div>
             ))}
-
-            {/* {invoiceForm &&
-              invoiceForm?.products.map((product) => (
-                <div key={product.id}>
-                  <div className="flex justify-evenly">
-                    <div>
-                      <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                        {product.name}
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                        {product.amount}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                        {product.quantity}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                        {product.total}
-                      </span>
-                    </div>
-                    <div>
-                      <Button>Remove</Button>
-                    </div>
-                  </div>
-                </div>
-              ))} */}
             {/* Subtotal Start */}
             <div
               className={
@@ -1265,11 +1323,11 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                 )}
               </div>
             ))}
-            {/* Add Tax Action */}
+            {/* Add Discount Action */}
             {!isViewMode && (
               <div className="flex flex-col sm:flex-row rounded-lg sm:visible w-full px-4 py-2 items-center sm:justify-end">
                 <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
-                  <Button size="sm" block={1} onClick={addDiscount}>
+                  <Button size="sm" block={1} onClick={(addDiscount(selectedCategory, invoiceForm?.clientDetail?.clientCategory))}>
                     <TaxesIcon style={IconStyle} className="h-5 w-5" />
                     Add Discount (%)
                   </Button>
@@ -1328,11 +1386,30 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
           {/* Products Finished */}
         </div>
       )}
+      {invoiceForm && invoiceForm?.statusIndex !== "3" && (
+        <div className="px-4 pt-3">
+          <div className="flex flex-col justify-end flex-wrap sm:flex-row">
+            <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
+              <Button
+                size="sm"
+                block={1}
+                success={1}
+                onClick={() => saveAs("Paid")}
+              >
+                {/* <SecurityIcon className="h-5 w-5 mr-1" />{" "} */}
+                {params.id === "new" ? "Save" : "Update"} As Paid
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {invoiceForm && (
         <div className="p-4">
           <InvoiceTopBar
             onClickExport={handleExport}
-            onClickDownloadImg={handleDownloadImg}
+            // onClickDownloadImg={handleDownloadImg}
+            onClickDownloadPdf={handleDownloadPdf}
           />
         </div>
       )}

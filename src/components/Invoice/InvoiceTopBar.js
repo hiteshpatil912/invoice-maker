@@ -5,12 +5,14 @@ import EyeOpenIcon from "../Icons/EyeOpenIcon";
 import PencilIcon from "../Icons/PencilIcon";
 import SettingIcon from "../Icons/SettingIcon";
 
+
 function InvoiceTopBar({
   viewMode = false,
   onClickViewAs,
   onClickSetting,
   onClickExport,
   onClickDownloadImg,
+  onClickDownloadPdf,
   onClickBack,
 }) {
   return (
@@ -73,11 +75,11 @@ function InvoiceTopBar({
                 clipRule="evenodd"
               />
             </svg>
-            Export Print & PDF
+            Export Print 
           </Button>
         </div>
-        {/* <div className="w-full sm:w-1/2 md:w-1/4 my-1 sm:my-1 md:my-0 px-1">
-          <Button size="sm" block={1} outlined={1} onClick={onClickDownloadImg}>
+        <div className="w-full sm:w-1/2 md:w-1/4 my-1 sm:my-1 md:my-0 px-1">
+          <Button size="sm" block={1} outlined={1} onClick={onClickDownloadPdf}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               style={IconStyle}
@@ -93,9 +95,9 @@ function InvoiceTopBar({
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
               />
             </svg>
-            Download Image
+            Download PDF
           </Button>
-        </div> */}
+        </div>
       </div>
     </div>
   );

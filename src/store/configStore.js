@@ -3,7 +3,7 @@ import clientsReducer from "./clientSlice";
 import productRedicer from "./productSlice";
 import companyReducer from "./companySlice";
 import invoiceReducer from "./invoiceSlice";
-import categoryReducer from "./categorySlice";
+import discountReducer from "./discountSlice";
 
 
 export const store = configureStore({
@@ -12,7 +12,8 @@ export const store = configureStore({
     company: companyReducer,
     products: productRedicer,
     invoices: invoiceReducer,
-    Categorys: categoryReducer,
+    // discountReducer: discountReducer
+    Categorys: discountReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 import Button from "../Button/Button";
 import SectionTitle from "../Common/SectionTitle";
 
-import { addNewCategory } from "../../store/categorySlice"; // Importing addNewCategory action creator
+import { addNewCategory } from "../../store/discountSlice"; // Importing addNewCategory action creator
 
 const emptyForm ={
   clientCategory: "" ,
@@ -25,7 +25,7 @@ function QuickAddCategory() {
   const [categoryForm, setCategoryForm] = useState(categoryemptyForm);
 
   const clientCategories = ["Client Category 1", "Client Category 2", "Client Category 3"];
-  const productCategories = ["Product Category 1", "Product Category 2", "Product Category 3"];
+  const productCategories = ["Electronics", "Books", "Clothing"];
 
   
   const handlerCategoryValue = useCallback((event, keyName) => {

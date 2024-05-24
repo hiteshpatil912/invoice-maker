@@ -11,6 +11,7 @@ import DeleteIcon from "../Icons/DeleteIcon";
 import SecurityIcon from "../Icons/SecurityIcon";
 import InvoiceNavbarLoading from "../Loading/InvoiceNavbarLoading";
 import { getCompanyData } from "../../store/companySlice";
+
 import Skeleton from "react-loading-skeleton";
 
 const NAV_DATA = [
@@ -32,6 +33,16 @@ const NAV_DATA = [
   {
     title: "Products",
     link: "products",
+    Icon: ProductIcon,
+  },
+  {
+    title: "Discount",
+    link: "discount",
+    Icon: ProductIcon,
+  },
+  {
+    title: "CashInvoice",
+    link: "cashInvoice",
     Icon: ProductIcon,
   },
 ];
@@ -172,7 +183,7 @@ function Sidebar() {
 
         <hr />
 
-        <div className="mt-4">
+        {/* <div className="mt-4">
           <motion.a
             href={"#!"}
             className="block px-4 py-2 rounded-md flex"
@@ -196,7 +207,7 @@ function Sidebar() {
             <DeleteIcon className="h-6 w-6 mr-4" />
             Clear Data
           </motion.a>
-        </div>
+        </div> */}
       </nav>
     </>
   );

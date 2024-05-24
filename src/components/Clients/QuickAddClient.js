@@ -141,52 +141,6 @@ function QuickAddClient() {
       </div>
       <div className="mt-2">
         <div className="font-title text-sm text-default-color">
-          Client Category
-        </div>
-        <div className="relative">
-          <input
-            value={clientForm.clientCategory}
-            type="text"
-            onChange={(e) => {
-              const newValue = e.target.value;
-              setClientForm((prev) => ({
-                ...prev,
-                clientCategory: newValue,
-              }));
-              handlerClientValue(e, "clientCategory");
-            }}
-            placeholder=""
-            className={
-              !validForm.clientCategory && isTouched
-                ? defaultInputInvalidStyle
-                : defaultInputStyle
-            }
-            disabled={isInitLoading}
-          />
-          {/* Spinner for predefined categories*/}
-          <select
-            value={clientForm.clientCategory}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              setClientForm((prev) => ({
-                ...prev,
-                clientCategory: newValue,
-              }));
-              handlerClientValue(e, "clientCategory");
-            }}
-            className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
-          >
-            <option value="">Select Category</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <div className="mt-2">
-        <div className="font-title text-sm text-default-color">
           Mobile Number
         </div>
         <div className="flex">
@@ -235,6 +189,52 @@ function QuickAddClient() {
               />
             )}
           </div>
+        </div>
+      </div>
+      <div className="mt-2">
+        <div className="font-title text-sm text-default-color">
+          Client Category
+        </div>
+        <div className="relative">
+          <input
+            value={clientForm.clientCategory}
+            type="text"
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setClientForm((prev) => ({
+                ...prev,
+                clientCategory: newValue,
+              }));
+              handlerClientValue(e, "clientCategory");
+            }}
+            placeholder=""
+            className={
+              !validForm.clientCategory && isTouched
+                ? defaultInputInvalidStyle
+                : defaultInputStyle
+            }
+            disabled={isInitLoading}
+          />
+          {/* Spinner for predefined categories*/}
+          <select
+            value={clientForm.clientCategory}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setClientForm((prev) => ({
+                ...prev,
+                clientCategory: newValue,
+              }));
+              handlerClientValue(e, "clientCategory");
+            }}
+            className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
+          >
+            <option value="">Select Category</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="mt-3">

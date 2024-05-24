@@ -4,7 +4,7 @@ import {
   getAllCategorysSelector,
   setDeleteId,
   setEditedId,
-} from "../../store/categorySlice";
+} from "../../store/discountSlice";
 import { Menu, MenuItem, MenuButton } from "@szhsin/react-menu";
 import {
   defaultTdStyle,

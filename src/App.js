@@ -7,7 +7,10 @@ import DashboardScreen from "./pages/DashboardScreen";
 import ClientListScreen from "./pages/clients/ClientListScreen";
 import ProductListScreen from "./pages/products/ProductListScreen";
 import InvoiceListScreen from "./pages/invoices/InvoiceListScreen";
+import CashInvoiceListScreen from "./pages/cashinvoice/CashInvoiceListScreen.js"
+import DiscountListScreen from "./pages/discount/DiscountListScreen";
 import InvoiceDetailScreen from "./pages/invoices/InvoiceDetailScreen";
+import CashInvoiceDetailScreen from "./pages/cashinvoice/CashInvoiceDetailScreen.js"
 import AboutScreen from "./pages/about/AboutScreen";
 import Container from "./components/Container/Container";
 import useInitApp from "./hook/useInitApp";
@@ -45,9 +48,16 @@ const App = () => {
 
           <Route path="products" element={<ProductListScreen />}></Route>
 
+          <Route path="discount" element={<DiscountListScreen />}></Route>
+
           <Route path="invoices">
             <Route path="" element={<InvoiceListScreen />} exact />
             <Route path=":id" element={<InvoiceDetailScreen />} />
+          </Route>
+          {/* cashInvoice */}
+          <Route path="cashinvoice">
+            <Route path="" element={<CashInvoiceListScreen />} exact />
+            <Route path=":id" element={<CashInvoiceDetailScreen />} />
           </Route>
 
           <Route path="about" element={<AboutScreen />} />
