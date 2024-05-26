@@ -34,7 +34,7 @@ function CategoryTable({ showAdvanceSearch = false }) {
   const [searchForm, setSearchForm] = useState(emptySearchForm);
   const [currentItems, setCurrentItems] = useState(null);
   const [pageCount, setPageCount] = useState(0);
-  const [itemOffset, setItemOffset] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
 
   const categorys = useMemo(() => {
     let filterData = allCategorys.length > 0 ? [...allCategorys].reverse() : [];
@@ -59,42 +59,36 @@ function CategoryTable({ showAdvanceSearch = false }) {
     return filterData;
   }, [allCategorys, searchForm]);
 
-  // Invoke when user click to request another page.
-  const handlePageClick = (event) => {
-    const newOffset = event.selected * itemsPerPage;
-    setItemOffset(newOffset);
+  // Handle search input change
+  const handlerSearchValue = (event, keyName) => {
+    const value = event.target.value;
+    setSearchForm((prev) => ({
+      ...prev,
+      [keyName]: value,
+    }));
+    setCurrentPage(0); // Reset current page when search changes
   };
 
-  const handleDelete = useCallback(
-    (item) => {
-      dispatch(setDeleteId(item.id));
-    },
-    [dispatch]
-  );
-
-  const handleEdit = useCallback(
-    (item) => {
-      dispatch(setEditedId(item.id));
-    },
-    [dispatch]
-  );
-
-  const handlerSearchValue = useCallback((event, keyName) => {
-    const value = event.target.value;
-
-    setSearchForm((prev) => {
-      return { ...prev, [keyName]: value };
-    });
-
-    setItemOffset(0);
-  }, []);
+  // Pagination logic
+  const handlePageChange = ({ selected }) => {
+    setCurrentPage(selected);
+  };
 
   useEffect(() => {
-    // Fetch items from another resources.
-    const endOffset = itemOffset + itemsPerPage;
-    setCurrentItems(categorys.slice(itemOffset, endOffset));
+    const startOffset = currentPage * itemsPerPage;
+    const endOffset = startOffset + itemsPerPage;
+    setCurrentItems(categorys.slice(startOffset, endOffset));
     setPageCount(Math.ceil(categorys.length / itemsPerPage));
-  }, [categorys, itemOffset]);
+  }, [categorys, currentPage]);
+
+  // Handlers for delete and edit
+  const handleDelete = useCallback((item) => {
+    dispatch(setDeleteId(item.id));
+  }, [dispatch]);
+
+  const handleEdit = useCallback((item) => {
+    dispatch(setEditedId(item.id));
+  }, [dispatch]);
 
   return (
     <>
@@ -279,7 +273,8 @@ function CategoryTable({ showAdvanceSearch = false }) {
               breakLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
               activeLinkClassName="py-2 px-3 text-blue-600 bg-blue-50 border border-gray-300 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
               breakLabel="..."
-              onPageChange={handlePageClick}
+              // onPageChange={handlePageClick}
+              onPageChange={handlePageChange}
               pageRangeDisplayed={1}
               pageCount={pageCount}
               previousLabel="<"

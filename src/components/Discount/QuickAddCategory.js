@@ -4,30 +4,21 @@ import { useDispatch } from "react-redux";
 import { nanoid } from "nanoid";
 import Button from "../Button/Button";
 import SectionTitle from "../Common/SectionTitle";
-
 import { addNewCategory } from "../../store/discountSlice"; // Importing addNewCategory action creator
 
-const emptyForm ={
-  clientCategory: "" ,
-  productCategory: ""
-}
-
-const categoryemptyForm ={
-    id: "",
-    clientCategory: "",
-    productCategory: "",
-    amount: 0,
-  }
+const emptyForm = {
+  clientCategory: "",
+  productCategory: "",
+  amount: 0
+};
 
 function QuickAddCategory() {
   const dispatch = useDispatch();
-
-  const [categoryForm, setCategoryForm] = useState(categoryemptyForm);
+  const [categoryForm, setCategoryForm] = useState(emptyForm);
 
   const clientCategories = ["Client Category 1", "Client Category 2", "Client Category 3"];
   const productCategories = ["Electronics", "Books", "Clothing"];
 
-  
   const handlerCategoryValue = useCallback((event, keyName) => {
     const value = event.target.value;
     setCategoryForm((prev) => ({
@@ -35,7 +26,6 @@ function QuickAddCategory() {
       [keyName]: value,
     }));
   }, []);
-
 
   const submitHandler = useCallback(() => {
     console.log(categoryForm);
@@ -52,13 +42,12 @@ function QuickAddCategory() {
       id: nanoid(),
     };
 
-    
     dispatch(addNewCategory(categoryData));
 
     // Reset form after submission
     setCategoryForm(emptyForm);
 
-    toast.success("Category added Successfully!", {
+    toast.success("Category added successfully!", {
       position: "bottom-center",
       autoClose: 2000,
     });
@@ -66,7 +55,7 @@ function QuickAddCategory() {
 
   return (
     <div className="bg-white rounded-xl p-4">
-      <SectionTitle> Quick Add Category </SectionTitle>
+      <SectionTitle>Quick Add Category</SectionTitle>
       <div className="mt-2">
         <div className="font-title text-sm text-default-color">Client Category</div>
         <div className="relative">
@@ -102,26 +91,23 @@ function QuickAddCategory() {
         </div>
       </div>
       <div className="mt-2">
-        <div className="font-title text-sm text-default-color">
-          Product Amount
-        </div>
+        <div className="font-title text-sm text-default-color">Product Amount</div>
         <div className="flex">
           <div className="flex-1">
-            {/* Your input field for product amount */}
             <input
-                autoComplete="nope"
-                placeholder="Amount"
-                type="number"
-                className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl p-x2 focus:outline-none border-indigo-400 h-12 flex-1"
-                value={categoryForm.amount}
-                onChange={(e) => handlerCategoryValue(e, "amount")}
-              />
+              autoComplete="nope"
+              placeholder="Amount"
+              type="number"
+              className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl p-x2 focus:outline-none border-indigo-400 h-12 flex-1"
+              value={categoryForm.amount}
+              onChange={(e) => handlerCategoryValue(e, "amount")}
+            />
           </div>
         </div>
       </div>
       <div className="mt-3">
         <Button onClick={submitHandler} block={1}>
-          <span className="inline-block ml-2"> Submit </span>
+          <span className="inline-block ml-2">Submit</span>
         </Button>
       </div>
     </div>

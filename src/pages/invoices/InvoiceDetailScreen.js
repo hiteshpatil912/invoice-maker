@@ -397,89 +397,84 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     }
     return sumProductTotal(invoiceForm.products);
   }, [invoiceForm]);
-  // abc
-  // const addDiscount = useCallback((category, client) => {
 
-  //   console.log("Adding Discount!", category, client);
-    
-  //   const isSomeDiscount = invoiceForm?.discounts?.some(
-  //     (form) => form.type === "percentage"
-  //   );
-
-  //   if (isSomeDiscount) {
-  //     toast.error("Already Have Percentage Discounts!", {
-  //       position: "bottom-center",
-  //       autoClose: 2000,
-  //     });
-  //     return;
-  //   }
-  //   console.log("invoiceForm", invoiceForm);
-  //   setInvoiceForm((prev) => {
-  //     const subTotalAmount = sumProductTotal(prev.products);
-
-  //     // // find the discount using client and product category id
-  //     // ccid=clintid;
-  //     // pcid=pcid;
-  //     // findDscount(cciid,pcid);
-  //     // // set discountPercentage
-
-  //     // Calculate discount
-  //     const discountPercentage = 5; // Example: 5% discount
-  //     const discountAmount = (discountPercentage / 100) * subTotalAmount;
-  //     const totalAmount = subTotalAmount - discountAmount;
-
-  //     const discount = {
-  //       id: nanoid(),
-  //       title: "Discount",
-  //       type: "percentage",
-  //       value: discountPercentage,
-  //       amount: discountAmount,
-  //     };
-
-  //     return {
-  //       ...prev,
-  //       discounts: prev?.discounts
-  //         ? [discount, ...prev?.discounts]
-  //         : [discount],
-  //       totalAmount: totalAmount,
-  //     };
-  //   });
-  // }, [invoiceForm]);
-
-// rozy
-
+  // abc addDiscount
   const addDiscount = useCallback((category, client) => {
+
     console.log("Adding Discount!", category, client);
 
     const isSomeDiscount = invoiceForm?.discounts?.some(
       (form) => form.type === "percentage"
     );
 
-  //   if (isSomeDiscount) {
-  //     return category?.map((product) => {
-  //       // Assuming you have a discount value and you want to apply it
-  //       const discountRate = 0.1; // 10% discount, for example
-  //       return {
-  //         ...product,
-  //         price: product.price - (product.price * discountRate)
-  //       };
-  //     });
-    // }
-    return category;
+    if (isSomeDiscount) {
+      toast.error("Already Have Percentage Discounts!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+      return;
+    }
+    console.log("invoiceForm", invoiceForm);
+    setInvoiceForm((prev) => {
+      const subTotalAmount = sumProductTotal(prev.products);
+
+      // // find the discount using client and product category id
+      // ccid=clintid;
+      // pcid=pcid;
+      // findDscount(cciid,pcid);
+      // // set discountPercentage
+
+      // Calculate discount
+      const discountPercentage = 5; // Example: 5% discount
+      const discountAmount = (discountPercentage / 100) * subTotalAmount;
+      const totalAmount = subTotalAmount - discountAmount;
+
+      const discount = {
+        id: nanoid(),
+        title: "Discount",
+        type: "percentage",
+        value: discountPercentage,
+        amount: discountAmount,
+      };
+
+      return {
+        ...prev,
+        discounts: prev?.discounts
+          ? [discount, ...prev?.discounts]
+          : [discount],
+        totalAmount: totalAmount,
+      };
+    });
   }, [invoiceForm]);
-  // useEffect(() => {
-  //   if (category && category) {
-  //     let filteredcategory = category.filter(
-  //       (product) => product.category === category && client.category === category
+
+  // rozy
+
+  // const [records, setRecords] = useState([]);
+
+  // const applyDiscount = useCallback(() => {
+  //   const clientCategory = invoiceForm?.clientDetail?.clientCategory;
+  //   if (selectedCategory && clientCategory) {
+  //     const filteredCategory = selectedCategory.filter(
+  //       (product) =>
+  //         product.clientCategoryId === clientCategory.id &&
+  //         product.productCategoryId === selectedCategory.id // Ensure this logic matches your actual data structure
   //     );
 
-  //     // Apply discount if necessary
-  //     filteredcategory = addDiscount(filteredcategory, client);
+  //     const discountRate = 0.1; // Example discount rate of 10%
+  //     const discountedProducts = filteredCategory.map((product) => ({
+  //       ...product,
+  //       price: product.price - product.price * discountRate,
+  //     }));
 
-  //     setRecords(filteredcategory);
-  //     console.log("filteredcategory with potential discount", filteredcategory);
+  //     setRecords(discountedProducts);
   //   }
-  // }, [category, client, addDiscount]);
+  // }, [selectedCategory, invoiceForm]);
+
+  // useEffect(() => {
+  //   if (selectedCategory && invoiceForm?.clientDetail?.clientCategory) {
+  //     applyDiscount();
+  //   }
+  // }, [selectedCategory, invoiceForm, applyDiscount]);
 
   // xyz
   const saveAs = useCallback(
@@ -1327,13 +1322,31 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
             {!isViewMode && (
               <div className="flex flex-col sm:flex-row rounded-lg sm:visible w-full px-4 py-2 items-center sm:justify-end">
                 <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
-                  <Button size="sm" block={1} onClick={(addDiscount(selectedCategory, invoiceForm?.clientDetail?.clientCategory))}>
+                  <Button
+                    size="sm"
+                    block={1}
+                    onClick={addDiscount(
+                      selectedCategory,
+                      invoiceForm?.clientDetail?.clientCategory
+                    )}
+                  >
                     <TaxesIcon style={IconStyle} className="h-5 w-5" />
                     Add Discount (%)
                   </Button>
                 </div>
               </div>
             )}
+            {/* {!isViewMode && (
+              <div className="flex flex-col sm:flex-row rounded-lg sm:visible w-full px-4 py-2 items-center sm:justify-end">
+                <div className="font-title w-full sm:w-1/4 text-right sm:pr-8 flex flex-row sm:block mb-1">
+                  <Button size="sm" block={1} onClick={applyDiscount}>
+                    <TaxesIcon style={IconStyle} className="h-5 w-5" />
+                    Add Discount (%)
+                  </Button>
+                </div>
+              </div>
+            )} */}
+
             {/* Subtotal Start */}
             <div
               className={
