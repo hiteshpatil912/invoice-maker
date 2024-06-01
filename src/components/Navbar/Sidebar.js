@@ -45,6 +45,21 @@ const NAV_DATA = [
     link: "cashInvoice",
     Icon: ProductIcon,
   },
+  // {
+  //   title: "CreditInvoice",
+  //   link: "cashInvoice",
+  //   Icon: ProductIcon,
+  // },
+  // {
+  //   title: "SellInvoice",
+  //   link: "cashInvoice",
+  //   Icon: ProductIcon,
+  // },
+  // {
+  //   title: "ReturnInvoice",
+  //   link: "cashInvoice",
+  //   Icon: ProductIcon,
+  // },
 ];
 
 const navDefaultClasses =

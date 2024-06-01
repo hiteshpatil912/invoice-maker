@@ -400,13 +400,12 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
 
   // abc addDiscount
   const addDiscount = useCallback((category, client) => {
-
     console.log("Adding Discount!", category, client);
-
+  
     const isSomeDiscount = invoiceForm?.discounts?.some(
       (form) => form.type === "percentage"
     );
-
+  
     if (isSomeDiscount) {
       toast.error("Already Have Percentage Discounts!", {
         position: "bottom-center",
@@ -414,6 +413,24 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
       });
       return;
     }
+  
+    // Assuming you have access to client and product category IDs
+    const clientCategoryId = client.id; // Replace with the correct property name
+    const productCategoryId = category.id; // Replace with the correct property name
+  
+    // Find the discount using the client and product category IDs
+    const discount = findDiscount(clientCategoryId, productCategoryId);
+  
+    if (discount) {
+      // Apply the discount
+      console.log("Discount found:", discount);
+      // Further logic to apply the discount as needed
+    } else {
+      console.log("No discount found for the given category and client.");
+    }
+  
+    console.log("invoiceForm", invoiceForm);
+
     console.log("invoiceForm", invoiceForm);
     setInvoiceForm((prev) => {
       const subTotalAmount = sumProductTotal(prev.products);
@@ -446,35 +463,81 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
       };
     });
   }, [invoiceForm]);
-
+  const findDiscount = (clientCategoryId, productCategoryId) => {
+    // Your logic to find the discount based on client and product category IDs
+    // Iterate through your discount data to find the applicable discount
+    // Return the discount object if found, or null if not found
+  };
   // rozy
 
-  // const [records, setRecords] = useState([]);
-
-  // const applyDiscount = useCallback(() => {
-  //   const clientCategory = invoiceForm?.clientDetail?.clientCategory;
-  //   if (selectedCategory && clientCategory) {
-  //     const filteredCategory = selectedCategory.filter(
-  //       (product) =>
-  //         product.clientCategoryId === clientCategory.id &&
-  //         product.productCategoryId === selectedCategory.id // Ensure this logic matches your actual data structure
-  //     );
-
-  //     const discountRate = 0.1; // Example discount rate of 10%
-  //     const discountedProducts = filteredCategory.map((product) => ({
+  // const getDiscountRate = (clientCategoryId, productCategoryId) => {
+  //   const discount = discountTable.find(
+  //     (d) => d.clientCategoryId === clientCategoryId && d.productCategoryId === productCategoryId
+  //   );
+  //   return discount ? discount.discountRate : null;
+  // };
+  
+  // const applyDiscount = (product, clientCategory) => {
+  //   const discountRate = getDiscountRate(clientCategory.id, product.productCategoryId);
+  //   if (discountRate !== null) {
+  //     return {
   //       ...product,
   //       price: product.price - product.price * discountRate,
-  //     }));
-
-  //     setRecords(discountedProducts);
+  //     };
   //   }
-  // }, [selectedCategory, invoiceForm]);
-
-  // useEffect(() => {
-  //   if (selectedCategory && invoiceForm?.clientDetail?.clientCategory) {
-  //     applyDiscount();
-  //   }
-  // }, [selectedCategory, invoiceForm, applyDiscount]);
+  //   return null;
+  // };
+  
+  // const InvoiceDetailScreen = ({ invoiceForm }) => {
+  //   const [selectedProducts, setSelectedProducts] = useState([]);
+  //   const [discountedProducts, setDiscountedProducts] = useState([]);
+  //   const [client, setClient] = useState(null);
+  
+  //   useEffect(() => {
+  //     if (invoiceForm?.clientDetail?.clientCategory) {
+  //       setClient(invoiceForm.clientDetail.clientCategory);
+  //     }
+  //   }, [invoiceForm]);
+  
+  //   const handleAddProduct = (product) => {
+  //     setSelectedProducts((prevSelected) => [...prevSelected, product]);
+  //   };
+  
+  //   const handleAddDiscount = useCallback(() => {
+  //     if (selectedProducts.length > 0 && client) {
+  //       const newDiscountedProducts = selectedProducts.map((product) => {
+  //         const discountedProduct = applyDiscount(product, client);
+  //         return discountedProduct || product;
+  //       });
+  //       setDiscountedProducts(newDiscountedProducts);
+  //     }
+  //   }, [selectedProducts, client]);
+  
+  //   const selectProduct = (productId) => {
+  //     const product = products.find((p) => p.id === productId);
+  //     if (product) {
+  //       handleAddProduct(product);
+  //     }
+  //   };
+  
+  //   return (
+  //     <div>
+  //       <h1>Invoice</h1>
+  //       <div>
+  //         {discountedProducts.map((product) => (
+  //           <div key={product.id}>
+  //             <p>{product.name} - ${product.price.toFixed(2)}</p>
+  //           </div>
+  //         ))}
+  //       </div>
+  //       {/* Example product selection */}
+  //       <button onClick={() => selectProduct(1)}>Select Product A</button>
+  //       <button onClick={() => selectProduct(2)}>Select Product B</button>
+  //       <button onClick={handleAddDiscount}>Add Discount</button>
+  //       {discountedProducts.length === 0 && <p>No discounts available.</p>}
+  //     </div>
+  //   );
+  // };
 
   // xyz
   const saveAs = useCallback(

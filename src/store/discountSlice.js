@@ -9,9 +9,9 @@ const initialState = {
   data: [],
   newForm: {
     id: nanoid(),
-    clientCategory: false, // Add Categorycategory field to the form
-    productCategory: false,
-    amount: "",
+    clientCategory: "", // Initialize as an empty string
+    productCategory: "", // Initialize as an empty string
+    percentage: "",
   },
   editedID: null,
   deletedID: null,
@@ -30,30 +30,25 @@ export const CategorysSlice = createSlice({
         id: nanoid(),
         clientCategory: "", // Update to clientCategory
         productCategory: "", // Update to productCategory
-        amount: "",
+        percentage: "",
       };
 
-      state.newForm = {
-        ...reNewForm
-      };
+      state.newForm = reNewForm;
       localforage.setItem(CATEGORY_FORM_KEY, reNewForm);
     },
 
     updateNewCategoryForm: (state, action) => {
-      state.newForm = {
-        ...action.payload
-      };
-      localforage.setItem(CATEGORY_FORM_KEY, {
-        ...state.newForm
-      });
+      state.newForm = action.payload;
+      localforage.setItem(CATEGORY_FORM_KEY, action.payload);
     },
 
     updateNewCategoryFormField: (state, action) => {
-      state.newForm[action.payload.key] = action.payload.value;
-      localforage.setItem(CATEGORY_FORM_KEY, {
-        ...state.newForm
-      });
+      const newFormCopy = { ...state.newForm }; // Clone state.newForm
+      newFormCopy[action.payload.key] = action.payload.value;
+      state.newForm = newFormCopy;
+      localforage.setItem(CATEGORY_FORM_KEY, newFormCopy);
     },
+    
 
     setAllCategorys: (state, action) => {
       state.data = action.payload;
@@ -67,7 +62,7 @@ export const CategorysSlice = createSlice({
       state.editedID = action.payload;
     },
 
-    onConfirmDeletedCategory: (state, action) => {
+    onConfirmDeletedCategory: (state) => {
       const newDatas = state.data.filter(
         (category) => category.id !== state.deletedID
       );
@@ -81,12 +76,10 @@ export const CategorysSlice = createSlice({
         (category) => category.id === state.editedID
       );
       if (isFindIndex !== -1) {
-        state.data[isFindIndex] = {
-          ...action.payload
-        };
+        state.data[isFindIndex] = action.payload;
       }
       state.editedID = null;
-      localforage.setItem(CATEGORYS_KEY, [...state.data]);
+      localforage.setItem(CATEGORYS_KEY, state.data);
     },
 
     setOpenCategorySelector: (state, action) => {

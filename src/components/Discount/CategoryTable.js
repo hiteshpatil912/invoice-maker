@@ -218,7 +218,7 @@ function CategoryTable({ showAdvanceSearch = false }) {
                   </div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.amount}{"%"}
+                      {client.percentage}{"%"}
                     </span>
                   </div>
                 </div>
