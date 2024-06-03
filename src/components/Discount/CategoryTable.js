@@ -17,6 +17,7 @@ import {
 import ReactPaginate from "react-paginate";
 import { useAppContext } from "../../context/AppContext";
 import EmptyBar from "../Common/EmptyBar";
+import localforage from "localforage";
 
 // Example items, to simulate fetching from another resources.
 const itemsPerPage = 10;
@@ -30,6 +31,8 @@ function CategoryTable({ showAdvanceSearch = false }) {
   const { initLoading } = useAppContext();
   const dispatch = useDispatch();
   const allCategorys = useSelector(getAllCategorysSelector);
+  const [allCategory , setAllCategorys ] = useState([])
+  console.log({allCategory})
 
   const [searchForm, setSearchForm] = useState(emptySearchForm);
   const [currentItems, setCurrentItems] = useState(null);
@@ -58,6 +61,17 @@ function CategoryTable({ showAdvanceSearch = false }) {
 
     return filterData;
   }, [allCategorys, searchForm]);
+
+  console.log(categorys)
+
+  useEffect(() => {
+    localforage.getItem("categorys").then((storedData) => {
+      if (storedData) {
+        setAllCategorys(storedData);
+      }
+    });
+  }, []);
+  
 
   // Handle search input change
   const handlerSearchValue = (event, keyName) => {
@@ -191,8 +205,8 @@ function CategoryTable({ showAdvanceSearch = false }) {
         </div>
 
         <div>
-          {currentItems &&
-            currentItems.map((client) => (
+          {allCategory &&
+            allCategory.map((client) => (
               <div className={defaultTdWrapperStyle} key={client.id}>
                 <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>Client Category</div>

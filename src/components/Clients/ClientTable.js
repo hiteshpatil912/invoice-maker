@@ -59,6 +59,7 @@ function ClientTable({ showAdvanceSearch = false }) {
     return filterData;
   }, [allClients, searchForm]);
 
+
   // Invoke when user click to request another page.
   const handlePageClick = (event) => {
     const newOffset = event.selected * itemsPerPage;

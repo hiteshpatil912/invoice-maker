@@ -10,4 +10,4 @@ export const INVOICE_FORM_KEY = "invoiceNewForm";
 export const DEFAULT_INVOICE_COLOR = "defaultInvoiceColor";
 export const DEFAULT_INVOICE_BG = "defaultInvoiceBG";
 export const CATEGORY_FORM_KEY = "categoryNewForm";
-export const CATEGORYS_KEY = "category";
+export const CATEGORYS_KEY = "categorys";

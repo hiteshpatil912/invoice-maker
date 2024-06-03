@@ -12,8 +12,8 @@ export const store = configureStore({
     company: companyReducer,
     products: productRedicer,
     invoices: invoiceReducer,
-    // discountReducer: discountReducer
-    Categorys: discountReducer,
+    discountReducer: discountReducer,
+    categorys: discountReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -64,6 +64,8 @@ import {
 import PageTitle from "../../components/Common/PageTitle";
 import ProductChoosenModal from "../../components/Product/ProductChoosenModal";
 import { jsPDF } from "jspdf";
+import localforage from "localforage";
+
 
 function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
@@ -95,6 +97,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const [invoiceForm, setInvoiceForm] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [allCategory , setAllCategorys ] = useState([])
   const [statusData, setStatusData] = useState({
     statusName: "Draft",
     statusIndex: 1,
@@ -155,6 +158,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
       }
     });
   }, [setEscapeOverflow, showNavbar, toggleNavbar]);
+
 
   // const handleDownloadImg = useCallback(() => {
   //   if (showNavbar) {
@@ -398,146 +402,72 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     return sumProductTotal(invoiceForm.products);
   }, [invoiceForm]);
 
-  // abc addDiscount
-  const addDiscount = useCallback((category, client) => {
-    console.log("Adding Discount!", category, client);
-  
-    const isSomeDiscount = invoiceForm?.discounts?.some(
-      (form) => form.type === "percentage"
-    );
-  
-    if (isSomeDiscount) {
-      toast.error("Already Have Percentage Discounts!", {
-        position: "bottom-center",
-        autoClose: 2000,
-      });
-      return;
-    }
-  
-    // Assuming you have access to client and product category IDs
-    const clientCategoryId = client.id; // Replace with the correct property name
-    const productCategoryId = category.id; // Replace with the correct property name
-  
-    // Find the discount using the client and product category IDs
-    const discount = findDiscount(clientCategoryId, productCategoryId);
-  
-    if (discount) {
-      // Apply the discount
-      console.log("Discount found:", discount);
-      // Further logic to apply the discount as needed
-    } else {
-      console.log("No discount found for the given category and client.");
-    }
-  
-    console.log("invoiceForm", invoiceForm);
 
-    console.log("invoiceForm", invoiceForm);
-    setInvoiceForm((prev) => {
-      const subTotalAmount = sumProductTotal(prev.products);
-
-      // // find the discount using client and product category id
-      // ccid=clintid;
-      // pcid=pcid;
-      // findDscount(cciid,pcid);
-      // // set discountPercentage
-
-      // Calculate discount
-      const discountPercentage = 5; // Example: 5% discount
-      const discountAmount = (discountPercentage / 100) * subTotalAmount;
-      const totalAmount = subTotalAmount - discountAmount;
-
-      const discount = {
-        id: nanoid(),
-        title: "Discount",
-        type: "percentage",
-        value: discountPercentage,
-        amount: discountAmount,
-      };
-
-      return {
-        ...prev,
-        discounts: prev?.discounts
-          ? [discount, ...prev?.discounts]
-          : [discount],
-        totalAmount: totalAmount,
-      };
+  useEffect(() => {
+    localforage.getItem("categorys").then((storedData) => {
+      if (storedData) {
+        setAllCategorys(storedData);
+      }
     });
-  }, [invoiceForm]);
-  const findDiscount = (clientCategoryId, productCategoryId) => {
-    // Your logic to find the discount based on client and product category IDs
-    // Iterate through your discount data to find the applicable discount
-    // Return the discount object if found, or null if not found
-  };
-  // rozy
+  }, []);
 
-  // const getDiscountRate = (clientCategoryId, productCategoryId) => {
-  //   const discount = discountTable.find(
-  //     (d) => d.clientCategoryId === clientCategoryId && d.productCategoryId === productCategoryId
-  //   );
-  //   return discount ? discount.discountRate : null;
-  // };
+  // abc addDiscount
+
+
+
+    // Define the handleAddDiscount function
+    const handleAddDiscount = (category, clientCategory) => {
+      console.log(allCategory);
+      const matchedCategory = allCategory.find(cat => 
+        cat.clientCategory === clientCategory && cat.productCategory === category
+      );
+      if (matchedCategory) {
+        return matchedCategory.percentage;
+      } else {
+        return 'none';
+      }
+    };
+
+// Handle button click to calculate discount and update invoiceForm
+// Handle button click to calculate discount and update invoiceForm
+const onDiscountButtonClick = (category, clientCategory) => {
+  const result = handleAddDiscount(category, clientCategory);
+  console.log("Result:", result);
   
-  // const applyDiscount = (product, clientCategory) => {
-  //   const discountRate = getDiscountRate(clientCategory.id, product.productCategoryId);
-  //   if (discountRate !== null) {
-  //     return {
-  //       ...product,
-  //       price: product.price - product.price * discountRate,
-  //     };
-  //   }
-  //   return null;
-  // };
-  
-  // const InvoiceDetailScreen = ({ invoiceForm }) => {
-  //   const [selectedProducts, setSelectedProducts] = useState([]);
-  //   const [discountedProducts, setDiscountedProducts] = useState([]);
-  //   const [client, setClient] = useState(null);
-  
-  //   useEffect(() => {
-  //     if (invoiceForm?.clientDetail?.clientCategory) {
-  //       setClient(invoiceForm.clientDetail.clientCategory);
-  //     }
-  //   }, [invoiceForm]);
-  
-  //   const handleAddProduct = (product) => {
-  //     setSelectedProducts((prevSelected) => [...prevSelected, product]);
-  //   };
-  
-  //   const handleAddDiscount = useCallback(() => {
-  //     if (selectedProducts.length > 0 && client) {
-  //       const newDiscountedProducts = selectedProducts.map((product) => {
-  //         const discountedProduct = applyDiscount(product, client);
-  //         return discountedProduct || product;
-  //       });
-  //       setDiscountedProducts(newDiscountedProducts);
-  //     }
-  //   }, [selectedProducts, client]);
-  
-  //   const selectProduct = (productId) => {
-  //     const product = products.find((p) => p.id === productId);
-  //     if (product) {
-  //       handleAddProduct(product);
-  //     }
-  //   };
-  
-  //   return (
-  //     <div>
-  //       <h1>Invoice</h1>
-  //       <div>
-  //         {discountedProducts.map((product) => (
-  //           <div key={product.id}>
-  //             <p>{product.name} - ${product.price.toFixed(2)}</p>
-  //           </div>
-  //         ))}
-  //       </div>
-  //       {/* Example product selection */}
-  //       <button onClick={() => selectProduct(1)}>Select Product A</button>
-  //       <button onClick={() => selectProduct(2)}>Select Product B</button>
-  //       <button onClick={handleAddDiscount}>Add Discount</button>
-  //       {discountedProducts.length === 0 && <p>No discounts available.</p>}
-  //     </div>
-  //   );
-  // };
+  // Check if result is 'none' or a valid number
+  if (result !== 'none' && !isNaN(parseFloat(result))) {
+    // Calculate the discount amount based on the result (percentage)
+    const discountAmount = (parseFloat(result) / 100) * parseFloat(invoiceForm.products[0].amount);
+    console.log("Discount Amount:", discountAmount);
+    console.log(invoiceForm)
+
+    // Calculate the new total amount after applying the discount
+    const newTotalAmount = parseFloat(invoiceForm.products[0].amount) - discountAmount;
+    console.log("New Total Amount:", newTotalAmount);
+
+    // Create a new discount object
+    const newDiscount = {
+      id: nanoid(), // You need to import uuid library or use any unique ID generation method
+      title: 'Discount', // You can change this as per your requirement
+      value: parseFloat(result),
+      amount: discountAmount, // Convert to 2 decimal places
+    };
+
+    // Update invoiceForm with the new total amount and discount
+    setInvoiceForm(prevInvoiceForm => ({
+      ...prevInvoiceForm,
+      totalAmount: newTotalAmount, // Update total amount
+      discounts: [...(prevInvoiceForm.discounts || []), newDiscount]
+    }));
+  } else {
+    console.log("Invalid discount result:", result);
+  }
+};
+
+
+
+
+
 
   // xyz
   const saveAs = useCallback(
@@ -1388,10 +1318,10 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                   <Button
                     size="sm"
                     block={1}
-                    onClick={addDiscount(
+                    onClick={() => { onDiscountButtonClick(
                       selectedCategory,
                       invoiceForm?.clientDetail?.clientCategory
-                    )}
+                    )}}
                   >
                     <TaxesIcon style={IconStyle} className="h-5 w-5" />
                     Add Discount (%)

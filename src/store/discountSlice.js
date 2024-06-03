@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import localforage from "localforage";
 import { nanoid } from "nanoid";
 import { CATEGORYS_KEY, CATEGORY_FORM_KEY } from "../constants/localKeys";
+import { useEffect } from "react";
 
 const initialState = {
   openCategorySelector: false,
@@ -17,12 +18,15 @@ const initialState = {
   deletedID: null,
 };
 
+
+
 export const CategorysSlice = createSlice({
-  name: "Categorys",
+  name: "categorys",
   initialState,
   reducers: {
     addNewCategory: (state, action) => {
       const newDatas = [...state.data, action.payload];
+      console.log({newDatas})
       state.data = newDatas;
       localforage.setItem(CATEGORYS_KEY, newDatas);
 
@@ -97,6 +101,7 @@ export const CategorysSlice = createSlice({
         state.selectedCategory = state.data[isFindIndex];
       }
     },
+    
   },
 });
 
@@ -113,17 +118,17 @@ export const {
   setCategorySelector,
 } = CategorysSlice.actions;
 
-export const getAllCategorysSelector = (state) => state.Categorys.data;
+export const getAllCategorysSelector = (state) => state.categorys.data;
 
-export const getCategoryNewForm = (state) => state.Categorys.newForm;
+export const getCategoryNewForm = (state) => state.categorys.newForm;
 
-export const getDeletedCategoryForm = (state) => state.Categorys.deletedID;
+export const getDeletedCategoryForm = (state) => state.categorys.deletedID;
 
-export const getEditedIdForm = (state) => state.Categorys.editedID;
+export const getEditedIdForm = (state) => state.categorys.editedID;
 
 export const getIsOpenCategorySelector = (state) =>
-  state.Categorys.openCategorySelector;
+  state.categorys.openCategorySelector;
 
-export const getSelectedCategory = (state) => state.Categorys.selectedCategory;
+export const getSelectedCategory = (state) => state.categorys.selectedCategory;
 
 export default CategorysSlice.reducer;
