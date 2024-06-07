@@ -29,7 +29,6 @@ import React, {
     getInvoiceNewForm,
     getIsConfirm,
     setDefaultBackground,
-    setConfirmModalOpen,
     setDefaultColor,
     setIsConfirm,
     setNewInvoices,
@@ -66,7 +65,7 @@ import React, {
   import { jsPDF } from "jspdf";
   
   
-  function CashInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
+  function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
       useAppContext();
     const params = useParams();
@@ -438,17 +437,6 @@ import React, {
       });
     }, [invoiceForm]);
     // xyz
-    const saveAs = useCallback(
-      (status) => {
-        setStatusData({
-          statusIndex: status === "Draft" ? "1" : status === "Unpaid" ? "2" : "3",
-          statusName: status,
-        });
-        dispatch(setConfirmModalOpen(true));
-      },
-      [dispatch]
-    );
-
     const onDeleteDiscount = (discountID) => {
       // Filter out the discount with the given ID
       const updatedDiscounts = invoiceForm.discounts.filter(
@@ -635,7 +623,7 @@ import React, {
             title={
               <>
                 {params.id === "new"
-                  ? "Cash Invoice"
+                  ? "Return Invoice"
                   : `Invoice Detail ${invoiceForm?.statusName}`}
               </>
             }
@@ -1343,23 +1331,6 @@ import React, {
             {/* Products Finished */}
           </div>
         )}
-         {invoiceForm && invoiceForm?.statusIndex !== "3" && (
-        <div className="px-4 pt-3">
-          <div className="flex flex-col justify-end flex-wrap sm:flex-row">
-            <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
-              <Button
-                size="sm"
-                block={1}
-                success={1}
-                onClick={() => saveAs("Paid")}
-              >
-                {/* <SecurityIcon className="h-5 w-5 mr-1" />{" "} */}
-                {params.id === "new" ? "Save" : "Update"} As Paid
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
         {invoiceForm && (
           <div className="p-4">
             <InvoiceTopBar
@@ -1372,5 +1343,5 @@ import React, {
       </div>
     );
   }
-  export default CashInvoiceDetailScreen;
+  export default ReturnInvoiceDetailScreen;
   

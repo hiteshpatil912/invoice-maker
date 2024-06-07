@@ -464,12 +464,7 @@ const onDiscountButtonClick = (category, clientCategory) => {
   }
 };
 
-
-
-
-
-
-  // xyz
+// xyz
   const saveAs = useCallback(
     (status) => {
       setStatusData({

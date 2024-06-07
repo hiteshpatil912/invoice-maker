@@ -28,8 +28,8 @@ import React, {
     getCurrentColor,
     getInvoiceNewForm,
     getIsConfirm,
-    setDefaultBackground,
     setConfirmModalOpen,
+    setDefaultBackground,
     setDefaultColor,
     setIsConfirm,
     setNewInvoices,
@@ -66,7 +66,7 @@ import React, {
   import { jsPDF } from "jspdf";
   
   
-  function CashInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
+  function CreditInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
       useAppContext();
     const params = useParams();
@@ -635,7 +635,7 @@ import React, {
             title={
               <>
                 {params.id === "new"
-                  ? "Cash Invoice"
+                  ? "Credit Invoice"
                   : `Invoice Detail ${invoiceForm?.statusName}`}
               </>
             }
@@ -1343,18 +1343,19 @@ import React, {
             {/* Products Finished */}
           </div>
         )}
-         {invoiceForm && invoiceForm?.statusIndex !== "3" && (
+          {invoiceForm && invoiceForm?.statusIndex !== "2" && (
         <div className="px-4 pt-3">
           <div className="flex flex-col justify-end flex-wrap sm:flex-row">
-            <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
+            <div className="w-48 my-1 sm:my-1 md:my-0 px-4 bg">
               <Button
+              className="bg-red-500 rounded-full text-white p-2"
                 size="sm"
                 block={1}
                 success={1}
-                onClick={() => saveAs("Paid")}
+                onClick={() => saveAs("Unpaid")}
               >
                 {/* <SecurityIcon className="h-5 w-5 mr-1" />{" "} */}
-                {params.id === "new" ? "Save" : "Update"} As Paid
+                {params.id === "new" ? "Save" : "Update"} As Unpaid
               </Button>
             </div>
           </div>
@@ -1372,5 +1373,5 @@ import React, {
       </div>
     );
   }
-  export default CashInvoiceDetailScreen;
+  export default CreditInvoiceDetailScreen;
   

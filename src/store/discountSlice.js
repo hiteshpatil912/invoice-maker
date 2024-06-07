@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import localforage from "localforage";
 import { nanoid } from "nanoid";
 import { CATEGORYS_KEY, CATEGORY_FORM_KEY } from "../constants/localKeys";
-import { useEffect } from "react";
+// import { useEffect } from "react";
 
 const initialState = {
   openCategorySelector: false,
