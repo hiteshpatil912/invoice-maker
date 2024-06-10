@@ -159,7 +159,7 @@ function ProductTable({ showAdvanceSearch = false }) {
             Name
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-            Amount
+            Price
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
             Category

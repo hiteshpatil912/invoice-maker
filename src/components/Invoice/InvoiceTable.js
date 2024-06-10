@@ -125,7 +125,7 @@ function InvoiceTable({ showAdvanceSearch = false }) {
               <input
                 autoComplete="nope"
                 value={searchForm.clientName}
-                placeholder="User Name"
+                placeholder="Client Name"
                 className={defaultSearchStyle}
                 onChange={(e) => handlerSearchValue(e, "clientName")}
               />
@@ -137,14 +137,14 @@ function InvoiceTable({ showAdvanceSearch = false }) {
       <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
         <div className="hidden sm:flex invisible sm:visible w-full flex-col sm:flex-row">
           <div className="sm:text-left text-default-color font-title flex-1">
-            Invoice Name
+            Invoice Number
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
             Client Name
           </div>
-          <div className="sm:text-left text-default-color font-title flex-1">
+          {/* <div className="sm:text-left text-default-color font-title flex-1">
             Status
-          </div>
+          </div> */}
           <div className="sm:text-left text-default-color font-title flex-1">
             Amount
           </div>
@@ -178,7 +178,7 @@ function InvoiceTable({ showAdvanceSearch = false }) {
                   </div>
                 </div>
 
-                <div className={defaultTdStyle}>
+                {/* <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>Status</div>
                   <div className={defaultTdContent}>
                     <span
@@ -194,7 +194,7 @@ function InvoiceTable({ showAdvanceSearch = false }) {
                       {invoice.statusName}
                     </span>
                   </div>
-                </div>
+                </div> */}
 
                 <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>Status</div>
@@ -239,9 +239,9 @@ function InvoiceTable({ showAdvanceSearch = false }) {
                       }
                       transition
                     >
-                      <MenuItem onClick={() => handleEdit(invoice)}>
+                      {/* <MenuItem onClick={() => handleEdit(invoice)}>
                         Detail
-                      </MenuItem>
+                      </MenuItem> */}
                       <MenuItem onClick={() => handleDelete(invoice)}>
                         Delete
                       </MenuItem>

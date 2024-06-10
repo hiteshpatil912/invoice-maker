@@ -121,12 +121,12 @@ function ClientTable({ showAdvanceSearch = false }) {
               <input
                 autoComplete="nope"
                 value={searchForm.name}
-                placeholder="User Name"
+                placeholder="Client Name"
                 className={defaultSearchStyle}
                 onChange={(e) => handlerSearchValue(e, "name")}
               />
             </div>
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
+            {/* <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
               <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -150,7 +150,7 @@ function ClientTable({ showAdvanceSearch = false }) {
                 className={defaultSearchStyle}
                 onChange={(e) => handlerSearchValue(e, "clientCategory")}
               />
-            </div>
+            </div> */}
             <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
               <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                 <svg

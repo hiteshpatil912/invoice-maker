@@ -53,12 +53,12 @@ const NAV_DATA = [
     Icon: CreditIcon,
   },
   {
-    title: "SalesOrderInvoice",
+    title: "SalesOrder",
     link: "salesorderInvoice",
     Icon: SalesOrderIcon,
   },
   {
-    title: "ReturnInvoice",
+    title: "SalesReturn",
     link: "returnInvoice",
     Icon: ReturnIcon,
   },

@@ -239,9 +239,9 @@ function ReturnInvoiceTable({ showAdvanceSearch = false }) {
                       }
                       transition
                     >
-                      <MenuItem onClick={() => handleEdit(invoice)}>
+                      {/* <MenuItem onClick={() => handleEdit(invoice)}>
                         Detail
-                      </MenuItem>
+                      </MenuItem> */}
                       <MenuItem onClick={() => handleDelete(invoice)}>
                         Delete
                       </MenuItem>

@@ -135,7 +135,25 @@ function QuickAddProduct() {
       setProductForm(productNewForm);
     }
   }, [productNewForm]);
+  const [formValues, setFormValues] = useState([]);
+  const [category, setCategory] = useState("");
+  const [amount, setAmount] = useState("");
 
+  const handleCategoryChange = (e) => {
+    setCategory(e.target.value);
+  };
+
+  const handleAmountChange = (e) => {
+    setAmount(e.target.value);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newEntry = { category, amount };
+    setFormValues([...formValues, newEntry]);
+    setCategory("");
+    setAmount("");
+  };
   return (
     <div className="bg-white rounded-xl p-4">
       <SectionTitle> Quick Add Product </SectionTitle>
@@ -194,32 +212,8 @@ function QuickAddProduct() {
           </div>
         </div>
       </div>
-      <div className="mt-2">
-        <div className="font-title text-sm text-default-color">Price </div>
-        <div className="flex">
-          <div className="flex-1">
-            {isInitLoading ? (
-              <Skeleton className={defaultSkeletonNormalStyle} />
-            ) : (
-              <input
-                autoComplete="nope"
-                placeholder="Amount"
-                type="number"
-                className={
-                  !validForm.amount && isTouched
-                    ? defaultInputInvalidStyle
-                    : defaultInputStyle
-                }
-                disabled={isInitLoading}
-                value={productForm.amount}
-                onChange={(e) => handlerProductValue(e, "amount")}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-      {/* <div className="flex mt-2">
-        <div className="w-1/2">
+      <from className="flex mt-2" onSubmit={handleSubmit}>
+        <div className="w-3/6">
           <label
             className="font-title text-sm text-default-color"
             htmlFor="clientCategory"
@@ -228,22 +222,29 @@ function QuickAddProduct() {
           </label>
           <select
             id="clientCategory"
-            value={categoryForm.clientCategory}
-            onChange={(e) => handleCategoryValue(e, "clientCategory")}
-            className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 h-12"
+            className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 "
+            value={category}
+            onChange={handleCategoryChange}
+            required
           >
             <option value="">Select Category</option>
-            <option value="">Client Category 1</option>
-            <option value="">Client Category 2</option>
-            {clientCategories.map((clientCategory) => (
-            <option key={clientCategory} value={clientCategory}>
-              {clientCategory}
-            </option>
-          ))}
+            <option value="Client Category 1">Client Category 1</option>
+            <option value="Client Category 2">Client Category 2</option>
+            <option value="Client Category 3">Client Category 3</option>
+            <option value="Client Category 4">Client Category 4</option>
+            <option value="Client Category 5">Client Category 5</option>
+            <option value="Client Category 6">Client Category 6</option>
+            <option value="Client Category 7">Client Category 7</option>
+            <option value="Client Category 8">Client Category 8</option>
+            <option value="Client Category 9">Client Category 9</option>
+            <option value="Client Category 10">Client Category 10</option>
+            {/* {productCategories.map((category) => (
+            <option key={category} value={category}>{category}</option>
+          ))} */}
           </select>
         </div>
-        <div className="w-1/2 px-2">
-          <div className="font-title text-sm text-default-color">Price </div>
+        <div className="w-2/6 px-2 mt-1">
+          <div className="font-title text-sm text-default-color">Price</div>
           <div className="flex">
             <div className="flex-1">
               {isInitLoading ? (
@@ -259,14 +260,49 @@ function QuickAddProduct() {
                       : defaultInputStyle
                   }
                   disabled={isInitLoading}
-                  value={productForm.amount}
-                  onChange={(e) => handlerProductValue(e, "amount")}
+                  value={amount}
+                  onChange={handleAmountChange}
+                  required
                 />
               )}
             </div>
           </div>
         </div>
-      </div> */}
+        <button
+          type="submit"
+          onClick={handleSubmit}
+          className="w-1/6 font-title text-md px-2 block border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 h-10 mt-7 bg-indigo-400 text-white hover:bg-indigo-500"
+        >
+          Add
+        </button>
+      </from>
+      {formValues.length > 0 && (
+        <div>
+          {/* <h2>Submitted Forms</h2> */}
+          {formValues.map((entry, index) => (
+            <div key={index} className="flex mt-2">
+              <div className="w-3/6">
+                {/* <label
+                  className="font-title text-sm text-default-color"
+                  htmlFor="clientCategory"
+                >
+                  Client Category
+                </label> */}
+                <p className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 h-12">{entry.category}</p>
+              </div>
+              <div className="w-2/6 px-2 mt-1">
+                {/* <label
+                  className="font-title text-sm text-default-color"
+                  htmlFor="clientCategory"
+                >
+                  Amount
+                </label> */}
+                <p className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 h-12">{entry.amount}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="mt-2">
         <div className="font-title text-sm text-default-color">
