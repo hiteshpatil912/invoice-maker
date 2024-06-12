@@ -1,8 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
-import { useDispatch, useSelector } from "react-redux";
-import { nanoid } from "nanoid";
 import Button from "../Button/Button";
 import ImageUpload from "../Common/ImageUpload";
 import SectionTitle from "../Common/SectionTitle";
@@ -14,14 +12,9 @@ import {
   defaultSkeletonLargeStyle,
   defaultSkeletonNormalStyle,
 } from "../../constants/defaultStyles";
-import {
-  addNewProduct,
-  getProductNewForm,
-  updateNewProductFormField,
-} from "../../store/productSlice";
+import { useAuth } from "../../auth/AuthContext";
 
 const emptyForm = {
-  id: "",
   image: "",
   productID: "",
   name: "",
@@ -30,16 +23,13 @@ const emptyForm = {
   amount: 0,
 };
 
-function QuickAddProduct() {
-  const dispatch = useDispatch();
-  const productNewForm = useSelector(getProductNewForm);
+function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
   const { initLoading: isInitLoading } = useAppContext();
-
+  const { authToken } = useAuth();
   // State variables
   const [isTouched, setIsTouched] = useState(false);
   const [productForm, setProductForm] = useState(emptyForm);
   const [validForm, setValidForm] = useState({
-    id: false,
     image: false,
     productID: false,
     name: false,
@@ -47,16 +37,75 @@ function QuickAddProduct() {
     description: false,
     amount: false,
   });
+  const [loading, setLoading] = useState(true);
+  const [productCategories, setProductCategories] = useState([]);
+  const apiDomain = process.env.REACT_APP_API_DOMAIN;
 
-  const [productCategories, setProductCategories] = useState(["X", "Y", "Z"]);
+  const resetForm = () => {
+    setProductForm({
+      image: "", // Set your initial values here
+      productID: "",
+      name: "",
+      category: "",
+      description: "",
+      amount: ""
+    });
+    setValidForm({
+      image: false, // Set initial validation states here
+      productID: false,
+      name: false,
+      category: false,
+      description: false,
+      amount: false
+    });
+  };
+
+  const myHeaders = useMemo(() => {
+    const headers = new Headers();
+    headers.append("Accept", "application/json");
+    headers.append("Authorization", `Bearer ${authToken}`);
+    return headers;
+  }, [authToken]);
+
+
+  const fetchCategories = useCallback(async () => {
+    setLoading(false)
+    try {
+      const response = await fetch(`${apiDomain}/products`, {
+        method: "GET",
+        headers: {
+          Authorization: authToken,
+        },
+      });
+      const data = await response.json();
+      setProductCategories(data.data.category); // Assuming the response is an array of products
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setLoading(false);
+    }finally{
+      setLoading(false)
+    }
+  }, [apiDomain, authToken,setLoading]);
+
+  useEffect(() => {
+    if (authToken) {
+      fetchCategories();
+    }
+  }, [authToken, fetchCategories]);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setProductForm(selectedProduct);
+    }
+  }, [selectedProduct]);
 
   // Callback function to handle image change
   const onChangeImage = useCallback(
     (str) => {
       setProductForm((prev) => ({ ...prev, image: str }));
-      dispatch(updateNewProductFormField({ key: "image", value: str }));
     },
-    [dispatch]
+    []
   );
 
   // Callback function to handle product form field changes
@@ -73,17 +122,26 @@ function QuickAddProduct() {
         }));
 
         if (value.trim() && !productCategories.includes(value.trim())) {
-          setProductCategories((prevCategories) => [...prevCategories, value.trim()]);
+          setProductCategories((prevCategories) => [
+            ...prevCategories,
+            value.trim(),
+          ]);
         }
-      } else {
-        dispatch(updateNewProductFormField({ key: keyName, value }));
-      }
+      } 
     },
-    [dispatch, productCategories]
+    [productCategories]
+  );
+
+
+  const handleEditorNew = useCallback(
+    (item) => {
+      onNewUpdateProduct(item); // Pass selected product to parent component
+    },
+    [onNewUpdateProduct]
   );
 
   // Form submission handler
-  const submitHandler = useCallback(() => {
+  const submitHandler = useCallback(async() => {
     setIsTouched(true);
     const isValid = Object.values(validForm).every((value) => value);
 
@@ -95,14 +153,57 @@ function QuickAddProduct() {
       return;
     }
 
-    toast.success("Product Added Successfully!", {
-      position: "bottom-center",
-      autoClose: 2000,
-    });
+    const formdata = new FormData();
+    formdata.append("image", productForm.image);
+    formdata.append("productID", productForm.productID);
+    formdata.append("name", productForm.name);
+    formdata.append("category", productForm.category);
+    formdata.append("description", productForm.description);
+    formdata.append("amount", productForm.amount);
 
-    dispatch(addNewProduct({ ...productForm, id: nanoid() }));
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
+    };
+
+    try {
+      let response;
+      if (selectedProduct) {
+        response = await fetch(`${apiDomain}/product/${selectedProduct.id}`, requestOptions);
+      } else {
+        response = await fetch(`${apiDomain}/product`, requestOptions);
+      }
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const result = await response.json();
+      handleEditorNew(result)
+      toast.success(result.data.message || "Product Added Successfully!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+
+          // Reset the form after successful submission
+    resetForm();
+
+    } catch (error) {
+      toast.error("Failed to add/update product!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    } finally {
+      setIsTouched(false);
+    }
+
+
     setIsTouched(false);
-  }, [productForm, dispatch, validForm]);
+
+  }, [productForm, validForm, apiDomain, myHeaders, selectedProduct,handleEditorNew]);
+
+
 
   // Memoized class for image upload
   const imageUploadClasses = useMemo(() => {
@@ -116,7 +217,6 @@ function QuickAddProduct() {
   useEffect(() => {
     setValidForm((prev) => ({
       ...prev,
-      id: !!productForm.id,
       image: productForm.image,
       productID: !!productForm.productID,
       name: productForm?.name?.trim() ? true : false,
@@ -126,12 +226,8 @@ function QuickAddProduct() {
     }));
   }, [productForm]);
 
-  // Effect to update productForm when productNewForm changes
-  useEffect(() => {
-    if (productNewForm) {
-      setProductForm(productNewForm);
-    }
-  }, [productNewForm]);
+
+
 
   return (
     <div className="bg-white rounded-xl p-4">
@@ -166,7 +262,9 @@ function QuickAddProduct() {
         </div>
       </div>
       <div className="mt-2">
-        <div className="font-title text-sm text-default-color">Product Name</div>
+        <div className="font-title text-sm text-default-color">
+          Product Name
+        </div>
         <div className="flex">
           <div className="flex-1">
             {isInitLoading ? (
@@ -188,9 +286,11 @@ function QuickAddProduct() {
             )}
           </div>
         </div>
-      </div>      
+      </div>
       <div className="mt-2">
-        <div className="font-title text-sm text-default-color">Product Amount</div>
+        <div className="font-title text-sm text-default-color">
+          Product Amount
+        </div>
         <div className="flex">
           <div className="flex-1">
             {isInitLoading ? (
@@ -263,8 +363,8 @@ function QuickAddProduct() {
           >
             <option value="">Select Category</option>
             {productCategories.map((category) => (
-              <option key={category} value={category}>
-                {category}
+              <option key={category.id} value={category.name}>
+                {category.name}
               </option>
             ))}
           </select>

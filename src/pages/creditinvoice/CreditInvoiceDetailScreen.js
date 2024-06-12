@@ -52,7 +52,7 @@ import { jsPDF } from "jspdf";
 import { useAuth } from "../../auth/AuthContext";
 import ClientSelectionModal from "./selectClientModal";
 
-function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
+function CreditInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
     useAppContext();
   const params = useParams();
@@ -680,7 +680,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     formdata.append("currency", invoiceForm.currencyUnit);
     formdata.append("client_id", invoiceForm.clientDetail.id);
     formdata.append("product_category_id", invoiceForm.productCategoryId);
-    formdata.append("invoice_type", "new");
+    formdata.append("invoice_type", "credit");
     formdata.append("discount_per", "");
     formdata.append("discounted_amount", "");
     formdata.append("sub_total", invoiceForm.totalAmount);
@@ -1480,4 +1480,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     </div>
   );
 }
-export default InvoiceDetailScreen;
+export default CreditInvoiceDetailScreen;
+
+  

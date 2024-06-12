@@ -9,75 +9,89 @@ import {
   defaultTdContentTitleStyle,
   defaultSearchStyle,
 } from "../../constants/defaultStyles";
-import ReactPaginate from "react-paginate";
 import Button from "../Button/Button";
-import {
-  getAllProductSelector,
-  getIsOpenProductSelector,
-  setOpenProductSelector,
-  setProductSelector,
-} from "../../store/productSlice";
-import ProductIDIcon from "../Icons/ProductIDIcon";
 import ProductIcon from "../Icons/ProductIcon";
-
-// Example items, to simulate fetching from another resources.
-const itemsPerPage = 6;
+import { useAuth } from "../../auth/AuthContext";
 const emptySearchForm = {
   name: "",
   // email: "",
   mobileNo: "",
 };
 
-function ProductChoosenModal({ selectedCategory, onClose }) {
-  const dispatch = useDispatch();
-  const allProducts = useSelector(getAllProductSelector);
-  const openModal = useSelector(getIsOpenProductSelector);
-
-  const [animate, setAnimate] = useState(true);
-  const [searchForm, setSearchForm] = useState(emptySearchForm);
-  // const [currentItems, setCurrentItems] = useState(null);
-  // const [pageCount, setPageCount] = useState(0);
-  const [itemOffset, setItemOffset] = useState(0);
-  // const [data, setData] = useState([]);
+function ProductChoosenModal({ selectedCategory, onClose, onSelect }) {
+  const { authToken } = useAuth();
   const [filterRecords, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const apiDomain = process.env.REACT_APP_API_DOMAIN || "";
+    const [products, setProducts] = useState({
+    data: [],
+    category:[],
+    pagination: { total: 0 , pageCount: 0 },
+  });
+
+
+  const fetchProductsCategories = useCallback(
+    async (page = 1, searchParams = {}) => {
+      setLoading(true);
+      try {
+        const searchQuery = new URLSearchParams({
+          ...searchParams,
+          page,
+        }).toString();
+
+
+        const response = await fetch(`${apiDomain}/products?${searchQuery}`, {
+          method: "GET",
+          headers: {
+            Authorization: authToken,
+          },
+        });
+        const data = await response.json();
+        setProducts({
+          data: data.data.product,
+          category: data.data.category,
+          pagination: {
+            total: data.data.product.pagination.total,
+            pageCount: data.data.product.pagination.total_pages,
+          },
+        });
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setLoading(false);
+      }
+    },
+    [apiDomain, authToken]
+  );
 
   useEffect(() => {
-    if (allProducts && selectedCategory) {
-      const filteredProducts = allProducts.filter(
+    if (authToken) {
+      fetchProductsCategories()
+    }
+  }, [authToken,fetchProductsCategories]);
+
+
+  useEffect(() => {
+    if (products.category.length > 0 && selectedCategory) {
+      const filteredProducts = products.data.data.filter(
         (product) => product.category === selectedCategory
       );
       setRecords(filteredProducts);
-      console.log("filteredProducts", filteredProducts);
     }
-  }, [selectedCategory, allProducts]);
+  }, [selectedCategory, products]);
 
   const handleSelect = useCallback(
     (item) => {
-      dispatch(setProductSelector(item.id));
-
+      onSelect(item);
       setTimeout(() => {
-        dispatch(setOpenProductSelector(false));
         onClose();
       }, 50);
     },
-    [dispatch, onClose]
+    [onClose,onSelect]
   );
 
-  const onCancelHandler = useCallback(() => {
-    dispatch(setOpenProductSelector(false));
-  }, [dispatch]);
 
-  const handlerSearchValue = useCallback((event, keyName) => {
-    const value = event.target.value;
-
-    setSearchForm((prev) => {
-      return { ...prev, [keyName]: value };
-    });
-
-    setItemOffset(0);
-  }, []);
-
-  return openModal ? (
+  return (
     <div className="px-4 ">
       {filterRecords &&
         filterRecords.map((product) => (
@@ -146,7 +160,7 @@ function ProductChoosenModal({ selectedCategory, onClose }) {
         </button>
       </div>
     </div>
-  ) : null;
+  );
 }
 
 export default ProductChoosenModal;

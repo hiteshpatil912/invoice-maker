@@ -27,7 +27,7 @@ const initialState = {
     invoiceNo: "",
     statusIndex: "1",
     statusName: "Draft",
-    totalAmount: 1200,
+    totalAmount: 0,
     color: colorData[0],
     backgroundImage: imageData[0],
     dueDate: new Date(),
@@ -41,15 +41,7 @@ const initialState = {
       image: "",
       billingAddress: "",
     },
-    products: [
-      {
-        amount: 1200,
-        id: "D9vPlvwg11cxYJToEf3x4",
-        name: "productName",
-        productID: "",
-        quantity: 1,
-      },
-    ],
+    products: [],
     taxes: [],
   },
 };

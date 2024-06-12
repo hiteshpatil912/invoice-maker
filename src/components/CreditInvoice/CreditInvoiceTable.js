@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Menu, MenuItem, MenuButton } from "@szhsin/react-menu";
 import {
   defaultTdStyle,
@@ -9,165 +10,92 @@ import {
   defaultSearchStyle,
 } from "../../constants/defaultStyles";
 import ReactPaginate from "react-paginate";
+import { useNavigate } from "react-router-dom";
+import { NumberFormatBase } from 'react-number-format';
+import InvoiceIcon from "../Icons/InvoiceIcon";
 import { useAppContext } from "../../context/AppContext";
 import EmptyBar from "../Common/EmptyBar";
 import { useAuth } from "../../auth/AuthContext";
-import { toast } from "react-toastify";
 
-// Example items, to simulate fetching from another resources.
 const itemsPerPage = 10;
 const emptySearchForm = {
   search: "",
 };
 
-function ClientTable({
-  showAdvanceSearch = false,
-  onSelectClient,
-  onNewOrUpdateClient,
-}) {
+function CreditInvoiceTable({ showAdvanceSearch = false }) {
   const { initLoading } = useAppContext();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { authToken } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const apiDomain = process.env.REACT_APP_API_DOMAIN || "";
-  const [currentPage, setCurrentPage] = useState(1);
+
+  const [invoices, setInvoices] = useState([]);
   const [searchForm, setSearchForm] = useState(emptySearchForm);
-  const [currentItems, setCurrentItems] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [itemOffset, setItemOffset] = useState(0);
-  const [clients, setClients] = useState({
-    data: [],
-    pagination: { total: 0 },
-  });
+  const apiDomain = process.env.REACT_APP_API_DOMAIN || "";
+  const [currentPage, setCurrentPage] = useState(1);
 
 
-  useEffect(() => {
-    if (onNewOrUpdateClient && onNewOrUpdateClient.data) {
-      const updatedClient =
-        onNewOrUpdateClient.data.client || onNewOrUpdateClient.data.Client;
-      if (updatedClient) {
-        console.log({ updatedClient });
-        setCurrentItems((prevItems) => {
-          const clientIndex = prevItems.findIndex(
-            (client) => client.id === updatedClient.id
-          );
-          if (clientIndex !== -1) {
-            // If the client already exists, update it in the currentItems list
-            const updatedItems = [...prevItems];
-            updatedItems[clientIndex] = updatedClient;
-            return updatedItems;
-          } else {
-            // If the client does not exist, add it to the beginning of the currentItems list
-            return [updatedClient, ...prevItems];
-          }
-        });
-      }
-    }
-  }, [onNewOrUpdateClient]);
 
-  const fetchClients = useCallback(
+  // Fetch invoices from the API
+  const fetchInvoices = useCallback(
     async (page = 1, searchParams = {}) => {
-      setLoading(true);
       try {
         const searchQuery = new URLSearchParams({
           ...searchParams,
+          "invoice-type":"credit",
           page,
         }).toString();
+      const myHeaders = new Headers();
+      myHeaders.append("Authorization", authToken);
+    const requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow"
+    };
 
-        const response = await fetch(`${apiDomain}/clients?${searchQuery}`, {
-          method: "GET",
-          headers: {
-            Authorization: authToken,
-          },
-        });
-        const data = await response.json();
-        setClients(data.data.clients);
-        setPageCount(data.data.clients.pagination.total_pages);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-        setLoading(false);
-      }
-    },
-    [apiDomain, authToken]
-  );
-
-  const deleteClient = useCallback(
-    async (clientId) => {
-      try {
-        const response = await fetch(`${apiDomain}/client/${clientId}/delete`, {
-          method: "DELETE",
-          headers: {
-            Authorization: authToken,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to delete product");
+    fetch(`${apiDomain}/invoices?${searchQuery}`, requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          setInvoices(data.data.invoices.data);
+          setPageCount(data.data.invoices.pagination.total_pages);
+        } else {
+          console.error("Failed to fetch invoices");
         }
-
-        const result = await response.json();
-        toast.success(result.data.message || "Product Deleted Successfully!", {
-          position: "bottom-center",
-          autoClose: 2000,
-        });
-
-        removeFromState(clientId);
-      } catch (error) {
-        console.error("Error deleting product:", error);
-      }
-    },
-    [apiDomain, authToken]
-  );
-
-  const removeFromState = (clientId) => {
-    setClients((prevClients) => {
-      const updatedData = prevClients.data.filter(
-        (client) => client.id !== clientId
-      );
-      const updatedTotal = updatedData.length;
-      return {
-        data: updatedData,
-        pagination: { ...prevClients.pagination, total: updatedTotal },
-      };
-    });
-
-    setCurrentItems((prevItems) =>
-      prevItems.filter((item) => item.id !== clientId)
-    );
-  };
+      })
+      .catch(error => console.error('Error:', error));
+    }catch (error) {
+      console.error("Error fetching clients:", error);
+    }
+  }, [apiDomain, authToken]);
 
   useEffect(() => {
     if (authToken) {
-      fetchClients(currentPage);
+      fetchInvoices(currentPage);
     }
-  }, [authToken, fetchClients, currentPage]);
+  }, [authToken, fetchInvoices, currentPage]);
 
-  useEffect(() => {
-    if (Array.isArray(clients.data)) {
-      setCurrentItems(clients.data);
-      setPageCount(Math.ceil(clients.pagination.total / itemsPerPage));
-    }
-  }, [clients]);
+console.log({invoices})
 
   // Invoke when user click to request another page.
   const handlePageClick = (event) => {
     const selectedPage = event.selected + 1; // ReactPaginate uses 0-based index
     setCurrentPage(selectedPage);
-    fetchClients(selectedPage);
+    fetchInvoices(selectedPage);
   };
 
   const handleDelete = useCallback(
     (item) => {
-      deleteClient(item.id);
     },
-    [deleteClient]
+    []
   );
 
   const handleEdit = useCallback(
     (item) => {
-      onSelectClient(item);
+      navigate("/invoices/" + item.id);
     },
-    [onSelectClient]
+    [navigate]
   );
 
   const handlerSearchValue = useCallback(
@@ -181,10 +109,12 @@ function ClientTable({
       const searchParams = {
         search: keyName === "search" ? value : searchForm.search,
       };
-      fetchClients(1, searchParams);
+      fetchInvoices(1, searchParams);
     },
-    [fetchClients, searchForm]
+    [fetchInvoices, searchForm]
   );
+
+
 
   return (
     <>
@@ -194,23 +124,12 @@ function ClientTable({
           <div className="flex w-full flex-col sm:flex-row">
             <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
               <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-gray-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <InvoiceIcon className="h-6 w-6 text-gray-400" />
               </div>
               <input
                 autoComplete="nope"
                 value={searchForm.search}
-                placeholder="Search"
+                placeholder="Search Invoice"
                 className={defaultSearchStyle}
                 onChange={(e) => handlerSearchValue(e, "search")}
               />
@@ -222,19 +141,16 @@ function ClientTable({
       <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
         <div className="hidden sm:flex invisible sm:visible w-full flex-col sm:flex-row">
           <div className="sm:text-left text-default-color font-title flex-1">
-            Id
+            Invoice Name
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-            Name
+            Client Name
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-            Mobile
+            Status
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-            address
-          </div>
-          <div className="sm:text-left text-default-color font-title flex-1">
-            Client Category
+            Amount
           </div>
           <div className="sm:text-left text-default-color font-title sm:w-11">
             Action
@@ -242,46 +158,64 @@ function ClientTable({
         </div>
 
         <div>
-          {currentItems &&
-            currentItems.map((client, index) => (
-              <div className={defaultTdWrapperStyle} key={client.id}>
-                <div className="px-4 py-2">
-                  {(currentPage - 1) * itemsPerPage + index + 1}
-                </div>
+          {invoices &&
+            invoices.map((invoice) => (
+              <div className={defaultTdWrapperStyle} key={invoice.id}>
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Name</div>
+                  <div className={defaultTdContentTitleStyle}>Invoice Name</div>
                   <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden pl-1">
-                      {client.name}
+                    <span
+                      className="whitespace-nowrap text-ellipsis overflow-hidden text-blue-500 cursor-pointer"
+                      onClick={() => handleEdit(invoice)}
+                    >
+                      {invoice.invoice_name}
                     </span>
                   </div>
                 </div>
+
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Mobile</div>
-                  <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.phone_number}
-                    </span>
-                  </div>
-                </div>
-                <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Address</div>
+                  <div className={defaultTdContentTitleStyle}>Client Name</div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.address}{" "}
+                      {invoice.client_name}
                     </span>
                   </div>
                 </div>
+
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>
-                    client Category
-                  </div>
+                  <div className={defaultTdContentTitleStyle}>Status</div>
                   <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.client_category}{" "}
+                    <span
+                      className={
+                        "whitespace-nowrap text-ellipsis overflow-hidden px-3 rounded-xl py-1 " +
+                        (invoice.status === "Paid"
+                          ? "bg-green-200 text-green-600"
+                          : "bg-gray-100 text-gray-600 ")
+                      }
+                    >
+                      {invoice.status}
                     </span>
                   </div>
                 </div>
+
+                <div className={defaultTdStyle}>
+                  <div className={defaultTdContentTitleStyle}>Amount</div>
+                  <div className={defaultTdContent}>
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden ">
+                      <NumberFormatBase
+                        value={invoice.amount}
+                        className=""
+                        displayType={"text"}
+                        thousandSeparator={true}
+                        prefix={"$"}
+                        renderText={(value, props) => (
+                          <span {...props}>{value}</span>
+                        )}
+                      />
+                    </span>
+                  </div>
+                </div>
+
                 <div className={defaultTdActionStyle}>
                   <div className={defaultTdContentTitleStyle}>Action</div>
                   <div className={defaultTdContent}>
@@ -300,7 +234,7 @@ function ClientTable({
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+                                d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 11-2 0 1 1 0 012 0zm7 0a1 1 11-2 0 1 1 0 012 0z"
                               />
                             </svg>
                           </div>
@@ -308,10 +242,10 @@ function ClientTable({
                       }
                       transition
                     >
-                      <MenuItem onClick={() => handleEdit(client)}>
-                        Edit
+                      <MenuItem onClick={() => handleEdit(invoice)}>
+                        Detail
                       </MenuItem>
-                      <MenuItem onClick={() => handleDelete(client)}>
+                      <MenuItem onClick={() => handleDelete(invoice)}>
                         Delete
                       </MenuItem>
                     </Menu>
@@ -320,11 +254,11 @@ function ClientTable({
               </div>
             ))}
 
-          {clients.data.length <= 0 && !initLoading && (
-            <EmptyBar title="Client Data" />
+          {invoices.length <= 0 && !initLoading && (
+            <EmptyBar title={"Invoice"} />
           )}
 
-          {clients.data.length > 0 && (
+          {invoices.length > 0 && (
             <ReactPaginate
               className="inline-flex items-center -space-x-px mt-2"
               previousLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
@@ -337,7 +271,7 @@ function ClientTable({
               pageRangeDisplayed={1}
               pageCount={pageCount}
               previousLabel="<"
-              nextLabel=">"
+              nextLabel={">"}
               renderOnZeroPageCount={null}
             />
           )}
@@ -347,4 +281,6 @@ function ClientTable({
   );
 }
 
-export default ClientTable;
+export default CreditInvoiceTable;
+
+

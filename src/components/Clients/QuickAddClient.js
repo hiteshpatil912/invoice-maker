@@ -1,50 +1,64 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
-import { useDispatch, useSelector } from "react-redux";
-import { nanoid } from "nanoid";
 import Button from "../Button/Button";
 import SectionTitle from "../Common/SectionTitle";
 import { useAppContext } from "../../context/AppContext";
 import {
   defaultInputStyle,
   defaultInputInvalidStyle,
-  //defaultInputLargeStyle,
-  //defaultSkeletonLargeStyle,
   defaultSkeletonNormalStyle,
 } from "../../constants/defaultStyles";
-import {
-  addNewClient,
-  getClientNewForm,
-  updateNewClientFormField,
-} from "../../store/clientSlice";
+import { useAuth } from "../../auth/AuthContext";
 
 const emptyForm = {
-  id: "",
   name: "",
-  clientCategory: "",
-  mobileNumber: "",
-  billingAddress: "",
+  client_category: "",
+  phone_number:"",
+  address: "",
 };
 
-function QuickAddClient() {
-  const dispatch = useDispatch();
-  const clientNewForm = useSelector(getClientNewForm);
+function QuickAddClient({selectedClient,onNewUpdateClient}) {
   const { initLoading: isInitLoading } = useAppContext();
+  const { authToken } = useAuth();
+  const apiDomain = process.env.REACT_APP_API_DOMAIN;
+
 
   // State variables
   const [isTouched, setIsTouched] = useState(false);
   const [clientForm, setClientForm] = useState(emptyForm);
+  const [loading, setLoading] = useState(true);
+  const [clientCategories, setClientCategories] = useState([]);
   const [validForm, setValidForm] = useState({
-    id: false,
     name: false,
-    clientCategory: false,
-    mobileNumber: false,
-    billingAddress: false,
+    client_category: false,
+    phone_number:false,
+    address: false,
   });
-  const [categories, setCategories] = useState(["A", "B", "C"]); // Initial categories
 
-  // Callback function to handle client form field changes
+  const resetForm = () => {
+    setClientForm({
+      name: "",
+      client_category: "",
+      phone_number:"",
+      address: "",
+    });
+    setValidForm({
+      name: false,
+      client_category: false,
+      phone_number:false,
+      address: false,
+    });
+  };
+
+  const myHeaders = useMemo(() => {
+    const headers = new Headers();
+    headers.append("Accept", "application/json");
+    headers.append("Authorization", `Bearer ${authToken}`);
+    return headers;
+  }, [authToken]);
+
+  // // Callback function to handle client form field changes
   const handlerClientValue = useCallback(
     (event, keyName) => {
       const value = event.target.value;
@@ -52,27 +66,68 @@ function QuickAddClient() {
       setClientForm((prev) => {
         return { ...prev, [keyName]: value };
       });
+      console.log({keyName})
 
-      // Include a condition to check if the keyName is "clientCategory"
-      if (keyName === "clientCategory") {
+      // Include a condition to check if the keyName is "client_category"
+      if (keyName === "client_category") {
         setValidForm((prev) => ({
           ...prev,
-          [keyName]: !!value.trim(), // Validate the clientCategory field
+          [keyName]: !!value.trim(), // Validate the client_category field
         }));
 
         // Add the new category if it doesn't exist
-        if (value.trim() && !categories.includes(value.trim())) {
-          setCategories((prevCategories) => [...prevCategories, value.trim()]);
+        if (value.trim() && !clientCategories.includes(value.trim())) {
+          setClientCategories((prevCategories) => [...prevCategories, value.trim()]);
         }
-      } else {
-        dispatch(updateNewClientFormField({ key: keyName, value }));
-      }
+      } 
     },
-    [dispatch, categories]
+    [clientCategories]
   );
 
+  const handleEditorNew = useCallback(
+    (item) => {
+      onNewUpdateClient(item); // Pass selected product to parent component
+    },
+    [onNewUpdateClient]
+  );
+
+  const fetchClientCategories = useCallback(async () => {
+    setLoading(false)
+    try {
+      const response = await fetch(`${apiDomain}/clients`, {
+        method: "GET",
+        headers: {
+          Authorization: authToken,
+        },
+      });
+      const data = await response.json();
+      console.log({data})
+      setClientCategories(data.data.clientCategory); // Assuming the response is an array of products
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setLoading(false);
+    }finally{
+      setLoading(false)
+    }
+  }, [apiDomain, authToken,setLoading]);
+
+
+  useEffect(() => {
+    if (authToken) {
+      fetchClientCategories();
+    }
+  }, [authToken, fetchClientCategories]);
+
+
+  useEffect(() => {
+    if (selectedClient) {
+      setClientForm(selectedClient);
+    }
+  }, [selectedClient]);
+
   // Form submission handler
-  const submitHandler = useCallback(() => {
+  const submitHandler = useCallback(async () => {
     setIsTouched(true);
     const isValid = Object.values(validForm).every((value) => value);
 
@@ -83,34 +138,62 @@ function QuickAddClient() {
       });
       return;
     }
+    const formdata = new FormData();
+    formdata.append("name", clientForm.name);
+    formdata.append("client_category", clientForm.client_category);
+    formdata.append("phone_number",clientForm.phone_number);
+    formdata.append("address",clientForm.address)
 
-    toast.success("Client Added Successfully!", {
-      position: "bottom-center",
-      autoClose: 2000,
-    });
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
+    };
 
-    dispatch(addNewClient({ ...clientForm, id: nanoid() }));
-    setIsTouched(false);
-  }, [clientForm, dispatch, validForm]);
+
+    try {
+      let response;
+      if (selectedClient) {
+        response = await fetch(`${apiDomain}/client/${selectedClient.id}`, requestOptions);
+      } else {
+        console.log({requestOptions})
+        response = await fetch(`${apiDomain}/client`, requestOptions);
+      }
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const result = await response.json();
+      console.log({result})
+      handleEditorNew(result)
+      toast.success(result.data.message || "Product Added Successfully!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    resetForm();
+    } catch (error) {
+      toast.error("Failed to add/update product!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    } finally {
+      setIsTouched(false);
+    }   
+  }, [clientForm, validForm,apiDomain,myHeaders,selectedClient,handleEditorNew]);
 
   // Effect to update validForm when clientForm changes
   useEffect(() => {
     setValidForm((prev) => ({
       ...prev,
-      id: !!clientForm.id,
       name: clientForm?.name?.trim() ? true : false,
-      clientCategory: clientForm?.clientCategory?.trim() ? true : false, // Ensure clientCategory validation
-      mobileNumber: !!clientForm.mobileNumber,
-      billingAddress: clientForm?.billingAddress?.trim() ? true : false,
+      client_category: clientForm?.client_category?.trim() ? true : false, // Ensure clientCategory validation
+      phone_number: !!clientForm.phone_number,
+      address: clientForm?.address?.trim() ? true : false,
     }));
   }, [clientForm]);
 
-  // Effect to update clientForm when clientNewForm changes
-  useEffect(() => {
-    if (clientNewForm) {
-      setClientForm(clientNewForm);
-    }
-  }, [clientNewForm]);
+
 
   return (
     <div className="bg-white rounded-xl p-4">
@@ -153,13 +236,13 @@ function QuickAddClient() {
                 placeholder="Mobile Number"
                 type="text"
                 className={
-                  !validForm.mobileNumber && isTouched
+                  !validForm.phone_number && isTouched
                     ? defaultInputInvalidStyle
                     : defaultInputStyle
                 }
                 disabled={isInitLoading}
-                value={clientForm.mobileNumber}
-                onChange={(e) => handlerClientValue(e, "mobileNumber")}
+                value={clientForm.phone_number}
+                onChange={(e) => handlerClientValue(e, "phone_number")}
               />
             )}
           </div>
@@ -179,13 +262,13 @@ function QuickAddClient() {
                 placeholder="Billing Address"
                 type="text"
                 className={
-                  !validForm.billingAddress && isTouched
+                  !validForm.address && isTouched
                     ? defaultInputInvalidStyle
                     : defaultInputStyle
                 }
                 disabled={isInitLoading}
-                value={clientForm.billingAddress}
-                onChange={(e) => handlerClientValue(e, "billingAddress")}
+                value={clientForm.address}
+                onChange={(e) => handlerClientValue(e, "address")}
               />
             )}
           </div>
@@ -197,19 +280,19 @@ function QuickAddClient() {
         </div>
         <div className="relative">
           <input
-            value={clientForm.clientCategory}
+            value={clientForm.client_category}
             type="text"
             onChange={(e) => {
               const newValue = e.target.value;
               setClientForm((prev) => ({
                 ...prev,
-                clientCategory: newValue,
+                client_category: newValue,
               }));
-              handlerClientValue(e, "clientCategory");
+              handlerClientValue(e, "client_category");
             }}
             placeholder=""
             className={
-              !validForm.clientCategory && isTouched
+              !validForm.client_category && isTouched
                 ? defaultInputInvalidStyle
                 : defaultInputStyle
             }
@@ -217,21 +300,21 @@ function QuickAddClient() {
           />
           {/* Spinner for predefined categories*/}
           <select
-            value={clientForm.clientCategory}
+            value={clientForm.client_category}
             onChange={(e) => {
               const newValue = e.target.value;
               setClientForm((prev) => ({
                 ...prev,
-                clientCategory: newValue,
+                client_category: newValue,
               }));
-              handlerClientValue(e, "clientCategory");
+              handlerClientValue(e, "client_category");
             }}
             className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
           >
             <option value="">Select Category</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
+            {clientCategories.map((category) => (
+              <option key={category.id} value={category.name}>
+                {category.name}
               </option>
             ))}
           </select>

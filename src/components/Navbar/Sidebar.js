@@ -1,18 +1,22 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
 import { useSelector } from "react-redux";
 import HomeIcon from "../Icons/HomeIcon";
 import ProductIcon from "../Icons/ProductIcon";
 import InvoiceIcon from "../Icons/InvoiceIcon";
 import ClientPlusIcon from "../Icons/ClientPlusIcon";
+import SalesOrderIcon from "../Icons/SalesOrderIcon";
+import CreditIcon from "../Icons/CreditIcon";
+import ReturnIcon from "../Icons/ReturnIcon";
 import DeleteIcon from "../Icons/DeleteIcon";
 import SecurityIcon from "../Icons/SecurityIcon";
 import InvoiceNavbarLoading from "../Loading/InvoiceNavbarLoading";
 import { getCompanyData } from "../../store/companySlice";
 
 import Skeleton from "react-loading-skeleton";
+import axios from "axios";
 
 const NAV_DATA = [
   {
@@ -45,21 +49,22 @@ const NAV_DATA = [
     link: "cashInvoice",
     Icon: ProductIcon,
   },
-  // {
-  //   title: "CreditInvoice",
-  //   link: "cashInvoice",
-  //   Icon: ProductIcon,
-  // },
-  // {
-  //   title: "SellInvoice",
-  //   link: "cashInvoice",
-  //   Icon: ProductIcon,
-  // },
-  // {
-  //   title: "ReturnInvoice",
-  //   link: "cashInvoice",
-  //   Icon: ProductIcon,
-  // },
+  {
+    title: "SalesOrder",
+    link: "salesorderInvoice",
+    Icon: SalesOrderIcon,
+  },
+  {
+    title: "CreditInvoice",
+    link: "creditInvoice",
+    Icon: CreditIcon,
+  },
+  {
+    title: "SalesReturn",
+    link: "returnInvoice",
+    Icon: ReturnIcon,
+  },
+
 ];
 
 const navDefaultClasses =
@@ -71,6 +76,15 @@ function Sidebar() {
   const { showNavbar, initLoading, toggleNavbar } = useAppContext();
   const { pathname } = useLocation();
   const company = useSelector(getCompanyData);
+  const [error, setError] = useState("");
+  const apiDomain = process.env.REACT_APP_API_DOMAIN || "";
+  const navigate = useNavigate();
+
+  const myHeaders = useMemo(() => {
+    const headers = new Headers();
+    headers.append("Accept", "application/json");
+    return headers;
+  }, []);
 
   const onClickNavbar = useCallback(() => {
     const width = window.innerWidth;
@@ -81,6 +95,38 @@ function Sidebar() {
   }, [showNavbar, toggleNavbar]);
 
   const aboutRoute = useMemo(() => pathname === "/about", [pathname]);
+
+  const handleLogout = async () => {
+    setError("");
+    const authData = JSON.parse(localStorage.getItem("auth"));
+    const userId = authData?.userId;
+
+    try {
+      const formData = new FormData();
+      formData.append("user_id", userId);
+
+      const myHeaders = new Headers();
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: formData,
+        redirect: "follow",
+      };
+
+      const response = await fetch(`${apiDomain}/logout`, requestOptions);
+
+      if (response.ok) {
+        localStorage.removeItem("auth");
+        navigate("/login");
+        window.location.reload();
+      } else {
+        setError(response.data.message || "Logout failed");
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
 
   return (
     <>
@@ -120,6 +166,12 @@ function Sidebar() {
               navItemDefaultClasses + " bg-gray-50 flex items-center px-3"
             }
           >
+            <button
+              onClick={handleLogout} // Define this function to handle the logout logic
+              className="mr-2 px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-700"
+            >
+              Logout
+            </button>
             <img
               className={"object-cover h-10 w-10 rounded-lg"}
               src={company?.image}

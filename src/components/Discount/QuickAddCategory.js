@@ -2,7 +2,6 @@ import React, { useState, useCallback, useMemo, useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
-import { nanoid } from "nanoid";
 import Button from "../Button/Button";
 import ImageUpload from "../Common/ImageUpload";
 import SectionTitle from "../Common/SectionTitle";
@@ -14,45 +13,49 @@ import {
   defaultSkeletonLargeStyle,
   defaultSkeletonNormalStyle,
 } from "../../constants/defaultStyles";
-import {
-  addNewCategory,
-  getCategoryNewForm,
-  getSelectedCategory,
-  updateNewCategoryFormField,
-} from "../../store/discountSlice";
+import { useAuth } from "../../auth/AuthContext";
 
 const emptyForm = {
-  id: nanoid(),
-  clientCategory: "", // Initialize as an empty string
-  productCategory: "", // Initialize as an empty string
-  percentage: 0,
+  client_category_id: "",
+  product_category_id: "",
+  discount_percentage: 0,
 };
 
-function QuickAddCategory() {
-  const dispatch = useDispatch();
-  const categoryNewForm = useSelector(getCategoryNewForm);
-  console.log({categoryNewForm})
+function QuickAddCategory({ selectedDiscount, onNewUpdateDiscount }) {
   const { initLoading: isInitLoading } = useAppContext();
-
+  const [loading, setLoading] = useState(true);
+  const { authToken } = useAuth();
+  const apiDomain = process.env.REACT_APP_API_DOMAIN;
   // State variables
   const [isTouched, setIsTouched] = useState(false);
   const [validForm, setValidForm] = useState({
-    id: false,
-    clientCategory: false,
-    productCategory: false,
-    percentage: false,
+    client_category_id: false,
+    product_category_id: false,
+    discount_percentage: false,
   });
   const [categoryForm, setCategoryForm] = useState(emptyForm);
-  const [clientCategories, setClientCategories] = useState([
-    "Client Category 1",
-    "Client Category 2",
-    "Client Category 3",
-  ]);
-  const [productCategories, setProductCategories] = useState([
-    "Electronics",
-    "Books",
-    "Clothing",
-  ]);
+  const [clientCategories, setClientCategories] = useState([]);
+  const [productCategories, setProductCategories] = useState([]);
+
+  const resetForm = () => {
+    setCategoryForm({
+      client_category_id: "",
+      product_category_id: "",
+      discount_percentage: 0,
+    });
+    setValidForm({
+      client_category_id: false,
+      product_category_id: false,
+      discount_percentage: false,
+    });
+  };
+
+  const myHeaders = useMemo(() => {
+    const headers = new Headers();
+    headers.append("Accept", "application/json");
+    headers.append("Authorization", `Bearer ${authToken}`);
+    return headers;
+  }, [authToken]);
 
   // Callback function to handle Category form field changes
   const handleCategoryValue = useCallback(
@@ -68,7 +71,10 @@ function QuickAddCategory() {
       if (keyName === "category") {
         // Add the new category if it doesn't exist in clientCategories
         if (value.trim() && !clientCategories.includes(value.trim())) {
-          setClientCategories((prevCategories) => [...prevCategories, value.trim()]);
+          setClientCategories((prevCategories) => [
+            ...prevCategories,
+            value.trim(),
+          ]);
         }
         // Add the new category if it doesn't exist in productCategories
         if (value.trim() && !productCategories.includes(value.trim())) {
@@ -77,103 +83,133 @@ function QuickAddCategory() {
             value.trim(),
           ]);
         }
-      } else {
-        dispatch(updateNewCategoryFormField({ key: keyName, value }));
       }
     },
-    [dispatch, clientCategories, productCategories]
-  )
+    [clientCategories, productCategories]
+  );
+
+  const handleEditorNew = useCallback(
+    (item) => {
+      console.log({item})
+      onNewUpdateDiscount(item); // Pass selected product to parent component
+    },
+    [onNewUpdateDiscount]
+  );
+
+  const fetchDiscountCategories = useCallback(async () => {
+    setLoading(false);
+    try {
+      const response = await fetch(`${apiDomain}/discounts`, {
+        method: "GET",
+        headers: {
+          Authorization: authToken,
+        },
+      });
+      const data = await response.json();
+      setClientCategories(data.data.clientCategory); // Assuming the response is an array of products
+      setProductCategories(data.data.productCategory);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiDomain, authToken, setLoading]);
+
+  useEffect(() => {
+    if (authToken) {
+      fetchDiscountCategories();
+    }
+  }, [authToken, fetchDiscountCategories]);
+
+  useEffect(() => {
+    if (selectedDiscount) {
+      setCategoryForm(selectedDiscount);
+    }
+  }, [selectedDiscount]);
+
   // Form submission handler
-  const submitHandler = useCallback(() => {
+  const submitHandler = useCallback(async () => {
     setIsTouched(true);
     const isValid = Object.values(validForm).every((value) => value);
 
     if (!isValid) {
-      toast.error("Invalid Discount Form!", {
+      toast.error("Invalid Client Form!", {
         position: "bottom-center",
         autoClose: 2000,
       });
       return;
     }
+    const formdata = new FormData();
+    formdata.append("client_category_id", Number(categoryForm.client_category_id));
+    formdata.append("product_category_id", Number(categoryForm.product_category_id));
+    formdata.append("discount_percentage", Number(categoryForm.discount_percentage));
 
-    toast.success("Discount Added Successfully!", {
-      position: "bottom-center",
-      autoClose: 2000,
-    });
 
-    dispatch(addNewCategory({ ...categoryForm, id: nanoid() }));
-    setIsTouched(false);
-  }, [categoryForm, dispatch, validForm]);
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
+    };
+
+    try {
+      let response;
+      if (selectedDiscount) {
+        response = await fetch(
+          `${apiDomain}/discount/${selectedDiscount.id}`,
+          requestOptions
+        );
+      } else {
+        console.log({ requestOptions });
+        response = await fetch(`${apiDomain}/discount`, requestOptions);
+      }
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const result = await response.json();
+      console.log({ result });
+      handleEditorNew(result);
+      toast.success(result.data.message || "Product Added Successfully!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+      resetForm();
+    } catch (error) {
+      toast.error("Failed to add/update product!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    } finally {
+      setIsTouched(false);
+    }
+  }, [
+    categoryForm,
+    validForm,
+    apiDomain,
+    myHeaders,
+    selectedDiscount,
+    handleEditorNew,
+  ]);
 
   // Effect to update validForm when categoryForm changes
   useEffect(() => {
     setValidForm((prev) => ({
       ...prev,
-      id: !!categoryForm.id,
-      clientCategory: categoryForm.clientCategory?.trim() ? true : false,
-      productCategory: categoryForm.productCategory?.trim() ? true : false,
-      percentage: categoryForm.percentage,
+      client_category_id: categoryForm.client_category_id
+      ? true
+        : false,
+      product_category_id: categoryForm.product_category_id
+        ? true
+        : false,
+      discount_percentage: categoryForm.discount_percentage
+      ? true
+      : false
+      ,
     }));
   }, [categoryForm]);
-
-  // Effect to update productForm when categoryForm changes
-  useEffect(() => {
-    if (categoryNewForm) {
-      setCategoryForm(categoryNewForm);
-    }
-  }, [categoryNewForm]);
-
-    // Save form data to localStorage whenever it changes
-    useEffect(() => {
-      localStorage.setItem("categoryForm", JSON.stringify(categoryForm));
-    }, [categoryForm]);
-
-  // const dispatch = useDispatch();
-  // const [categoryForm, setCategoryForm] = useState(emptyForm);
-
-  // const clientCategories = ["Client Category 1", "Client Category 2", "Client Category 3"];
-  // const productCategories = ["Electronics", "Books", "Clothing"];
-
-  // const handleCategoryValue = useCallback((event, keyName) => {
-  //   const value = event.target.value;
-  //   setCategoryForm((prev) => ({
-  //     ...prev,
-  //     [keyName]: value,
-  //   }));
-  // }, []);
-
-  // const submitHandler = useCallback(() => {
-  //   if (!categoryForm.clientCategory || !categoryForm.productCategory) {
-  //     toast.error("Please select both client and product categories", {
-  //       position: "bottom-center",
-  //       autoClose: 2000,
-  //     });
-  //     return;
-  //   }
-
-  //   if (categoryForm.percentage <= 0) {
-  //     toast.error("Please enter a valid percentage", {
-  //       position: "bottom-center",
-  //       autoClose: 2000,
-  //     });
-  //     return;
-  //   }
-
-  //   const categoryData = {
-  //     ...categoryForm,
-  //     id: nanoid(),
-  //   };
-
-  //   dispatch(addNewCategory(categoryData));
-
-  //   // Reset form after submission
-  //   setCategoryForm(emptyForm);
-
-  //   toast.success("Category added successfully!", {
-  //     position: "bottom-center",
-  //     autoClose: 2000,
-  //   });
-  // }, [categoryForm, dispatch]);
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-md">
@@ -187,15 +223,13 @@ function QuickAddCategory() {
         </label>
         <select
           id="clientCategory"
-          value={categoryForm.clientCategory}
-          onChange={(e) => handleCategoryValue(e, "clientCategory")}
+          value={categoryForm.client_category_id}
+          onChange={(e) => handleCategoryValue(e, "client_category_id")}
           className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 h-12"
         >
           <option value="">Select Category</option>
           {clientCategories.map((clientCategory) => (
-            <option key={clientCategory} value={clientCategory}>
-              {clientCategory}
-            </option>
+            <option key={clientCategory.id} value={clientCategory.id}>{clientCategory.name}</option>
           ))}
         </select>
       </div>
@@ -206,17 +240,17 @@ function QuickAddCategory() {
         >
           Product Category
         </label>
-       
+
         <select
           id="productCategory"
-          value={categoryForm.productCategory}
-          onChange={(e) => handleCategoryValue(e, "productCategory")}
+          value={categoryForm.product_category_id}
+          onChange={(e) => handleCategoryValue(e, "product_category_id")}
           className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 h-12"
         >
           <option value="">Select Category</option>
           {productCategories.map((productCategory) => (
-            <option key={productCategory} value={productCategory}>
-              {productCategory}
+            <option key={productCategory.id} value={productCategory.id}>
+              {productCategory.name}
             </option>
           ))}
         </select>
@@ -234,8 +268,8 @@ function QuickAddCategory() {
           placeholder="percentage"
           type="number"
           className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 h-12"
-          value={categoryForm.percentage}
-          onChange={(e) => handleCategoryValue(e, "percentage")}
+          value={categoryForm.discount_percentage}
+          onChange={(e) => handleCategoryValue(e, "discount_percentage")}
         />
       </div>
       <div className="mt-3">

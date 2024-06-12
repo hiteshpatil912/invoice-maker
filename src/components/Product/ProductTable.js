@@ -1,149 +1,221 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  getAllProductSelector,
-  setDeleteId,
-  setEditedId,
-} from "../../store/productSlice";
+import React, { useCallback, useEffect, useState } from "react";
 import { Menu, MenuItem, MenuButton } from "@szhsin/react-menu";
+import ReactPaginate from "react-paginate";
+import ProductIcon from "../Icons/ProductIcon";
+import EmptyBar from "../Common/EmptyBar";
+import { useAppContext } from "../../context/AppContext";
+import { useAuth } from "../../auth/AuthContext";
 import {
-  defaultTdStyle,
   defaultTdActionStyle,
-  defaultTdWrapperStyle,
   defaultTdContent,
   defaultTdContentTitleStyle,
   defaultSearchStyle,
 } from "../../constants/defaultStyles";
-import ReactPaginate from "react-paginate";
-import ProductIcon from "../Icons/ProductIcon";
-import ProductIDIcon from "../Icons/ProductIDIcon";
-import EmptyBar from "../Common/EmptyBar";
-import { useAppContext } from "../../context/AppContext";
+import { toast } from "react-toastify";
 
 const itemsPerPage = 10;
 const emptySearchForm = {
-  name: "",
-  productID: "",
-  category: "",
+  search: "",
 };
 
-function ProductTable({ showAdvanceSearch = false }) {
+function ProductTable({
+  showAdvanceSearch = false,
+  onSelectProduct,
+  onNewOrUpdateProduct,
+}) {
   const { initLoading } = useAppContext();
-  const dispatch = useDispatch();
-  const allProducts = useSelector(getAllProductSelector);
-
+  const { authToken } = useAuth();
   const [searchForm, setSearchForm] = useState(emptySearchForm);
-  const [currentItems, setCurrentItems] = useState(null);
+  const [currentItems, setCurrentItems] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [pageCount, setPageCount] = useState(0);
-  const [itemOffset, setItemOffset] = useState(0);
+  const [products, setProducts] = useState({
+    data: [],
+    pagination: { total: 0 },
+  });
+  const [loading, setLoading] = useState(true);
 
-  const products = useMemo(() => {
-    let filterData = allProducts.length > 0 ? [...allProducts].reverse() : [];
-    if (searchForm.name?.trim()) {
-      filterData = filterData.filter((product) =>
-        product.name.includes(searchForm.name)
-      );
+  const apiDomain = process.env.REACT_APP_API_DOMAIN || "";
+
+  useEffect(() => {
+    if (
+      onNewOrUpdateProduct &&
+      onNewOrUpdateProduct.data &&
+      onNewOrUpdateProduct.data.product
+    ) {
+      const updatedProduct = onNewOrUpdateProduct.data.product;
+      setCurrentItems((prevItems) => {
+        const productIndex = prevItems.findIndex(
+          (product) => product.id === updatedProduct.id
+        );
+        if (productIndex !== -1) {
+          // If the product already exists, update it in the currentItems list
+          const updatedItems = [...prevItems];
+          updatedItems[productIndex] = updatedProduct;
+          return updatedItems;
+        } else {
+          // If the product does not exist, add it to the beginning of the currentItems list
+          return [updatedProduct, ...prevItems];
+        }
+      });
     }
+  }, [onNewOrUpdateProduct]);
 
-    if (searchForm.productID?.trim()) {
-      filterData = filterData.filter((product) =>
-        product.productID.includes(searchForm.productID)
+  const fetchProducts = useCallback(
+    async (page = 1, searchParams = {}) => {
+      setLoading(true);
+      try {
+        const searchQuery = new URLSearchParams({
+          ...searchParams,
+          page,
+        }).toString();
+
+        console.log(searchQuery);
+
+        const response = await fetch(`${apiDomain}/products?${searchQuery}`, {
+          method: "GET",
+          headers: {
+            Authorization: authToken,
+          },
+        });
+        const data = await response.json();
+        setProducts(data.data.product);
+        setPageCount(data.data.product.pagination.total_pages);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setLoading(false);
+      }
+    },
+    [apiDomain, authToken]
+  );
+
+  const deleteProduct = useCallback(
+    async (productId) => {
+      try {
+        const response = await fetch(
+          `${apiDomain}/product/${productId}/delete`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: authToken,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to delete product");
+        }
+
+        const result = await response.json();
+        toast.success(result.data.message || "Product Deleted Successfully!", {
+          position: "bottom-center",
+          autoClose: 2000,
+        });
+
+        removeFromState(productId);
+      } catch (error) {
+        console.error("Error deleting product:", error);
+      }
+    },
+    [apiDomain, authToken]
+  );
+
+  const removeFromState = (productId) => {
+    setProducts((prevProducts) => {
+      const updatedData = prevProducts.data.filter(
+        (product) => product.id !== productId
       );
-    }
+      const updatedTotal = updatedData.length;
+      return {
+        data: updatedData,
+        pagination: { ...prevProducts.pagination, total: updatedTotal },
+      };
+    });
 
-    if (searchForm.category?.trim()) {
-      filterData = filterData.filter((product) =>
-        product.category.includes(searchForm.category)
-      );
-    }
+    setCurrentItems((prevItems) =>
+      prevItems.filter((item) => item.id !== productId)
+    );
+  };
 
-    return filterData;
-  }, [allProducts, searchForm]);
+  useEffect(() => {
+    if (authToken) {
+      fetchProducts(currentPage);
+    }
+  }, [authToken, fetchProducts, currentPage]);
+
+  useEffect(() => {
+    if (Array.isArray(products.data)) {
+      setCurrentItems(products.data);
+      setPageCount(Math.ceil(products.pagination.total / itemsPerPage));
+    }
+  }, [products]);
 
   const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % products.length;
-    setItemOffset(newOffset);
+    const selectedPage = event.selected + 1; // ReactPaginate uses 0-based index
+    setCurrentPage(selectedPage);
+    fetchProducts(selectedPage);
   };
 
   const handleDelete = useCallback(
     (item) => {
-      dispatch(setDeleteId(item.id));
+      deleteProduct(item.id);
     },
-    [dispatch]
+    [deleteProduct]
   );
 
   const handleEdit = useCallback(
     (item) => {
-      dispatch(setEditedId(item.id));
+      onSelectProduct(item); // Pass selected product to parent component
     },
-    [dispatch]
+    [onSelectProduct]
   );
 
-  const handlerSearchValue = useCallback((event, keyName) => {
-    const value = event.target.value;
-    setSearchForm((prev) => ({ ...prev, [keyName]: value }));
-    setItemOffset(0);
-  }, []);
+  const handlerSearchValue = useCallback(
+    (event, keyName) => {
+      const value = event.target.value;
 
-  useEffect(() => {
-    const endOffset = itemOffset + itemsPerPage;
-    setCurrentItems(products.slice(itemOffset, endOffset));
-    setPageCount(Math.ceil(products.length / itemsPerPage));
-  }, [products, itemOffset]);
+      setSearchForm((prev) => ({ ...prev, [keyName]: value }));
+      
+      const searchParams = {
+        search: keyName === "search" ? value : searchForm.search,
+      };
+      fetchProducts(1, searchParams); // Fetch products with search parameters
+    },
+    [fetchProducts, searchForm]
+  );
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
-      {showAdvanceSearch === true && (
+      {showAdvanceSearch && (
         <div className="bg-white rounded-xl px-3 py-3 mb-3">
           <div className="font-title mb-2">Advanced Search</div>
           <div className="flex w-full flex-col sm:flex-row">
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
-              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center text-gray-400">
-                <ProductIDIcon />
-              </div>
-              <input
-                autoComplete="nope"
-                value={searchForm.productID}
-                placeholder="Product ID"
-                className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "productID")}
-              />
-            </div>
             <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
               <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
                 >
                   <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
+                    clipRule="evenodd"
                   />
                 </svg>
               </div>
               <input
                 autoComplete="nope"
-                value={searchForm.category}
-                placeholder="Product Category"
+                value={searchForm.search}
+                placeholder="Search"
                 className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "category")}
-              />
-            </div>
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
-              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center text-gray-400">
-                <ProductIcon />
-              </div>
-              <input
-                autoComplete="nope"
-                value={searchForm.name}
-                placeholder="Product Name"
-                className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "name")}
+                onChange={(e) => handlerSearchValue(e, "search")}
               />
             </div>
           </div>
@@ -152,141 +224,104 @@ function ProductTable({ showAdvanceSearch = false }) {
 
       <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
         <div className="hidden sm:flex w-full flex-col sm:flex-row">
-          <div className="sm:text-left text-default-color font-title flex-1">
-            Product ID
-          </div>
-          <div className="sm:text-left text-default-color font-title flex-1">
-            Name
-          </div>
-          <div className="sm:text-left text-default-color font-title flex-1">
-            Amount
-          </div>
-          <div className="sm:text-left text-default-color font-title flex-1">
-            Category
-          </div>
-          <div className="sm:text-left text-default-color font-title flex-1">
-            Description
-          </div>
-          <div className="sm:text-left text-default-color font-title sm:w-11">
-            Action
-          </div>
+          <table className="table-auto w-full">
+            <thead>
+              <tr>
+                <th className="px-4 py-2">ID</th>
+                <th className="px-4 py-2">Product Image</th>
+                <th className="px-4 py-2">Name</th>
+                <th className="px-4 py-2">Amount</th>
+                <th className="px-4 py-2">Description</th>
+                <th className="px-4 py-2">Category</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.map((product, index) => (
+                <tr className="text-center" key={product.id}>
+                  <td className="border px-4 py-2">
+                    {(currentPage - 1) * itemsPerPage + index + 1}
+                  </td>
+                  <td className="border px-4 py-2">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-16 h-16 object-cover"
+                    />
+                  </td>
+                  <td className="border px-4 py-2">{product.name}</td>
+                  <td className="border px-4 py-2">{product.amount}</td>
+                  <td className="border px-4 py-2">
+                    {product.description || "N/A"}
+                  </td>
+                  <td className="border px-4 py-2">{product.category}</td>
+                  <td className="border px-4 py-2">
+                    <div className={defaultTdActionStyle}>
+                      <div className={defaultTdContentTitleStyle}>Action</div>
+                      <div className={defaultTdContent}>
+                        <Menu
+                          menuButton={
+                            <MenuButton>
+                              <div className="bg-gray-50 px-2 rounded-xl">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-6 w-6 text-blue-400"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  strokeWidth={2}
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+                                  />
+                                </svg>
+                              </div>
+                            </MenuButton>
+                          }
+                          transition
+                        >
+                          <MenuItem onClick={() => handleEdit(product)}>
+                            Edit
+                          </MenuItem>
+                          <MenuItem onClick={() => handleDelete(product)}>
+                            Delete
+                          </MenuItem>
+                        </Menu>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {currentItems.length <= 0 && !initLoading && (
+                <tr>
+                  <td colSpan="6" className="px-4 py-2 text-center">
+                    No data available
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
-        <div>
-          {currentItems &&
-            currentItems.map((product) => (
-              <div className={defaultTdWrapperStyle} key={product.id}>
-                <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Product ID</div>
-                  <div className={defaultTdContent}>
-                    {product.image ? (
-                      <img
-                        className="object-cover h-10 w-10 rounded-2xl"
-                        src={product.image}
-                        alt={product.name}
-                      />
-                    ) : (
-                      <span className="h-10 w-10 rounded-2xl bg-gray-100 flex justify-center items-center">
-                        <ProductIcon />
-                      </span>
-                    )}
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden pl-1">
-                      {product.productID || "#"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Name</div>
-                  <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {product.name}
-                    </span>
-                  </div>
-                </div>
-
-                <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Amount</div>
-                  <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {product.amount}
-                    </span>
-                  </div>
-                </div>
-
-                <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Category</div>
-                  <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {product.category}
-                    </span>
-                  </div>
-                </div>
-                <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Description</div>
-                  <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {product.description}
-                    </span>
-                  </div>
-                </div>
-
-                <div className={defaultTdActionStyle}>
-                  <div className={defaultTdContentTitleStyle}>Action</div>
-                  <div className={defaultTdContent}>
-                    <Menu
-                      menuButton={
-                        <MenuButton>
-                          <div className="bg-gray-50 px-2 rounded-xl">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-6 w-6 text-blue-400"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-                              />
-                            </svg>
-                          </div>
-                        </MenuButton>
-                      }
-                      transition
-                    >
-                      <MenuItem onClick={() => handleEdit(product)}>Edit</MenuItem>
-                      <MenuItem onClick={() => handleDelete(product)}>
-                        Delete
-                      </MenuItem>
-                    </Menu>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-          {products.length <= 0 && !initLoading && <EmptyBar />}
-
-          {products.length > 0 && (
-            <ReactPaginate
-              className="inline-flex items-center -space-x-px mt-2"
-              previousLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              nextLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              pageLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              breakLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              activeLinkClassName="py-2 px-3 text-blue-600 bg-blue-50 border border-gray-300 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-              breakLabel="..."
-              onPageChange={handlePageClick}
-              pageRangeDisplayed={1}
-              pageCount={pageCount}
-              previousLabel="<"
-              nextLabel={">"}
-              renderOnZeroPageCount={null}
-            />
-          )}
-        </div>
+        {products.length <= 0 && !initLoading && <EmptyBar />}
+        {products.data.length > 0 && (
+          <ReactPaginate
+            className="inline-flex items-center -space-x-px mt-2"
+            previousLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            nextLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            pageLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            breakLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            activeLinkClassName="py-2 px-3 text-blue-600 bg-blue-50 border border-gray-300 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+            breakLabel="..."
+            onPageChange={handlePageClick}
+            pageRangeDisplayed={1}
+            pageCount={pageCount}
+            previousLabel="<"
+            nextLabel={">"}
+            renderOnZeroPageCount={null}
+          />
+        )}
       </div>
     </>
   );

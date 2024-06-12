@@ -1,10 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  getAllCategorysSelector,
-  setDeleteId,
-  setEditedId,
-} from "../../store/discountSlice";
+import React, { useCallback, useEffect, useState } from "react";
 import { Menu, MenuItem, MenuButton } from "@szhsin/react-menu";
 import {
   defaultTdStyle,
@@ -17,92 +11,189 @@ import {
 import ReactPaginate from "react-paginate";
 import { useAppContext } from "../../context/AppContext";
 import EmptyBar from "../Common/EmptyBar";
-import localforage from "localforage";
+import { useAuth } from "../../auth/AuthContext";
+import { toast } from "react-toastify";
 
 // Example items, to simulate fetching from another resources.
 const itemsPerPage = 10;
 const emptySearchForm = {
-  amount: "",
-  clientCategory: "",
-  productCategory: "",
+  search: "",
 };
 
-function CategoryTable({ showAdvanceSearch = false }) {
+function CategoryTable({
+  showAdvanceSearch = true,
+  onSelectDiscount,
+  onNewOrUpdateDiscount,
+}) {
   const { initLoading } = useAppContext();
-  const dispatch = useDispatch();
-  const allCategorys = useSelector(getAllCategorysSelector);
-  const [allCategory , setAllCategorys ] = useState([])
-  console.log({allCategory})
+  const [allCategories, setAllCategories] = useState({
+    data: [],
+    pagination: { total: 0 },
+  });
+  const { authToken } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const apiDomain = process.env.REACT_APP_API_DOMAIN || "";
 
   const [searchForm, setSearchForm] = useState(emptySearchForm);
   const [currentItems, setCurrentItems] = useState(null);
   const [pageCount, setPageCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const categorys = useMemo(() => {
-    let filterData = allCategorys.length > 0 ? [...allCategorys].reverse() : [];
-    if (searchForm.amount?.trim()) {
-      filterData = filterData.filter((category) =>
-        category.amount.includes(searchForm.amount)
-      );
-    }
-
-    if (searchForm.clientCategory?.trim()) {
-      filterData = filterData.filter((category) =>
-        category.clientCategory.includes(searchForm.clientCategory)
-      );
-    }
-
-    if (searchForm.productCategory?.trim()) {
-      filterData = filterData.filter((category) =>
-        category.productCategory.includes(searchForm.productCategory)
-      );
-    }
-
-    return filterData;
-  }, [allCategorys, searchForm]);
-
-  console.log(categorys)
+  console.log({ currentItems });
 
   useEffect(() => {
-    localforage.getItem("categorys").then((storedData) => {
-      if (storedData) {
-        setAllCategorys(storedData);
+    if (onNewOrUpdateDiscount && onNewOrUpdateDiscount.data) {
+      const updatedDiscount =
+        onNewOrUpdateDiscount.data.discount ||
+        onNewOrUpdateDiscount.data.Discount;
+      if (updatedDiscount) {
+        console.log({ updatedDiscount });
+        setCurrentItems((prevItems) => {
+          const discountIndex = prevItems.findIndex(
+            (discount) => discount.id === updatedDiscount.id
+          );
+          if (discountIndex !== -1) {
+            // If the client already exists, update it in the currentItems list
+            const updatedItems = [...prevItems];
+            updatedItems[discountIndex] = updatedDiscount;
+            return updatedItems;
+          } else {
+            // If the client does not exist, add it to the beginning of the currentItems list
+            return [updatedDiscount, ...prevItems];
+          }
+        });
       }
+    }
+  }, [onNewOrUpdateDiscount]);
+
+  const fetchCategories = useCallback(
+    async (page = 1, searchParams = {}) => {
+      setLoading(true);
+      try {
+        const searchQuery = new URLSearchParams({
+          ...searchParams,
+          page,
+        }).toString();
+
+        const response = await fetch(`${apiDomain}/discounts?${searchQuery}`, {
+          method: "GET",
+          headers: {
+            Authorization: authToken,
+          },
+        });
+        const data = await response.json();
+        setAllCategories(data.data.discounts);
+        setPageCount(data.data.discounts.pagination.total_pages);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+        setLoading(false);
+      }
+    },
+    [apiDomain, authToken]
+  );
+
+  const deleteDiscount = useCallback(
+    async (discountId) => {
+      try {
+        const response = await fetch(
+          `${apiDomain}/discount/${discountId}/delete`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: authToken,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to delete discount");
+        }
+
+        const result = await response.json();
+        toast.success(result.data.message || "Product Deleted Successfully!", {
+          position: "bottom-center",
+          autoClose: 2000,
+        });
+
+        removeFromState(discountId);
+      } catch (error) {
+        console.error("Error deleting product:", error);
+      }
+    },
+    [apiDomain, authToken]
+  );
+
+  const removeFromState = (discountId) => {
+    setAllCategories((prevDiscounts) => {
+      const updatedData = prevDiscounts.data.filter(
+        (discount) => discount.id !== discountId
+      );
+      const updatedTotal = updatedData.length;
+      return {
+        data: updatedData,
+        pagination: { ...prevDiscounts.pagination, total: updatedTotal },
+      };
     });
-  }, []);
-  
 
-  // Handle search input change
-  const handlerSearchValue = (event, keyName) => {
-    const value = event.target.value;
-    setSearchForm((prev) => ({
-      ...prev,
-      [keyName]: value,
-    }));
-    setCurrentPage(0); // Reset current page when search changes
-  };
-
-  // Pagination logic
-  const handlePageChange = ({ selected }) => {
-    setCurrentPage(selected);
+    setCurrentItems((prevItems) =>
+      prevItems.filter((item) => item.id !== discountId)
+    );
   };
 
   useEffect(() => {
-    const startOffset = currentPage * itemsPerPage;
-    const endOffset = startOffset + itemsPerPage;
-    setCurrentItems(categorys.slice(startOffset, endOffset));
-    setPageCount(Math.ceil(categorys.length / itemsPerPage));
-  }, [categorys, currentPage]);
+    if (authToken) {
+      fetchCategories(currentPage);
+    }
+  }, [authToken, fetchCategories, currentPage]);
+
+  useEffect(() => {
+    if (Array.isArray(allCategories.data)) {
+      setCurrentItems(allCategories.data);
+      setPageCount(Math.ceil(allCategories.pagination.total / itemsPerPage));
+    }
+  }, [allCategories]);
+
+  // Invoke when user click to request another page.
+  const handlePageClick = (event) => {
+    const selectedPage = event.selected + 1; // ReactPaginate uses 0-based index
+    setCurrentPage(selectedPage);
+    fetchCategories(selectedPage);
+  };
 
   // Handlers for delete and edit
-  const handleDelete = useCallback((item) => {
-    dispatch(setDeleteId(item.id));
-  }, [dispatch]);
+  const handleDelete = useCallback(
+    (item) => {
+      deleteDiscount(item.id);
+    },
+    [deleteDiscount]
+  );
 
-  const handleEdit = useCallback((item) => {
-    dispatch(setEditedId(item.id));
-  }, [dispatch]);
+  const handleEdit = useCallback(
+    (item) => {
+      onSelectDiscount(item);
+    },
+    [onSelectDiscount]
+  );
+
+  const handlerSearchValue = useCallback(
+    (event, keyName) => {
+      const value = event.target.value;
+
+      setSearchForm((prev) => {
+        return { ...prev, [keyName]: value };
+      });
+
+      const searchParams = {
+        search:
+          keyName === "search" ? value : searchForm.search,
+      };
+      fetchCategories(1, searchParams);
+    },
+    [fetchCategories, searchForm]
+  );
+
+
 
   return (
     <>
@@ -110,7 +201,7 @@ function CategoryTable({ showAdvanceSearch = false }) {
         <div className="bg-white rounded-xl px-3 py-3 mb-3">
           <div className="font-title mb-2">Advanced Search</div>
           <div className="flex w-full flex-col sm:flex-row">
-          <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
+            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
               <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -129,61 +220,12 @@ function CategoryTable({ showAdvanceSearch = false }) {
               </div>
               <input
                 autoComplete="nope"
-                value={searchForm.clientCategory}
-                placeholder="User Client Category"
+                value={searchForm.search}
+                placeholder="Search"
                 className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "clientCategory")}
+                onChange={(e) => handlerSearchValue(e, "search")}
               />
             </div>
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
-              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <input
-                autoComplete="nope"
-                value={searchForm.productCategory}
-                placeholder="Product category"
-                className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "productCategory")}
-              />
-            </div>
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
-              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-gray-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <input
-                autoComplete="nope"
-                value={searchForm.amount}
-                placeholder="percentage"
-                className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "amount")}
-              />
-            </div>
-           
           </div>
         </div>
       )}
@@ -191,10 +233,10 @@ function CategoryTable({ showAdvanceSearch = false }) {
       <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
         <div className="hidden sm:flex invisible sm:visible w-full flex-col sm:flex-row">
           <div className="sm:text-left text-default-color font-title flex-1">
-          Client Category
+            Client Category
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-          Product Category
+            Product Category
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
             Percentage
@@ -205,34 +247,38 @@ function CategoryTable({ showAdvanceSearch = false }) {
         </div>
 
         <div>
-          {allCategory &&
-            allCategory.map((client) => (
-              <div className={defaultTdWrapperStyle} key={client.id}>
-                <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Client Category</div>
-                  <div className={defaultTdContent}>
-                   
-
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden pl-1">
-                      {client.clientCategory}
-                    </span>
-                  </div>
+          {currentItems &&
+            currentItems.map((discount, index) => (
+              <div className={defaultTdWrapperStyle} key={discount.id}>
+                <div className="px-4 py-2">
+                {(currentPage - 1) * itemsPerPage + index + 1}
                 </div>
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Product category</div>
+                  <div className={defaultTdContentTitleStyle}>
+                    discount Category
+                  </div>
                   <div className={defaultTdContent}>
-                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.productCategory}
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden pl-1">
+                      {discount.client_category}
                     </span>
                   </div>
                 </div>
                 <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>
-                    Percentage
+                    Product category
                   </div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.percentage}{"%"}
+                      {discount.product_category}
+                    </span>
+                  </div>
+                </div>
+                <div className={defaultTdStyle}>
+                  <div className={defaultTdContentTitleStyle}>Percentage</div>
+                  <div className={defaultTdContent}>
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                      {discount.discount_percentage}
+                      {"%"}
                     </span>
                   </div>
                 </div>
@@ -262,10 +308,10 @@ function CategoryTable({ showAdvanceSearch = false }) {
                       }
                       transition
                     >
-                      <MenuItem onClick={() => handleEdit(client)}>
+                      <MenuItem onClick={() => handleEdit(discount)}>
                         Edit
                       </MenuItem>
-                      <MenuItem onClick={() => handleDelete(client)}>
+                      <MenuItem onClick={() => handleDelete(discount)}>
                         Delete
                       </MenuItem>
                     </Menu>
@@ -274,11 +320,11 @@ function CategoryTable({ showAdvanceSearch = false }) {
               </div>
             ))}
 
-          {categorys.length <= 0 && !initLoading && (
+          {allCategories.data.length <= 0 && !initLoading && (
             <EmptyBar title="Category Data" />
           )}
 
-          {categorys.length > 0 && (
+          {allCategories.data.length > 0 && (
             <ReactPaginate
               className="inline-flex items-center -space-x-px mt-2"
               previousLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
@@ -287,8 +333,7 @@ function CategoryTable({ showAdvanceSearch = false }) {
               breakLinkClassName="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
               activeLinkClassName="py-2 px-3 text-blue-600 bg-blue-50 border border-gray-300 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
               breakLabel="..."
-              // onPageChange={handlePageClick}
-              onPageChange={handlePageChange}
+              onPageChange={handlePageClick}
               pageRangeDisplayed={1}
               pageCount={pageCount}
               previousLabel="<"
