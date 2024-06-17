@@ -13,6 +13,7 @@ import {
   defaultSkeletonNormalStyle,
 } from "../../constants/defaultStyles";
 import { useAuth } from "../../auth/AuthContext";
+import  DeleteIcon  from '../Icons/DeleteIcon'
 
 const emptyForm = {
   image: "",
@@ -298,6 +299,12 @@ function QuickAddProduct({ selectedProduct, onNewUpdateProduct }) {
     }
   };
 
+  const handleDelete = (indexToRemove) => {
+    const updatedValues = formValues.filter((_, index) => index !== indexToRemove);
+    setFormValues(updatedValues); //formValues is managed via state (useState)
+  };
+  
+
   return (
     <div className="bg-white rounded-xl p-4">
       <SectionTitle> Quick Add Product </SectionTitle>
@@ -429,6 +436,12 @@ function QuickAddProduct({ selectedProduct, onNewUpdateProduct }) {
                   {entry.amount}
                 </p>
               </div>
+              <button
+          className="ml-2 px-4 py-2 bg-red-500 text-white rounded-xl"
+          onClick={() => handleDelete(index)} // Assuming you have a function handleDelete to remove the entry
+        >
+          <DeleteIcon />
+        </button>
             </div>
           ))}
         </div>
@@ -480,7 +493,7 @@ function QuickAddProduct({ selectedProduct, onNewUpdateProduct }) {
           <select
             value={productForm.category}
             onChange={(e) => handlerProductValue(e, "category")}
-            className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
+            className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent focus:outline-none text-gray-500"
           >
             <option value="">Select Category</option>
             {productCategories.map((category) => (

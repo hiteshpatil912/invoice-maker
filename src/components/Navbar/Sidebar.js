@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
-import { useSelector } from "react-redux";
 import HomeIcon from "../Icons/HomeIcon";
 import ProductIcon from "../Icons/ProductIcon";
 import InvoiceIcon from "../Icons/InvoiceIcon";
@@ -10,12 +9,10 @@ import ClientPlusIcon from "../Icons/ClientPlusIcon";
 import SalesOrderIcon from "../Icons/SalesOrderIcon";
 import CreditIcon from "../Icons/CreditIcon";
 import ReturnIcon from "../Icons/ReturnIcon";
-import DeleteIcon from "../Icons/DeleteIcon";
 import SecurityIcon from "../Icons/SecurityIcon";
 import InvoiceNavbarLoading from "../Loading/InvoiceNavbarLoading";
 import { useAuth } from "../../auth/AuthContext";
 import Skeleton from "react-loading-skeleton";
-import axios from "axios";
 import { toast } from "react-toastify";
 
 const NAV_DATA = [
@@ -78,7 +75,8 @@ function Sidebar() {
   const apiDomain = process.env.REACT_APP_API_DOMAIN || "";
   const { authToken } = useAuth();
   const navigate = useNavigate();
-  const [company, setCompany] = useState({});
+  const [company, setCompany] = useState(null); // Initialize with null
+  const [isLoading, setIsLoading] = useState(true); // Loading state
 
   const myHeaders = useMemo(() => {
     const headers = new Headers();
@@ -125,27 +123,31 @@ function Sidebar() {
     } catch (error) {
       console.error("Error during logout:", error);
       setError("Logout failed");
-    } finally {
     }
   };
 
   const fetchCompanyDetails = useCallback(async () => {
+    setIsLoading(true); // Start loading
     try {
       const response = await fetch(`${apiDomain}/company/1/edit`, {
         method: "GET",
         headers: myHeaders,
       });
+      if (!response.ok) {
+        throw new Error("Failed to fetch company details");
+      }
       const data = await response.json();
       setCompany(data.data);
     } catch (error) {
+      setError("Failed to fetch company details");
       toast.error("Failed to fetch company details", {
         position: "bottom-center",
         autoClose: 2000,
       });
-    }finally{
+    } finally {
+      setIsLoading(false); // End loading
     }
   }, [apiDomain, myHeaders]);
-
 
   useEffect(() => {
     fetchCompanyDetails();
@@ -182,11 +184,17 @@ function Sidebar() {
           </motion.span>
         </div>
 
-        {initLoading && !company[0]?.name && (
+        {isLoading && (
           <Skeleton className="px-4 py-5 rounded-md" />
         )}
 
-        {company[0]?.name && !initLoading && (
+        {!isLoading && !company && (
+          <div className="px-4 py-5 rounded-md text-red-500">
+            Company details not found.
+          </div>
+        )}
+
+        {!isLoading && company && (
           <motion.span
             className={
               navItemDefaultClasses + " bg-gray-50 flex items-center px-3"
@@ -200,11 +208,11 @@ function Sidebar() {
             </button>
             <img
               className={"object-cover h-10 w-10 rounded-lg"}
-              src={company[0].image}
+              src={company[0]?.image}
               alt="upload_image"
             />
             <span className="flex-1 pl-2 font-title rounded-r py-1 border-r-4 border-indigo-400 flex items-center inline-block whitespace-nowrap text-ellipsis overflow-hidden ">
-              {company[0].name}
+              {company[0]?.name}
             </span>
           </motion.span>
         )}
