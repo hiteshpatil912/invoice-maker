@@ -119,7 +119,7 @@ function DashboardWidgets() {
             <div className="flex justify-between items-center">
               {/* Icon */}
               <div className="h-30">
-                <CreditIcon loop className="h-16 animate-slow-bounce rounded-3xl text-white p-3 mt-3 bg-blue-500" />
+                <CreditIcon loop className="h-16 animate-slow-bounce rounded-3xl text-white p-3 mt-3 bg-red-500" />
               </div>
               {/* Icon Finished */}
               <div className="text-2xl mr-2">
@@ -140,7 +140,7 @@ function DashboardWidgets() {
             <div className="flex justify-between items-center">
               {/* Icon */}
               <div className="h-30">
-                <ReturnIcon loop className="h-16 animate-slow-bounce rounded-3xl text-white p-3 mt-3 bg-blue-500" />
+                <ReturnIcon loop className="h-16 animate-slow-bounce rounded-3xl text-white p-3 mt-3 bg-green-500" />
               </div>
               {/* Icon Finished */}
               <div className="text-2xl mr-2">
