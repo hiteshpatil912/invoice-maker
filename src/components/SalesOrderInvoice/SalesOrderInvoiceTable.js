@@ -120,7 +120,7 @@ function SalesOrederInvoiceTable({ showAdvanceSearch = false }) {
 
   const handleEdit = useCallback(
     (item) => {
-      navigate("/invoices/" + item.id);
+      navigate("/salesOrderinvoice/" + item.id);
     },
     [navigate]
   );

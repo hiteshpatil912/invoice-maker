@@ -43,6 +43,7 @@ import ProductChoosenModal from "../../components/Product/ProductChoosenModal";
 import { jsPDF } from "jspdf";
 import { useAuth } from "../../auth/AuthContext";
 import ClientSelectionModal from "./selectClientModal";
+import html2canvas from "html2canvas";
 
 function CashInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
@@ -124,26 +125,26 @@ function CashInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     setEscapeOverflow(true);
     setIsViewMode(true);
     setIsExporting(true);
-
-    domtoimage.toPng(componentRef.current).then((dataUrl) => {
-      try {
-        const pdf = new jsPDF("p", "mm", "a4");
-        const img = new Image();
-        img.src = dataUrl;
-        img.onload = () => {
-          const imgWidth = pdf.internal.pageSize.getWidth();
-          const imgHeight = (img.height * imgWidth) / img.width;
-
-          pdf.addImage(dataUrl, "PNG", 0, 0, imgWidth, imgHeight);
-          pdf.save("invoice.pdf");
-        };
-      } catch (e) {
-        console.log(e);
-      } finally {
+  
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const component = componentRef.current;
+  
+      html2canvas(component).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 210; // A4 size
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save('invoice.pdf');
+  
         setIsExporting(false);
         setEscapeOverflow(false);
-      }
-    });
+      });
+    } catch (e) {
+      console.log(e);
+      setIsExporting(false);
+      setEscapeOverflow(false);
+    }
   }, [setEscapeOverflow, showNavbar, toggleNavbar]);
 
   const fetchClients = useCallback(

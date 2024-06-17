@@ -4,6 +4,7 @@ import React, {
   useMemo,
   useState,
   useRef,
+  act,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
@@ -43,6 +44,7 @@ import ProductChoosenModal from "../../components/Product/ProductChoosenModal";
 import { jsPDF } from "jspdf";
 import { useAuth } from "../../auth/AuthContext";
 import ClientSelectionModal from "./selectClientModal";
+import html2canvas from "html2canvas";
 
 function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
@@ -70,6 +72,7 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const [invoiceForm, setInvoiceForm] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [invoiceStatus,setInvoiceStatus] = useState();
   const [pageCount, setPageCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null); // State for selected product
@@ -97,8 +100,6 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const [showClientModal, setShowClientModal] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState();
   const [company, setCompany] = useState();
-
-
   
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -124,26 +125,26 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     setEscapeOverflow(true);
     setIsViewMode(true);
     setIsExporting(true);
-
-    domtoimage.toPng(componentRef.current).then((dataUrl) => {
-      try {
-        const pdf = new jsPDF("p", "mm", "a4");
-        const img = new Image();
-        img.src = dataUrl;
-        img.onload = () => {
-          const imgWidth = pdf.internal.pageSize.getWidth();
-          const imgHeight = (img.height * imgWidth) / img.width;
-
-          pdf.addImage(dataUrl, "PNG", 0, 0, imgWidth, imgHeight);
-          pdf.save("invoice.pdf");
-        };
-      } catch (e) {
-        console.log(e);
-      } finally {
+  
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const component = componentRef.current;
+  
+      html2canvas(component).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 210; // A4 size
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save('invoice.pdf');
+  
         setIsExporting(false);
         setEscapeOverflow(false);
-      }
-    });
+      });
+    } catch (e) {
+      console.log(e);
+      setIsExporting(false);
+      setEscapeOverflow(false);
+    }
   }, [setEscapeOverflow, showNavbar, toggleNavbar]);
 
   const fetchClients = useCallback(
@@ -273,6 +274,7 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         setSelectedCategory(data.data.product_category.name);
         setSelectedClient(newInvoiceForm.clientDetail);
         setInvoiceForm(newInvoiceForm);
+        setInvoiceStatus(data.data.invoice_type)
       } else {
         console.error("Failed to fetch invoice details");
       }
@@ -513,6 +515,8 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     [invoiceForm]
   );
 
+
+  console.log({invoiceForm})
   const onDeleteProduct = useCallback(
     (prodID) => {
       setInvoiceForm((prev) => {
@@ -813,7 +817,8 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   // Generate a random invoice number
   const randomInvoiceNumber = `inv-${generateRandomString(8)}`;
 
-  const handleSubmit = () => {
+  const handleSubmit = (action) => {
+
     const myHeaders = new Headers();
     myHeaders.append("Accept", "application/json");
     myHeaders.append("Authorization", authToken);
@@ -844,10 +849,21 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         : 0;
 
 
+    // Depending on the action parameter, you can handle the logic accordingly
+     if (action === 'cash') {
+      // Handle 'paid' action
+      formdata.append("invoice_type", "cash");
+    } else if (action === 'credit') {
+      // Handle 'unpaid' action
+      formdata.append("invoice_type", "credit");
+    }else if (action === 'pending') {
+      // Handle 'unpaid' action
+      formdata.append("invoice_type", "sale");
+    }
+  
     formdata.append("currency", invoiceForm.currencyUnit);
     formdata.append("client_id", invoiceForm.clientDetail.id);
     formdata.append("product_category_id", invoiceForm.productCategoryId);
-    formdata.append("invoice_type", "sale");
     formdata.append("discount_per", discountValue);
     formdata.append("discounted_amount", discountAmount);
     formdata.append("sub_total", invoiceForm.totalAmount);
@@ -1639,18 +1655,34 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
           {/* Products Finished */}
         </div>
       )}
-      {invoiceForm && invoiceForm?.statusIndex !== "3" && (
-        <div className="px-4 pt-3">
-          <div className="flex flex-col justify-end flex-wrap sm:flex-row">
-            <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
-              <Button size="sm" block={1} success={1} onClick={handleSubmit}>
-                {/* <SecurityIcon className="h-5 w-5 mr-1" />{" "} */}
-                {params.id === "new" ? "Save" : "Update"} As Paid
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+
+{invoiceForm && invoiceForm?.statusIndex !== "3" && params.id === "new" ? (
+  <div className="px-4 pt-3">
+    <div className="flex flex-col justify-end flex-wrap sm:flex-row">
+      <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
+        <Button size="sm" block={1} secondary={1} onClick={() => handleSubmit('pending')}>
+          {invoiceStatus === "sale" ? "Update" : "Save"} As Pending
+        </Button>
+      </div>
+    </div>
+  </div>
+) : (
+  <div className="px-4 pt-3">
+    <div className="flex flex-col justify-end flex-wrap sm:flex-row">
+      <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
+        <Button size="sm" block={1} success={1} onClick={() => handleSubmit('cash')}>
+          {invoiceStatus === "sale" ? "Update" : "Save"} As paid
+        </Button>
+      </div>
+      <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
+        <Button size="sm" block={1} danger={1} onClick={() => handleSubmit('credit')}>
+          {invoiceStatus === "sale" ? "Update" : "Save"} As unpaid
+        </Button>
+      </div>
+    </div>
+  </div>
+)
+}
 
       {invoiceForm && (
         <div className="p-4">

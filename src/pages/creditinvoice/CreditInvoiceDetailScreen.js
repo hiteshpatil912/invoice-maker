@@ -43,6 +43,7 @@ import ProductChoosenModal from "../../components/Product/ProductChoosenModal";
 import { jsPDF } from "jspdf";
 import { useAuth } from "../../auth/AuthContext";
 import ClientSelectionModal from "./selectClientModal";
+import html2canvas from "html2canvas";
 
 function CreditInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
@@ -124,26 +125,26 @@ function CreditInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     setEscapeOverflow(true);
     setIsViewMode(true);
     setIsExporting(true);
-
-    domtoimage.toPng(componentRef.current).then((dataUrl) => {
-      try {
-        const pdf = new jsPDF("p", "mm", "a4");
-        const img = new Image();
-        img.src = dataUrl;
-        img.onload = () => {
-          const imgWidth = pdf.internal.pageSize.getWidth();
-          const imgHeight = (img.height * imgWidth) / img.width;
-
-          pdf.addImage(dataUrl, "PNG", 0, 0, imgWidth, imgHeight);
-          pdf.save("invoice.pdf");
-        };
-      } catch (e) {
-        console.log(e);
-      } finally {
+  
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const component = componentRef.current;
+  
+      html2canvas(component).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 210; // A4 size
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save('invoice.pdf');
+  
         setIsExporting(false);
         setEscapeOverflow(false);
-      }
-    });
+      });
+    } catch (e) {
+      console.log(e);
+      setIsExporting(false);
+      setEscapeOverflow(false);
+    }
   }, [setEscapeOverflow, showNavbar, toggleNavbar]);
 
   const fetchClients = useCallback(
@@ -1643,9 +1644,9 @@ function CreditInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         <div className="px-4 pt-3">
           <div className="flex flex-col justify-end flex-wrap sm:flex-row">
             <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
-              <Button size="sm" block={1} success={1} onClick={handleSubmit}>
+              <Button size="sm"  block={1} danger={1} onClick={handleSubmit}>
                 {/* <SecurityIcon className="h-5 w-5 mr-1" />{" "} */}
-                {params.id === "new" ? "Save" : "Update"} As Paid
+                {params.id === "new" ? "Save" : "Update"} As UnPaid
               </Button>
             </div>
           </div>

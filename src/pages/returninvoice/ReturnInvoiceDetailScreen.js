@@ -43,6 +43,7 @@ import ProductChoosenModal from "../../components/Product/ProductChoosenModal";
 import { jsPDF } from "jspdf";
 import { useAuth } from "../../auth/AuthContext";
 import ClientSelectionModal from "./selectClientModal";
+import html2canvas from "html2canvas";
 
 function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
@@ -96,6 +97,7 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const [selectedClient, setSelectedClient] = useState(null);
   const [showClientModal, setShowClientModal] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState();
+  const [invoiceStatus,setInvoiceStatus] = useState();
   const [company, setCompany] = useState();
 
 
@@ -124,26 +126,26 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     setEscapeOverflow(true);
     setIsViewMode(true);
     setIsExporting(true);
-
-    domtoimage.toPng(componentRef.current).then((dataUrl) => {
-      try {
-        const pdf = new jsPDF("p", "mm", "a4");
-        const img = new Image();
-        img.src = dataUrl;
-        img.onload = () => {
-          const imgWidth = pdf.internal.pageSize.getWidth();
-          const imgHeight = (img.height * imgWidth) / img.width;
-
-          pdf.addImage(dataUrl, "PNG", 0, 0, imgWidth, imgHeight);
-          pdf.save("invoice.pdf");
-        };
-      } catch (e) {
-        console.log(e);
-      } finally {
+  
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const component = componentRef.current;
+  
+      html2canvas(component).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 210; // A4 size
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save('invoice.pdf');
+  
         setIsExporting(false);
         setEscapeOverflow(false);
-      }
-    });
+      });
+    } catch (e) {
+      console.log(e);
+      setIsExporting(false);
+      setEscapeOverflow(false);
+    }
   }, [setEscapeOverflow, showNavbar, toggleNavbar]);
 
   const fetchClients = useCallback(
@@ -271,6 +273,7 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         };
 
         setSelectedCategory(data.data.product_category.name);
+        setInvoiceStatus(data.data.invoice_type);
         setSelectedClient(newInvoiceForm.clientDetail);
         setInvoiceForm(newInvoiceForm);
       } else {
@@ -1639,18 +1642,19 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
           {/* Products Finished */}
         </div>
       )}
-      {invoiceForm && invoiceForm?.statusIndex !== "3" && (
-        <div className="px-4 pt-3">
-          <div className="flex flex-col justify-end flex-wrap sm:flex-row">
-            <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
-              <Button size="sm" block={1} success={1} onClick={handleSubmit}>
-                {/* <SecurityIcon className="h-5 w-5 mr-1" />{" "} */}
-                {params.id === "new" ? "Save" : "Update"} As Paid
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+
+{invoiceForm && invoiceForm?.statusIndex !== "3" && invoiceStatus !== 'return' && (
+  <div className="px-4 pt-3">
+    <div className="flex flex-col justify-end flex-wrap sm:flex-row">
+      <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
+        <Button size="sm" block={1} success={1} onClick={handleSubmit}>
+          {params.id === "new" ? "Save" : "Update"} Sale Return
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {invoiceForm && (
         <div className="p-4">

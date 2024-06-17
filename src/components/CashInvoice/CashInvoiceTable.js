@@ -120,7 +120,7 @@ function CashInvoiceTable({ showAdvanceSearch = false }) {
 
   const handleEdit = useCallback(
     (item) => {
-      navigate("/invoices/" + item.id);
+      navigate("/cashInvoice/" + item.id);
     },
     [navigate]
   );

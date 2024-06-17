@@ -120,7 +120,7 @@ function ReturnInvoiceTable({ showAdvanceSearch = false }) {
 
   const handleEdit = useCallback(
     (item) => {
-      navigate("/invoices/" + item.id);
+      navigate("/returnInvoice/" + item.id);
     },
     [navigate]
   );
