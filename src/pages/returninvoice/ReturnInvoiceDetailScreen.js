@@ -9,14 +9,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import { useReactToPrint } from "react-to-print";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  defaultTdStyle,
-  defaultTdActionStyle,
-  defaultTdWrapperStyle,
-  defaultTdContent,
-  defaultTdContentTitleStyle,
-  defaultSearchStyle,
-} from "../../constants/defaultStyles";
 // import NumberFormat from "react-number-format";
 import { NumberFormatBase } from "react-number-format";
 import { toast } from "react-toastify";
@@ -35,7 +27,6 @@ import { defaultInputSmStyle, IconStyle } from "../../constants/defaultStyles";
 import Button from "../../components/Button/Button";
 import ClientPlusIcon from "../../components/Icons/ClientPlusIcon";
 import InvoiceIcon from "../../components/Icons/InvoiceIcon";
-import { nanoid } from "nanoid";
 import DeleteIcon from "../../components/Icons/DeleteIcon";
 import Modal from "../../components/Modal";
 import { useAppContext } from "../../context/AppContext";
@@ -44,6 +35,7 @@ import {
   getTotalTaxesWithPercent,
   sumProductTotal,
   sumTotalAmount,
+  sumTotalDiscount,
   sumTotalTaxes,
 } from "../../utils/match";
 import PageTitle from "../../components/Common/PageTitle";
@@ -73,13 +65,11 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   });
   const { authToken } = useAuth();
   const invoiceNewForm = useSelector(getInvoiceNewForm);
-  const company = useSelector(getCompanyData);
   const currentBg = useSelector(getCurrentBGImage);
   const currentColor = useSelector(getCurrentColor);
   const [invoiceForm, setInvoiceForm] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [allCategory, setAllCategorys] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null); // State for selected product
@@ -93,14 +83,26 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     category: [],
     pagination: { total: 0, pageCount: 0 },
   });
+
+  const [discounts, setDiscounts] = useState({
+    data: [],
+    clientCategories: [],
+    productCategories: [],
+    pagination: { total: 0, pageCount: 0 },
+  });
+
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [showClientModal, setShowClientModal] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState();
+  const [company, setCompany] = useState();
+
+
+  
+
   const [currentPage, setCurrentPage] = useState(1);
   const { id } = useParams();
-
-
 
   const handleExport = useCallback(() => {
     if (showNavbar) {
@@ -114,6 +116,7 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     }, 3000);
   }, [handlePrint, setEscapeOverflow, showNavbar, toggleNavbar]);
 
+  
   const handleDownloadPdf = useCallback(() => {
     if (showNavbar) {
       toggleNavbar();
@@ -209,84 +212,157 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     [apiDomain, authToken]
   );
 
-  console.log({invoiceForm})
-
   const fetchInvoice = useCallback(async () => {
     const myHeaders = new Headers();
-    myHeaders.append("Authorization",authToken);
+    myHeaders.append("Authorization", authToken);
 
     const requestOptions = {
       method: "GET",
       headers: myHeaders,
-      redirect: "follow"
+      redirect: "follow",
     };
 
-    console.log({selectedClient})
-
     try {
-      const response = await fetch(`${apiDomain}/invoice/${id}/edit`, requestOptions);
+      const response = await fetch(
+        `${apiDomain}/invoice/${id}/edit`,
+        requestOptions
+      );
       const data = await response.json();
-      console.log({data})
       if (data.success) {
         const defaultImagePath = "/images/default_bg.jpg"; // Path to your default image
-        const newInvoiceForm = {        
-            "id": data.data.id,
-          "invoiceNo":  data.data.invoice_number || "",
-          "statusIndex": "1",
-          "statusName": data.data.status || "Draft",
-          "totalAmount": data.data.total || 0,
-          "color": "#686de0",
-          "backgroundImage": {
-            "id": "bg_1",
-            "path": data.data.background_image_path || defaultImagePath,
-            "base64": data.data.background_image_base64 || "" // Add base64 data if available
+        const newInvoiceForm = {
+          id: data.data.id,
+          invoiceNo: data.data.invoice_number || "",
+          statusIndex: "1",
+          statusName: data.data.status || "Draft",
+          totalAmount: data.data.total || 0,
+          color: "#686de0",
+          backgroundImage: {
+            id: "bg_1",
+            path: data.data.background_image_path || defaultImagePath,
+            base64: data.data.background_image_base64 || "", // Add base64 data if available
           },
-          "dueDate": data.data.due_date,
-          "createdDate": data.data.creation_date,
-          "currencyUnit":  data.data.currency || "KWD",
-          "clientDetail": {
-              "id":data.data.client.id || "",
-              "name": data.data.client.name || "",
-              "phone_number": data.data.client.phone_number,
-              "address": data.data.client.address,
-              "client_category": data.data.client.category,
+          dueDate: data.data.due_date,
+          createdDate: data.data.creation_date,
+          currencyUnit: data.data.currency || "KWD",
+          clientDetail: {
+            id: data.data.client.id || "",
+            name: data.data.client.name || "",
+            phone_number: data.data.client.phone_number,
+            address: data.data.client.address,
+            client_category: data.data.client.category,
           },
-          "products":data.data.invoiceDetails.map((detail) => ({
-                  "id": detail.product_id,
-                  "name": detail.product_name,
-                  "productID": detail.product_id,
-                  "amount": detail.price,
-                  "quantity": detail.qty
-                })),
-          "taxes": [],
-          "companyDetail": {
-              "id": "companyID",
-              "billingAddress": "105,albert hall",
-              "companyName": "Fitness bois",
-              "companyEmail": "",
-              "companyMobile": "+91 985676543"
-          },
-          "productCategoryId": data.data.product_category.id || 1
-        }
+          products: data.data.invoiceDetails.map((detail) => ({
+            id: detail.product_id,
+            name: detail.product_name,
+            productID: detail.product_id,
+            amount: detail.price,
+            quantity: detail.qty,
+          })),
+          discounts: [
+            {
+              title: "Discount",
+              value: data.data.discount_per,
+              amount: data.data.discounted_amount,
+            },
+          ],
+          taxes: [],
+          productCategoryId: data.data.product_category.id || 1,
+        };
 
         setSelectedCategory(data.data.product_category.name);
         setSelectedClient(newInvoiceForm.clientDetail);
-        setInvoiceForm(newInvoiceForm)
+        setInvoiceForm(newInvoiceForm);
       } else {
         console.error("Failed to fetch invoice details");
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
     } finally {
       setLoading(false);
     }
-  }, [id,apiDomain,authToken]);
+  }, [id, apiDomain, authToken]);
 
   useEffect(() => {
     fetchInvoice();
   }, [fetchInvoice]);
 
+  const fetchCompanyDetails = useCallback(async () => {
+    try {
+      const response = await fetch(`${apiDomain}/company/1/edit`, {
+        method: "GET",
+        headers: {
+          Authorization: authToken,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+
+      const companyDetails = {
+        companyDetail: {
+          id: data.data[0].id,
+          billingAddress: data.data[0].address,
+          companyName: data.data[0].name,
+          companyEmail: data.data[0].email,
+          companyMobile: data.data[0].phone,
+          image: data.data[0].image,
+        },
+      };
+      setCompany(companyDetails);
+      setInvoiceForm((prevForm) => ({
+        ...prevForm,
+        ...companyDetails,
+      }));
+    } catch (error) {
+      toast.error("Failed to fetch company details", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    }
+  }, [apiDomain, authToken]);
+
+  useEffect(() => {
+      fetchCompanyDetails();
+  }, [fetchCompanyDetails]);
+
+  const fetchDiscounts = useCallback(
+    async (page = 1, searchParams = {}) => {
+      setLoading(true);
+      try {
+        const searchQuery = new URLSearchParams({
+          ...searchParams,
+          page,
+        }).toString();
+
+        const response = await fetch(`${apiDomain}/discounts?${searchQuery}`, {
+          method: "GET",
+          headers: {
+            Authorization: authToken,
+          },
+        });
+        const result = await response.json();
+        setDiscounts({
+          data: result.data.discounts.data,
+          clientCategories: result.data.clientCategory,
+          productCategories: result.data.productCategory,
+          pagination: {
+            total: result.data.discounts.pagination.total,
+            pageCount: result.data.discounts.pagination.total_pages,
+          },
+        });
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+        setLoading(false);
+      }
+    },
+    [apiDomain, authToken]
+  );
+
   const handleCategoryChange = (e) => {
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    const id = selectedOption.getAttribute("category-id");
+    setSelectedCategoryId(id);
     const selectedCategory = products.category.find(
       (category) => category.name === e.target.value
     );
@@ -301,11 +377,19 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     if (authToken) {
       if (currentPage) {
         fetchClients(currentPage);
+        fetchDiscounts(currentPage);
       }
       fetchClients();
       fetchProductsCategories();
+      fetchDiscounts();
     }
-  }, [authToken, fetchClients, currentPage, fetchProductsCategories]);
+  }, [
+    authToken,
+    fetchClients,
+    currentPage,
+    fetchProductsCategories,
+    fetchDiscounts,
+  ]);
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
@@ -394,38 +478,78 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
 
       if (keyName === "quantity" || keyName === "amount") {
         const subTotalAmount = sumProductTotal(updateProducts);
+        const DiscountedAMount = sumTotalDiscount(
+          subTotalAmount,
+          invoiceForm?.discounts[0]?.value || 0
+        );
+
+        // Ensure invoiceForm.discounts is defined before accessing discounts[0]
+        if (invoiceForm.discounts && invoiceForm.discounts.length > 0) {
+          // Update discounts[0].amount only if discounts array exists and has elements
+          invoiceForm.discounts[0].amount = invoiceForm.discounts[0].value
+            ? DiscountedAMount
+            : 0;
+        }
+
         const updateTaxes = getTotalTaxesWithPercent(
           invoiceForm.taxes,
           subTotalAmount
         );
         updatedData.taxes = updateTaxes;
+
+        // Calculate totalAmount based on discounts, taxes, and subTotalAmount
         updatedData.totalAmount = sumTotalAmount(
           subTotalAmount,
-          sumTotalTaxes(updateTaxes)
+          sumTotalTaxes(updateTaxes),
+          sumTotalDiscount(
+            subTotalAmount,
+            invoiceForm?.discounts[0]?.value || 0
+          )
         );
       }
+
       setInvoiceForm(updatedData);
     },
     [invoiceForm]
   );
 
-  const onDeleteProduct = useCallback((prodID) => {
-    setInvoiceForm((prev) => {
-      let updatedData = { ...prev };
-      const updateProducts = prev.products.filter((prod) => prod.id !== prodID);
-      const subTotalAmount = sumProductTotal(updateProducts);
-      const updateTaxes = getTotalTaxesWithPercent(prev.taxes, subTotalAmount);
-      // const updateDiscount =getTotalDiscountwithPercent(0);
-      updatedData.products = updateProducts;
-      updatedData.taxes = updateTaxes;
-      // updatedData.taxes = updateDiscount;
-      updatedData.totalAmount = sumTotalAmount(
-        subTotalAmount,
-        sumTotalTaxes(updateTaxes)
-      );
-      return updatedData;
-    });
-  }, []);
+  const onDeleteProduct = useCallback(
+    (prodID) => {
+      setInvoiceForm((prev) => {
+        let updatedData = { ...prev };
+        const updateProducts = prev.products.filter(
+          (prod) => prod.id !== prodID
+        );
+        const subTotalAmount = sumProductTotal(updateProducts);
+        const updateTaxes = getTotalTaxesWithPercent(
+          prev.taxes,
+          subTotalAmount
+        );
+        const rate = prev.discounts?.[0] ? prev.discounts[0].value : 0;
+        const updatedDiscount = sumTotalDiscount(subTotalAmount, rate);
+
+        // Calculate the new total amount
+        const totalAmount = subTotalAmount + updateTaxes - updatedDiscount;
+
+
+        updatedData.products = updateProducts;
+        updatedData.taxes = updateTaxes;
+        updatedData.totalAmount = totalAmount;
+
+        // Ensure discounts array is copied and updated properly
+        if (updatedData.discounts?.length > 0) {
+          updatedData.discounts = [...updatedData.discounts];
+          updatedData.discounts[0] = {
+            ...updatedData.discounts[0],
+            amount: updatedDiscount,
+          };
+        }
+
+        return updatedData;
+      });
+    },
+    [setInvoiceForm]
+  );
 
   // abc
   const handlerDiscountsValue = useCallback(
@@ -466,26 +590,12 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         let discounts = [...prev.discounts];
 
         if (keyName === "value") {
-          const sumDiscounts = (discounts) => {
-            return discounts.reduce((total, discount) => {
-              return (
-                total +
-                (discount.type === "percentage"
-                  ? (discount.value / 100) * subTotalAmount
-                  : discount.amount)
-              );
-            }, 0);
-          };
           const subTotalAmount = sumProductTotal(prev.products);
-          const discountAmount = (value / 100) * subTotalAmount;
-          discounts[isFindIndex] = {
-            ...discounts[isFindIndex],
-            [keyName]: value,
-            amount:
-              currentDiscount.type !== "percentage" ? value : discountAmount,
-          };
-          const totalAmount = subTotalAmount - sumDiscounts(discounts);
-          return { ...prev, discounts: discounts, totalAmount: totalAmount };
+          const sumDiscounts = sumTotalDiscount(sumTotalAmount, value);
+
+          
+          const totalAmount = subTotalAmount - sumDiscounts;
+          return { ...prev, discounts: sumDiscounts, totalAmount: totalAmount };
         } else {
           discounts[isFindIndex] = {
             ...discounts[isFindIndex],
@@ -514,48 +624,47 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
 
   // Define the handleAddDiscount function
   const handleAddDiscount = (category, clientCategory) => {
-    console.log(allCategory);
-    const matchedCategory = allCategory.find(
+    const matchedCategory = discounts.data.find(
       (cat) =>
-        cat.clientCategory === clientCategory &&
-        cat.productCategory === category
+        cat.client_category === clientCategory &&
+        cat.product_category === category
     );
     if (matchedCategory) {
-      return matchedCategory.percentage;
+      return matchedCategory.discount_percentage;
     } else {
       return "none";
     }
   };
 
-  // Handle button click to calculate discount and update invoiceForm
-  // Handle button click to calculate discount and update invoiceForm
   const onDiscountButtonClick = (category, clientCategory) => {
     const result = handleAddDiscount(category, clientCategory);
-    console.log("Result:", result);
 
-    // Check if result is 'none' or a valid number
     if (result !== "none" && !isNaN(parseFloat(result))) {
-      // Calculate the discount amount based on the result (percentage)
-      const discountAmount =
-        (parseFloat(result) / 100) * parseFloat(invoiceForm.products[0].amount);
-      console.log("Discount Amount:", discountAmount);
-      console.log(invoiceForm);
+      const discountPercentage = parseFloat(result);
 
-      // Calculate the new total amount after applying the discount
-      const newTotalAmount =
-        parseFloat(invoiceForm.products[0].amount) - discountAmount;
-      console.log("New Total Amount:", newTotalAmount);
+      // let totalDiscountAmount = 0;
+      let subtotal = 0;
+      // let totalQuantity = 0;
+
+      invoiceForm.products.forEach((product) => {
+        subtotal += parseFloat(product.amount) * product.quantity;
+        // totalQuantity += product.quantity;
+      });
+
+      let totalDiscountAmount = (discountPercentage / 100) * subtotal;
+      let newTotalAmount = subTotal - totalDiscountAmount;
 
       // Create a new discount object
       const newDiscount = {
         title: "Discount", // You can change this as per your requirement
-        value: parseFloat(result),
-        amount: discountAmount, // Convert to 2 decimal places
+        value: discountPercentage,
+        amount: totalDiscountAmount, // Total discount amount
       };
 
-      // Update invoiceForm with the new total amount and discount
+      // Update invoiceForm with the new total amount, updated products, and discounts
       setInvoiceForm((prevInvoiceForm) => ({
         ...prevInvoiceForm,
+        // products: updatedProducts, // Update products with discounted amounts
         totalAmount: newTotalAmount, // Update total amount
         discounts: [...(prevInvoiceForm.discounts || []), newDiscount],
       }));
@@ -565,44 +674,81 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   };
 
   const onDeleteDiscount = (discountID) => {
-    // Filter out the discount with the given ID
-    const updatedDiscounts = invoiceForm.discounts.filter(
-      (discount) => discount.id !== discountID
+    // Find the discount to be removed
+    const discountToRemove = invoiceForm.discounts.find(
+      (discount) => discount.id === discountID
     );
 
-    // Update the invoice form state with the filtered discounts
-    setInvoiceForm((prev) => ({
-      ...prev,
-      discounts: updatedDiscounts,
-      // You might need to recalculate the total amount here
-    }));
-  };
+    if (discountToRemove) {
+      let newTotalAmount = invoiceForm.totalAmount + discountToRemove.amount;
 
-  console.log({ selectedProduct });
+      // Filter out the discount with the given ID
+      const updatedDiscounts = invoiceForm.discounts.filter(
+        (discount) => discount.id !== discountID
+      );
+
+      // Prepare the new state object
+      const newState = {
+        ...invoiceForm,
+        totalAmount: newTotalAmount,
+        discounts: updatedDiscounts.length > 0 ? updatedDiscounts : [],
+      };
+
+      // Update the invoice form state
+      setInvoiceForm(newState);
+    }
+  };
 
   useEffect(() => {
     if (selectedProduct !== null) {
-      // If Choosen Exisiting Client And This form is news
+      // If chosen existing client and this form is new
       const { id, name, productID, amount } = selectedProduct;
-      const newProduct = { id: id, name, productID, amount, quantity: 1 };
+      const newProduct = { id, name, productID, amount, quantity: 1 };
+
       setInvoiceForm((prev) => {
         let updatedData = { ...prev };
         const updateProducts = [...prev.products, newProduct];
         const subTotalAmount = sumProductTotal(updateProducts);
+        let rate = 0;
+        let Discounts = 0;
+
+        if (prev.discounts?.[0]) {
+          rate = prev.discounts[0].value;
+          Discounts = sumTotalDiscount(subTotalAmount, rate);
+        }
+
         const updateTaxes = getTotalTaxesWithPercent(
           prev.taxes,
           subTotalAmount
         );
+
         updatedData.products = updateProducts;
         updatedData.taxes = updateTaxes;
+
+        // Initialize discounts array if it doesn't exist
+        if (!updatedData.discounts) {
+          updatedData.discounts = [];
+        }
+
+        // Update the discount amount if there is a discount
+        if (updatedData.discounts[0]) {
+          updatedData.discounts[0].amount = Discounts;
+        } else if (rate !== 0) {
+          // If there's a rate but no discounts object, create one
+          updatedData.discounts[0] = { amount: Discounts };
+        }
+
         updatedData.totalAmount = sumTotalAmount(
           subTotalAmount,
-          sumTotalTaxes(updateTaxes)
+          sumTotalTaxes(updateTaxes),
+          Discounts
         );
+
         return updatedData;
       });
     }
   }, [selectedProduct]);
+
 
   useEffect(() => {
     if (initLoading === false) {
@@ -656,19 +802,27 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     }
   }, [currentBg, currentColor, initLoading]);
 
-  // const handleCategoryChange = (event) => {
-  //   setSelectedCategory(event.target.value);
-  // };
+  function generateRandomString(length) {
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    return Array.from(array, (byte) =>
+      ("0" + (byte & 0xff).toString(16)).slice(-2)
+    ).join("");
+  }
+
+  // Generate a random invoice number
+  const randomInvoiceNumber = `inv-${generateRandomString(8)}`;
 
   const handleSubmit = () => {
     const myHeaders = new Headers();
     myHeaders.append("Accept", "application/json");
     myHeaders.append("Authorization", authToken);
 
-    console.log({ invoiceForm });
-
     const formdata = new FormData();
-    formdata.append("invoice_number", invoiceForm.invoiceNo || "inv-1");
+    formdata.append(
+      "invoice_number",
+      invoiceForm.invoiceNo || randomInvoiceNumber
+    );
     formdata.append(
       "creation_date",
       new Date(invoiceForm.createdDate).toISOString().split("T")[0]
@@ -677,15 +831,31 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
       "due_date",
       new Date(invoiceForm.dueDate).toISOString().split("T")[0]
     );
+
+    // Check if discounts exist and has at least one element, else default to 0
+    const discountValue =
+      invoiceForm?.discounts && invoiceForm.discounts.length > 0
+        ? invoiceForm.discounts[0].value
+        : 0;
+
+    const discountAmount =
+      invoiceForm?.discounts && invoiceForm.discounts.length > 0
+        ? invoiceForm.discounts[0].amount
+        : 0;
+
+
     formdata.append("currency", invoiceForm.currencyUnit);
     formdata.append("client_id", invoiceForm.clientDetail.id);
     formdata.append("product_category_id", invoiceForm.productCategoryId);
     formdata.append("invoice_type", "return");
-    formdata.append("discount_per", "");
-    formdata.append("discounted_amount", "");
+    formdata.append("discount_per", discountValue);
+    formdata.append("discounted_amount", discountAmount);
     formdata.append("sub_total", invoiceForm.totalAmount);
     formdata.append("total", invoiceForm.totalAmount);
-
+    formdata.append(
+      "client_category_id",
+      invoiceForm.clientDetail.client_category_id
+    );
     invoiceForm.products.forEach((product, index) => {
       formdata.append(`invoiceDetails[${index}][product_id]`, product.id);
       formdata.append(`invoiceDetails[${index}][product_name]`, product.name);
@@ -705,29 +875,30 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     };
 
     fetch(`${apiDomain}/invoice`, requestOptions)
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.errors) {
-        Object.values(result.errors).forEach(errorArray => {
-          errorArray.forEach(errorMessage => {
-            toast.error(errorMessage, {
-              position: "bottom-center",
-              autoClose: 2000,
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.errors) {
+          Object.values(result.errors).forEach((errorArray) => {
+            errorArray.forEach((errorMessage) => {
+              toast.error(errorMessage, {
+                position: "bottom-center",
+                autoClose: 2000,
+              });
             });
           });
-        });
-      } else {
-        toast.success(result.data.message || "Invoice created!", {
+        } else {
+          toast.success(result.data.message || "Invoice created!", {
+            position: "bottom-center",
+            autoClose: 2000,
+          });
+        }
+      })
+      .catch((error) =>
+        toast.error(error.message || "Something went wrong", {
           position: "bottom-center",
           autoClose: 2000,
-        });
-      }
-    })
-    .catch((error) => 
-      toast.error(error.message || "Something went wrong", {
-        position: "bottom-center",
-        autoClose: 2000,
-      }));
+        })
+      );
   };
 
   return (
@@ -758,14 +929,14 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
           <div
             className={
               isExporting
-                ? "py-5 px-8 bg-cover bg-center bg-slate-50 rounded-xl flex flex-row justify-between items-center"
-                : "py-9 px-8 bg-cover bg-center bg-slate-50 rounded-xl flex flex-col sm:flex-row justify-between items-center"
+                ? "py-5 px-8 bg-cover bg-center bg-slate-500 rounded-xl flex flex-row justify-between items-center"
+                : "py-9 px-8 bg-cover bg-center bg-slate-500 rounded-xl flex flex-col sm:flex-row justify-between items-center"
             }
-            style={{
-              backgroundImage: invoiceForm?.backgroundImage?.base64 
-                ? `url(${invoiceForm.backgroundImage.base64})` 
-                : `url(${invoiceForm.backgroundImage.path})`
-            }}
+            // style={{
+            //   backgroundImage: invoiceForm?.backgroundImage?.base64
+            //     ? `url(${invoiceForm.backgroundImage.base64})`
+            //     : `url(${invoiceForm.backgroundImage?.path})`,
+            // }}
           >
             <div
               className={
@@ -774,16 +945,20 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                   : "flex flex-col sm:flex-row items-center"
               }
             >
+              {!invoiceForm?.companyDetail && <div>Loading...</div>}
               {invoiceForm?.companyDetail?.image ? (
                 <img
-                  className="object-contain h-20 w-20 mr-3 rounded"
+                  className="flex justify-center items-center object-contain h-20 w-20 mr-3 rounded"
                   alt={invoiceForm?.companyDetail?.companyName}
                   src={invoiceForm?.companyDetail?.image}
                 />
               ) : (
-                <span></span>
+                <img
+                  className="flex justify-center items-center object-contain h-20 w-20 mr-3 rounded"
+                  alt={invoiceForm?.companyDetail?.companyName}
+                  src={invoiceForm?.companyDetail?.image}
+                />
               )}
-
               <div
                 className={
                   isExporting
@@ -791,20 +966,24 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                     : "text-white font-title text-center sm:text-left"
                 }
               >
-                <p className="font-bold mb-2">
-                  {invoiceForm?.companyDetail?.companyName || "Company Name"}
-                </p>
-                <p className="text-sm font-medium">
-                  {invoiceForm?.companyDetail?.billingAddress ||
-                    "Plz add First Company Data"}
-                </p>
-                <p className="text-sm font-medium">
-                  {invoiceForm?.companyDetail?.companyMobile || "Company Ph"}
-                </p>
-                <p className="text-sm font-medium">
-                  {invoiceForm?.companyDetail?.companyEmail ||
-                    "Company@email.com"}
-                </p>
+                {invoiceForm ? (
+                  <>
+                    <p className="font-bold mb-2">
+                      {invoiceForm.companyDetail?.companyName}
+                    </p>
+                    <p className="text-sm font-medium">
+                      {invoiceForm.companyDetail?.billingAddress}
+                    </p>
+                    <p className="text-sm font-medium">
+                      {invoiceForm.companyDetail?.companyMobile }
+                    </p>
+                    <p className="text-sm font-medium">
+                      {invoiceForm.companyDetail?.companyEmail}
+                    </p>
+                  </>
+                ) : (
+                  <p>Loading...</p>
+                )}
               </div>
             </div>
             <div className="text-white font-title font-bold text-5xl mt-5 sm:mt-0">
@@ -856,7 +1035,7 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                         (isExporting ? "text-xs" : "text-sm mb-1")
                       }
                     >
-                      {selectedClient.client_category}
+                      {selectedClient.category}
                     </div>
                   </div>
                 )}
@@ -885,7 +1064,11 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                       <div className="overflow-y h-12"></div>
                       <option value="">Select a category</option>
                       {products.category.map((category) => (
-                        <option key={category.id} value={category.name}>
+                        <option
+                          key={category.id}
+                          value={category.name}
+                          category-id={category.id}
+                        >
                           {category.name}
                         </option>
                       ))}
@@ -896,7 +1079,7 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
             </div>
 
             <div className="flex-1">
-              {/* <div className="flex flex-row justify-between items-center mb-1">
+              <div className="flex flex-row justify-between items-center mb-1">
                 <div className="font-title flex-1"> INVOICE # </div>
                 <div className="font-title flex-1 text-right">
                   {!isViewMode ? (
@@ -911,7 +1094,7 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                     invoiceForm.invoiceNo || "-"
                   )}
                 </div>
-              </div> */}
+              </div>
               <div className="flex flex-row justify-between items-center mb-1">
                 <div className="font-title flex-1"> Creation Date </div>
                 <div className="font-title flex-1 text-right">
@@ -1031,7 +1214,8 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                     {selectedCategory && (
                       <ProductChoosenModal
                         onClose={handleCloseModal}
-                        selectedCategory={selectedCategory}
+                        selectedCategory={selectedCategoryId}
+                        selectedClient={selectedClient}
                         onSelect={handleSelect}
                       />
                     )}
@@ -1394,7 +1578,7 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                     onClick={() => {
                       onDiscountButtonClick(
                         selectedCategory,
-                        invoiceForm?.clientDetail?.clientCategory
+                        invoiceForm?.clientDetail?.category
                       );
                     }}
                   >
@@ -1481,5 +1665,53 @@ function ReturnInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   );
 }
 export default ReturnInvoiceDetailScreen;
+
+
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+  
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+  
+
+  
+
+
+
+  
+
+
+  
+
+  
+
+
+  
+
+  
 
   

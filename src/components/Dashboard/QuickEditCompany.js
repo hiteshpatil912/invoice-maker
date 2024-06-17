@@ -1,11 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
-import { useDispatch, useSelector } from "react-redux";
 import Button from "../Button/Button";
 import ImageUpload from "../Common/ImageUpload";
 import SectionTitle from "../Common/SectionTitle";
-import { getCompanyData, updateCompanyData } from "../../store/companySlice";
 import { useAppContext } from "../../context/AppContext";
 import {
   defaultInputStyle,
@@ -15,6 +13,7 @@ import {
   defaultSkeletonLargeStyle,
   defaultSkeletonNormalStyle,
 } from "../../constants/defaultStyles";
+import { useAuth } from "../../auth/AuthContext";
 
 const emptyForm = {
   id: "",
@@ -26,9 +25,9 @@ const emptyForm = {
 };
 
 function QuickEditCompany({ isShowDetail = false, alreadySet = false }) {
-  const dispatch = useDispatch();
-  const company = useSelector(getCompanyData);
+  const apiDomain = process.env.REACT_APP_API_DOMAIN || "";
   const { initLoading: isInitLoading } = useAppContext();
+  const { authToken } = useAuth();
   const [isTouched, setIsTouched] = useState(false);
   const [companyForm, setCompanyForm] = useState(emptyForm);
   const [validForm, setValidForm] = useState(
@@ -41,16 +40,51 @@ function QuickEditCompany({ isShowDetail = false, alreadySet = false }) {
     setCompanyForm((prev) => ({ ...prev, image: str }));
   }, []);
 
-  // const clearForm = useCallback(() => {
-  //   setCompanyForm({ ...emptyForm });
-  // }, []);
-
   const handlerCompanyValue = useCallback((event, keyName) => {
     const value = event.target.value;
     setCompanyForm((prev) => ({ ...prev, [keyName]: value }));
   }, []);
 
-  const submitHandler = useCallback(() => {
+  const fetchCompanyDetails = useCallback(async () => {
+    try {
+      const response = await fetch(`${apiDomain}/company/1/edit`, {
+        method: "GET",
+        headers: {
+          Authorization: authToken,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      setCompanyForm({
+        id: data.data[0].id,
+        image: data.data[0].image,
+        companyName: data.data[0].name,
+        companyEmail: data.data[0].email,
+        companyMobile: data.data[0].phone,
+        billingAddress: data.data[0].address,
+      });
+    } catch (error) {
+      toast.error("Failed to fetch company details", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    }
+  }, [apiDomain, authToken]);
+
+  useEffect(() => {
+    if (authToken) {
+      fetchCompanyDetails();
+    }
+  }, [fetchCompanyDetails, authToken]);
+
+  const myHeaders = useMemo(() => {
+    const headers = new Headers();
+    headers.append("Accept", "application/json");
+    headers.append("Authorization", `Bearer ${authToken}`);
+    return headers;
+  }, [authToken]);
+
+  const submitHandler = useCallback(async () => {
     setIsTouched(true);
 
     const isValid = Object.keys(validForm).every((key) => validForm[key]);
@@ -63,13 +97,56 @@ function QuickEditCompany({ isShowDetail = false, alreadySet = false }) {
       return;
     }
 
-    toast.success("Wow so easy to Update!", {
-      position: "bottom-center",
-      autoClose: 2000,
-    });
+    try {
+      // Create FormData object
+      const formData = new FormData();
+      console.log({ companyForm });
+      formData.append("name", companyForm.companyName);
+      formData.append("address", companyForm.billingAddress);
+      formData.append("phone", companyForm.companyMobile);
+      formData.append("email", companyForm.companyEmail);
+      // Conditionally append image only if user has selected a new image
+      if (companyForm.image && !companyForm.image.startsWith("http")) {
+        formData.append("image", companyForm.image);
+      }
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: formData,
+        redirect: "follow",
+      };
 
-    dispatch(updateCompanyData(companyForm));
-  }, [companyForm, dispatch, validForm]);
+      const response = await fetch(
+        `${apiDomain}/company/${companyForm.id}`,
+        requestOptions
+      );
+
+      // Check if the response is not OK
+      if (!response.ok) {
+        const errorText = await response.json(); // Get the response text (which might be HTML)
+        throw new Error(
+          `Failed to update company details: ${response.status} ${response.statusText} - ${errorText}`
+        );
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        fetchCompanyDetails();
+        toast.success("Company details updated successfully!", {
+          position: "bottom-center",
+          autoClose: 2000,
+        });
+      } else {
+        throw new Error("Failed to update company details");
+      }
+    } catch (error) {
+      console.error("Failed to update company details:", error);
+      toast.error(`Failed to update company details: ${error.message}`, {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    }
+  }, [companyForm, validForm, apiDomain, myHeaders]);
 
   const imageUploadClasses = useMemo(() => {
     const defaultStyle = "rounded-xl ";
@@ -84,12 +161,6 @@ function QuickEditCompany({ isShowDetail = false, alreadySet = false }) {
 
     return defaultStyle;
   }, [companyForm, isTouched]);
-
-  useEffect(() => {
-    if (company) {
-      setCompanyForm(company);
-    }
-  }, [company]);
 
   useEffect(() => {
     setValidForm((prev) => ({

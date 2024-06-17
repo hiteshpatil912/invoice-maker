@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Menu, MenuItem, MenuButton } from "@szhsin/react-menu";
 import ReactPaginate from "react-paginate";
-import ProductIcon from "../Icons/ProductIcon";
 import EmptyBar from "../Common/EmptyBar";
 import { useAppContext } from "../../context/AppContext";
 import { useAuth } from "../../auth/AuthContext";
@@ -63,6 +62,7 @@ function ProductTable({
 
   const fetchProducts = useCallback(
     async (page = 1, searchParams = {}) => {
+      console.log("i am called");
       setLoading(true);
       try {
         const searchQuery = new URLSearchParams({
@@ -92,51 +92,55 @@ function ProductTable({
 
   const deleteProduct = useCallback(
     async (productId) => {
-      try {
-        const response = await fetch(
-          `${apiDomain}/product/${productId}/delete`,
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: authToken,
-            },
+      if (window.confirm(`Are you sure you want to delete ?`)) {
+        try {
+          const response = await fetch(
+            `${apiDomain}/product/${productId}/delete`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: authToken,
+              },
+            }
+          );
+          const result = await response.json();
+          if (result.success) {
+            toast.success(
+              result.data.message || "Product Deleted Successfully!",
+              {
+                position: "bottom-center",
+                autoClose: 2000,
+              }
+            );
+          } else {
+            throw new Error("Failed to delete product");
           }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to delete product");
+          fetchProducts();
+          // removeFromState(productId);
+        } catch (error) {
+          console.error("Error deleting product:", error);
         }
-
-        const result = await response.json();
-        toast.success(result.data.message || "Product Deleted Successfully!", {
-          position: "bottom-center",
-          autoClose: 2000,
-        });
-
-        removeFromState(productId);
-      } catch (error) {
-        console.error("Error deleting product:", error);
       }
     },
-    [apiDomain, authToken]
+    [apiDomain, authToken, fetchProducts]
   );
 
-  const removeFromState = (productId) => {
-    setProducts((prevProducts) => {
-      const updatedData = prevProducts.data.filter(
-        (product) => product.id !== productId
-      );
-      const updatedTotal = updatedData.length;
-      return {
-        data: updatedData,
-        pagination: { ...prevProducts.pagination, total: updatedTotal },
-      };
-    });
+  // const removeFromState = (productId) => {
+  //   setProducts((prevProducts) => {
+  //     const updatedData = prevProducts.data.filter(
+  //       (product) => product.id !== productId
+  //     );
+  //     const updatedTotal = updatedData.length;
+  //     return {
+  //       data: updatedData,
+  //       pagination: { ...prevProducts.pagination, total: updatedTotal },
+  //     };
+  //   });
 
-    setCurrentItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId)
-    );
-  };
+  //   setCurrentItems((prevItems) =>
+  //     prevItems.filter((item) => item.id !== productId)
+  //   );
+  // };
 
   useEffect(() => {
     if (authToken) {
@@ -176,7 +180,7 @@ function ProductTable({
       const value = event.target.value;
 
       setSearchForm((prev) => ({ ...prev, [keyName]: value }));
-      
+
       const searchParams = {
         search: keyName === "search" ? value : searchForm.search,
       };
@@ -230,7 +234,6 @@ function ProductTable({
                 <th className="px-4 py-2">ID</th>
                 <th className="px-4 py-2">Product Image</th>
                 <th className="px-4 py-2">Name</th>
-                <th className="px-4 py-2">Amount</th>
                 <th className="px-4 py-2">Description</th>
                 <th className="px-4 py-2">Category</th>
               </tr>
@@ -249,7 +252,6 @@ function ProductTable({
                     />
                   </td>
                   <td className="border px-4 py-2">{product.name}</td>
-                  <td className="border px-4 py-2">{product.amount}</td>
                   <td className="border px-4 py-2">
                     {product.description || "N/A"}
                   </td>

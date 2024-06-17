@@ -16,6 +16,7 @@ import InvoiceIcon from "../Icons/InvoiceIcon";
 import { useAppContext } from "../../context/AppContext";
 import EmptyBar from "../Common/EmptyBar";
 import { useAuth } from "../../auth/AuthContext";
+import { toast } from "react-toastify";
 
 const itemsPerPage = 10;
 const emptySearchForm = {
@@ -43,7 +44,7 @@ function ReturnInvoiceTable({ showAdvanceSearch = false }) {
       try {
         const searchQuery = new URLSearchParams({
           ...searchParams,
-          "invoice-type":"return",
+          "invoice_type":"return",
           page,
         }).toString();
       const myHeaders = new Headers();
@@ -76,7 +77,7 @@ function ReturnInvoiceTable({ showAdvanceSearch = false }) {
     }
   }, [authToken, fetchInvoices, currentPage]);
 
-console.log({invoices})
+
 
   // Invoke when user click to request another page.
   const handlePageClick = (event) => {
@@ -86,10 +87,36 @@ console.log({invoices})
   };
 
   const handleDelete = useCallback(
-    (item) => {
+    (invoice) => {
+      if (window.confirm(`Are you sure you want to delete ${invoice.invoice_name}?`)) {
+        const myHeaders = new Headers();
+        myHeaders.append("Authorization", authToken);
+  
+        const requestOptions = {
+          method: "DELETE",
+          headers: myHeaders,
+          redirect: "follow"
+        };
+  
+        fetch(`${apiDomain}/invoice/${invoice.id}/delete`, requestOptions)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              fetchInvoices(currentPage);
+              toast.success(data.data.message || "Product Deleted Successfully!", {
+                position: "bottom-center",
+                autoClose: 2000,
+              });
+            } else {
+              console.error("Failed to delete invoice");
+            }
+          })
+          .catch(error => console.error('Error:', error));
+      }
     },
-    []
+    [apiDomain, authToken, fetchInvoices, currentPage]
   );
+  
 
   const handleEdit = useCallback(
     (item) => {
@@ -282,5 +309,13 @@ console.log({invoices})
 }
 
 export default ReturnInvoiceTable;
+
+
+
+
+
+
+
+
 
 

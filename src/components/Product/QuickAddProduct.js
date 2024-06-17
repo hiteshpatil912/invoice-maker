@@ -20,10 +20,10 @@ const emptyForm = {
   name: "",
   category: "",
   description: "",
-  amount: 0,
+  client_Categories: [{ Clientcategory: "", amount: "" }],
 };
 
-function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
+function QuickAddProduct({ selectedProduct, onNewUpdateProduct }) {
   const { initLoading: isInitLoading } = useAppContext();
   const { authToken } = useAuth();
   // State variables
@@ -35,10 +35,18 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
     name: false,
     category: false,
     description: false,
-    amount: false,
+    client_Categories: true,
   });
   const [loading, setLoading] = useState(true);
   const [productCategories, setProductCategories] = useState([]);
+  const [clientformData, setClientFormData] = useState({
+    Clientcategory: "",
+    amount: "",
+  });
+  const [formValues, setFormValues] = useState([]);
+
+  const [clientCategories, setClientCategories] = useState([]);
+
   const apiDomain = process.env.REACT_APP_API_DOMAIN;
 
   const resetForm = () => {
@@ -48,7 +56,7 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
       name: "",
       category: "",
       description: "",
-      amount: ""
+      client_Categories: [{ Clientcategory: "", amount: "" }],
     });
     setValidForm({
       image: false, // Set initial validation states here
@@ -56,7 +64,6 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
       name: false,
       category: false,
       description: false,
-      amount: false
     });
   };
 
@@ -67,9 +74,8 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
     return headers;
   }, [authToken]);
 
-
   const fetchCategories = useCallback(async () => {
-    setLoading(false)
+    setLoading(false);
     try {
       const response = await fetch(`${apiDomain}/products`, {
         method: "GET",
@@ -83,30 +89,53 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
     } catch (error) {
       console.error("Error fetching products:", error);
       setLoading(false);
-    }finally{
-      setLoading(false)
+    } finally {
+      setLoading(false);
     }
-  }, [apiDomain, authToken,setLoading]);
-
-  useEffect(() => {
-    if (authToken) {
-      fetchCategories();
-    }
-  }, [authToken, fetchCategories]);
+  }, [apiDomain, authToken, setLoading]);
 
   useEffect(() => {
     if (selectedProduct) {
       setProductForm(selectedProduct);
+      const formattedData = selectedProduct.product_categories.map((item) => ({
+        Clientcategory: item.category_name,
+        amount: item.price,
+      }));
+      setFormValues(formattedData);
     }
   }, [selectedProduct]);
 
+  const fetchClientCategories = useCallback(async () => {
+    setLoading(false);
+    try {
+      const response = await fetch(`${apiDomain}/discounts`, {
+        method: "GET",
+        headers: {
+          Authorization: authToken,
+        },
+      });
+      const data = await response.json();
+      setClientCategories(data.data.clientCategory); // Assuming the response is an array of products
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiDomain, authToken, setLoading]);
+
+  useEffect(() => {
+    if (authToken) {
+      fetchCategories();
+      fetchClientCategories();
+    }
+  }, [authToken, fetchCategories, fetchClientCategories]);
+
   // Callback function to handle image change
-  const onChangeImage = useCallback(
-    (str) => {
-      setProductForm((prev) => ({ ...prev, image: str }));
-    },
-    []
-  );
+  const onChangeImage = useCallback((str) => {
+    setProductForm((prev) => ({ ...prev, image: str }));
+  }, []);
 
   // Callback function to handle product form field changes
   const handlerProductValue = useCallback(
@@ -127,11 +156,10 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
             value.trim(),
           ]);
         }
-      } 
+      }
     },
     [productCategories]
   );
-
 
   const handleEditorNew = useCallback(
     (item) => {
@@ -141,7 +169,7 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
   );
 
   // Form submission handler
-  const submitHandler = useCallback(async() => {
+  const submitHandler = useCallback(async () => {
     setIsTouched(true);
     const isValid = Object.values(validForm).every((value) => value);
 
@@ -159,7 +187,18 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
     formdata.append("name", productForm.name);
     formdata.append("category", productForm.category);
     formdata.append("description", productForm.description);
-    formdata.append("amount", productForm.amount);
+    formdata.append("description", productForm.description);
+    formdata.append("description", productForm.description);
+    productForm.client_Categories.forEach((clientCategory, index) => {
+      formdata.append(
+        `product_categories[${index}][price]`,
+        clientCategory.amount
+      );
+      formdata.append(
+        `product_categories[${index}][client_category]`,
+        clientCategory.Clientcategory
+      );
+    });
 
     const requestOptions = {
       method: "POST",
@@ -171,7 +210,10 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
     try {
       let response;
       if (selectedProduct) {
-        response = await fetch(`${apiDomain}/product/${selectedProduct.id}`, requestOptions);
+        response = await fetch(
+          `${apiDomain}/product/${selectedProduct.id}`,
+          requestOptions
+        );
       } else {
         response = await fetch(`${apiDomain}/product`, requestOptions);
       }
@@ -180,15 +222,15 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
         throw new Error("Network response was not ok");
       }
       const result = await response.json();
-      handleEditorNew(result)
+      handleEditorNew(result);
       toast.success(result.data.message || "Product Added Successfully!", {
         position: "bottom-center",
         autoClose: 2000,
       });
 
-          // Reset the form after successful submission
-    resetForm();
-
+      // Reset the form after successful submission
+      resetForm();
+      setFormValues([]);
     } catch (error) {
       toast.error("Failed to add/update product!", {
         position: "bottom-center",
@@ -198,12 +240,15 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
       setIsTouched(false);
     }
 
-
     setIsTouched(false);
-
-  }, [productForm, validForm, apiDomain, myHeaders, selectedProduct,handleEditorNew]);
-
-
+  }, [
+    productForm,
+    validForm,
+    apiDomain,
+    myHeaders,
+    selectedProduct,
+    handleEditorNew,
+  ]);
 
   // Memoized class for image upload
   const imageUploadClasses = useMemo(() => {
@@ -222,12 +267,36 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
       name: productForm?.name?.trim() ? true : false,
       category: productForm?.category?.trim() ? true : false,
       description: productForm?.description?.trim() ? true : false,
-      amount: productForm.amount > 0,
     }));
   }, [productForm]);
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setClientFormData({ ...clientformData, [name]: value });
+  };
 
+  const handleAddCategory = (e) => {
+    e.preventDefault();
+    setIsTouched(true);
 
+    if (clientformData.Clientcategory && clientformData.amount) {
+      // Update the formValues state first
+      setFormValues((prevFormValues) => {
+        const updatedFormValues = [...prevFormValues, clientformData];
+
+        // Update the productForm state based on the updated formValues
+        setProductForm((prevProductForm) => ({
+          ...prevProductForm,
+          client_Categories: updatedFormValues, // Update the client_Categories array
+        }));
+
+        // Reset form fields after submission
+        setClientFormData({ Clientcategory: "", amount: "" });
+
+        return updatedFormValues;
+      });
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl p-4">
@@ -287,32 +356,84 @@ function QuickAddProduct({ selectedProduct ,onNewUpdateProduct}) {
           </div>
         </div>
       </div>
-      <div className="mt-2">
-        <div className="font-title text-sm text-default-color">
-          Product Amount
+
+      <form className="flex mt-2" onSubmit={handleAddCategory}>
+        <div className="w-3/6">
+          <label
+            className="font-title text-sm text-default-color"
+            htmlFor="clientCategory"
+          >
+            Client Category
+          </label>
+          <select
+            id="clientCategory"
+            name="Clientcategory"
+            className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 "
+            value={clientformData.Clientcategory}
+            onChange={handleInputChange}
+            required
+          >
+            <option value="">Select Category</option>
+            {clientCategories.map((clientCategory, index) => (
+              <option key={index} value={clientCategory.name}>
+                {clientCategory.name}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="flex">
-          <div className="flex-1">
-            {isInitLoading ? (
-              <Skeleton className={defaultSkeletonNormalStyle} />
-            ) : (
-              <input
-                autoComplete="nope"
-                placeholder="Amount"
-                type="number"
-                className={
-                  !validForm.amount && isTouched
-                    ? defaultInputInvalidStyle
-                    : defaultInputStyle
-                }
-                disabled={isInitLoading}
-                value={productForm.amount}
-                onChange={(e) => handlerProductValue(e, "amount")}
-              />
-            )}
+        <div className="w-2/6 px-2 mt-1">
+          <div className="font-title text-sm text-default-color">Price</div>
+          <div className="flex">
+            <div className="flex-1">
+              {isInitLoading ? (
+                <Skeleton className={defaultSkeletonNormalStyle} />
+              ) : (
+                <input
+                  autoComplete="nope"
+                  placeholder="Amount"
+                  type="number"
+                  name="amount"
+                  className={
+                    !validForm.amount && isTouched
+                      ? defaultInputInvalidStyle
+                      : defaultInputStyle
+                  }
+                  disabled={isInitLoading}
+                  value={clientformData.amount}
+                  onChange={handleInputChange}
+                  required
+                />
+              )}
+            </div>
           </div>
         </div>
-      </div>
+        <button
+          type="submit"
+          className="w-1/6 font-title text-md px-2 block border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 h-10 mt-7 bg-indigo-400 text-white hover:bg-indigo-500"
+        >
+          Add
+        </button>
+      </form>
+
+      {formValues.length > 0 && (
+        <div>
+          {formValues.map((entry, index) => (
+            <div key={index} className="flex mt-2">
+              <div className="w-3/6">
+                <p className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 h-12">
+                  {entry.Clientcategory}
+                </p>
+              </div>
+              <div className="w-2/6 px-2 mt-1">
+                <p className="font-title text-md px-2 block w-full border-solid border-2 rounded-xl py-2 focus:outline-none border-indigo-400 h-12">
+                  {entry.amount}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="mt-2">
         <div className="font-title text-sm text-default-color">
           Product Description

@@ -39,7 +39,6 @@ function ClientTable({
     pagination: { total: 0 },
   });
 
-
   useEffect(() => {
     if (onNewOrUpdateClient && onNewOrUpdateClient.data) {
       const updatedClient =
@@ -93,30 +92,40 @@ function ClientTable({
 
   const deleteClient = useCallback(
     async (clientId) => {
-      try {
-        const response = await fetch(`${apiDomain}/client/${clientId}/delete`, {
-          method: "DELETE",
-          headers: {
-            Authorization: authToken,
-          },
-        });
+      if (window.confirm(`Are you sure you want to delete ?`)) {
+        try {
+          const response = await fetch(
+            `${apiDomain}/client/${clientId}/delete`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: authToken,
+              },
+            }
+          );
 
-        if (!response.ok) {
-          throw new Error("Failed to delete product");
+          if (!response.ok) {
+            throw new Error("Failed to delete product");
+          }
+
+          const result = await response.json();
+          if (result.success) {
+            fetchClients();
+            toast.success(
+              result.data.message || "Product Deleted Successfully!",
+              {
+                position: "bottom-center",
+                autoClose: 2000,
+              }
+            );
+          }
+          // removeFromState(clientId);
+        } catch (error) {
+          console.error("Error deleting product:", error);
         }
-
-        const result = await response.json();
-        toast.success(result.data.message || "Product Deleted Successfully!", {
-          position: "bottom-center",
-          autoClose: 2000,
-        });
-
-        removeFromState(clientId);
-      } catch (error) {
-        console.error("Error deleting product:", error);
       }
     },
-    [apiDomain, authToken]
+    [apiDomain, authToken, fetchClients]
   );
 
   const removeFromState = (clientId) => {
@@ -278,7 +287,7 @@ function ClientTable({
                   </div>
                   <div className={defaultTdContent}>
                     <span className="whitespace-nowrap text-ellipsis overflow-hidden">
-                      {client.client_category}{" "}
+                      {client.category}{" "}
                     </span>
                   </div>
                 </div>

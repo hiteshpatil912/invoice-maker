@@ -12,13 +12,10 @@ import {
 import Button from "../Button/Button";
 import ProductIcon from "../Icons/ProductIcon";
 import { useAuth } from "../../auth/AuthContext";
-const emptySearchForm = {
-  name: "",
-  // email: "",
-  mobileNo: "",
-};
 
-function ProductChoosenModal({ selectedCategory, onClose, onSelect }) {
+
+
+function ProductChoosenModal({ selectedCategory, onClose, onSelect , selectedClient }) {
   const { authToken } = useAuth();
   const [filterRecords, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,17 +27,23 @@ function ProductChoosenModal({ selectedCategory, onClose, onSelect }) {
   });
 
 
+
   const fetchProductsCategories = useCallback(
     async (page = 1, searchParams = {}) => {
       setLoading(true);
       try {
-        const searchQuery = new URLSearchParams({
-          ...searchParams,
-          page,
-        }).toString();
+
+      const queryParams = {
+        ...searchParams,
+        client_category_id: selectedClient?.category_id,
+        product_category_id: selectedCategory,
+        page,
+      };
 
 
-        const response = await fetch(`${apiDomain}/products?${searchQuery}`, {
+      const searchQuery = new URLSearchParams(queryParams).toString();
+
+        const response = await fetch(`${apiDomain}/invoice/products?${searchQuery}`, {
           method: "GET",
           headers: {
             Authorization: authToken,
@@ -55,13 +58,14 @@ function ProductChoosenModal({ selectedCategory, onClose, onSelect }) {
             pageCount: data.data.product.pagination.total_pages,
           },
         });
+        setRecords(data.data.product.data)
         setLoading(false);
       } catch (error) {
         console.error("Error fetching products:", error);
         setLoading(false);
       }
     },
-    [apiDomain, authToken]
+    [apiDomain, authToken,selectedCategory,selectedClient]
   );
 
   useEffect(() => {
@@ -70,15 +74,14 @@ function ProductChoosenModal({ selectedCategory, onClose, onSelect }) {
     }
   }, [authToken,fetchProductsCategories]);
 
-
-  useEffect(() => {
-    if (products.category.length > 0 && selectedCategory) {
-      const filteredProducts = products.data.data.filter(
-        (product) => product.category === selectedCategory
-      );
-      setRecords(filteredProducts);
-    }
-  }, [selectedCategory, products]);
+  // useEffect(() => {
+  //   if (products.category.length > 0 && selectedCategory) {
+  //     const filteredProducts = products.data.data.filter(
+  //       (product) => product.productCategoryID === selectedCategory
+  //     );
+  //     setRecords(filteredProducts);
+  //   }
+  // }, [selectedCategory, products]);
 
   const handleSelect = useCallback(
     (item) => {

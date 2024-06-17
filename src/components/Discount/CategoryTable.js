@@ -95,6 +95,7 @@ function CategoryTable({
 
   const deleteDiscount = useCallback(
     async (discountId) => {
+      if (window.confirm(`Are you sure you want to delete ?`)) {
       try {
         const response = await fetch(
           `${apiDomain}/discount/${discountId}/delete`,
@@ -106,22 +107,23 @@ function CategoryTable({
           }
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to delete discount");
-        }
-
+        if (response.success) {
+          fetchCategories()
         const result = await response.json();
         toast.success(result.data.message || "Product Deleted Successfully!", {
           position: "bottom-center",
           autoClose: 2000,
         });
-
-        removeFromState(discountId);
+        }else{
+          throw new Error("Failed to delete discount");
+        }
+        // removeFromState(discountId);
       } catch (error) {
         console.error("Error deleting product:", error);
       }
+    }
     },
-    [apiDomain, authToken]
+    [apiDomain, authToken,fetchCategories]
   );
 
   const removeFromState = (discountId) => {

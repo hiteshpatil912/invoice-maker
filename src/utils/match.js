@@ -43,10 +43,19 @@ export const sumTotalTaxes = (taxes) => {
   );
 };
 
-export const sumTotalAmount = (subTotal, taxAmount) => {
-  const total = parseFloat(subTotal) + parseFloat(taxAmount);
+export const sumTotalAmount = (subTotal, taxAmount, totalDiscountAmount) => {
+  const total = parseFloat(subTotal) + parseFloat(taxAmount) - totalDiscountAmount;
 
   return Number.isInteger(total)
     ? total
     : total?.toFixed(4)?.toString()?.slice(0, -2);
+};
+
+
+export const sumTotalDiscount = (subTotal, discountPercentage) => {
+
+  const totalDiscountAmount = (discountPercentage / 100) * subTotal;
+
+  return totalDiscountAmount;
+ 
 };

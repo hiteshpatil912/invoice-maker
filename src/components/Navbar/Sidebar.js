@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
@@ -13,10 +13,10 @@ import ReturnIcon from "../Icons/ReturnIcon";
 import DeleteIcon from "../Icons/DeleteIcon";
 import SecurityIcon from "../Icons/SecurityIcon";
 import InvoiceNavbarLoading from "../Loading/InvoiceNavbarLoading";
-import { getCompanyData } from "../../store/companySlice";
-
+import { useAuth } from "../../auth/AuthContext";
 import Skeleton from "react-loading-skeleton";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const NAV_DATA = [
   {
@@ -64,7 +64,6 @@ const NAV_DATA = [
     link: "returnInvoice",
     Icon: ReturnIcon,
   },
-
 ];
 
 const navDefaultClasses =
@@ -75,20 +74,21 @@ const navItemDefaultClasses = "block px-4 py-2 rounded-md flex flex-1";
 function Sidebar() {
   const { showNavbar, initLoading, toggleNavbar } = useAppContext();
   const { pathname } = useLocation();
-  const company = useSelector(getCompanyData);
   const [error, setError] = useState("");
   const apiDomain = process.env.REACT_APP_API_DOMAIN || "";
+  const { authToken } = useAuth();
   const navigate = useNavigate();
+  const [company, setCompany] = useState({});
 
   const myHeaders = useMemo(() => {
     const headers = new Headers();
     headers.append("Accept", "application/json");
+    headers.append("Authorization", authToken);
     return headers;
-  }, []);
+  }, [authToken]);
 
   const onClickNavbar = useCallback(() => {
     const width = window.innerWidth;
-
     if (width <= 767 && showNavbar) {
       toggleNavbar();
     }
@@ -105,8 +105,6 @@ function Sidebar() {
       const formData = new FormData();
       formData.append("user_id", userId);
 
-      const myHeaders = new Headers();
-
       const requestOptions = {
         method: "POST",
         headers: myHeaders,
@@ -121,12 +119,37 @@ function Sidebar() {
         navigate("/login");
         window.location.reload();
       } else {
-        setError(response.data.message || "Logout failed");
+        const errorData = await response.json();
+        setError(errorData.message || "Logout failed");
       }
     } catch (error) {
       console.error("Error during logout:", error);
+      setError("Logout failed");
+    } finally {
     }
   };
+
+  const fetchCompanyDetails = useCallback(async () => {
+    try {
+      const response = await fetch(`${apiDomain}/company/1/edit`, {
+        method: "GET",
+        headers: myHeaders,
+      });
+      const data = await response.json();
+      setCompany(data.data);
+    } catch (error) {
+      toast.error("Failed to fetch company details", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    }finally{
+    }
+  }, [apiDomain, myHeaders]);
+
+
+  useEffect(() => {
+    fetchCompanyDetails();
+  }, [fetchCompanyDetails]);
 
   return (
     <>
@@ -159,35 +182,39 @@ function Sidebar() {
           </motion.span>
         </div>
 
-        {initLoading && <Skeleton className="px-4 py-5 rounded-md" />}
-        {!!company?.image && !initLoading && (
+        {initLoading && !company[0]?.name && (
+          <Skeleton className="px-4 py-5 rounded-md" />
+        )}
+
+        {company[0]?.name && !initLoading && (
           <motion.span
             className={
               navItemDefaultClasses + " bg-gray-50 flex items-center px-3"
             }
           >
             <button
-              onClick={handleLogout} // Define this function to handle the logout logic
+              onClick={handleLogout}
               className="mr-2 px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-700"
             >
               Logout
             </button>
             <img
               className={"object-cover h-10 w-10 rounded-lg"}
-              src={company?.image}
+              src={company[0].image}
               alt="upload_image"
             />
             <span className="flex-1 pl-2 font-title rounded-r py-1 border-r-4 border-indigo-400 flex items-center inline-block whitespace-nowrap text-ellipsis overflow-hidden ">
-              {company.companyName}
+              {company[0].name}
             </span>
           </motion.span>
         )}
+
         <ul className="mt-4">
           {NAV_DATA.map(({ title, link, Icon }) => (
             <li key={title} className="mb-2">
               <NavLink
                 to={link}
-                className={" rounded-md side-link"}
+                className={"rounded-md side-link"}
                 onClick={onClickNavbar}
               >
                 {({ isActive }) => (
@@ -249,32 +276,6 @@ function Sidebar() {
         </div>
 
         <hr />
-
-        {/* <div className="mt-4">
-          <motion.a
-            href={"#!"}
-            className="block px-4 py-2 rounded-md flex"
-            initial={{
-              color: "#EC7474",
-              backgroundColor: "#FFEEEE",
-            }}
-            whileHover={{
-              translateX: 6,
-              color: "#777",
-              backgroundColor: "#dfdfdf",
-              transition: {
-                backgroundColor: {
-                  type: "spring",
-                  damping: 18,
-                },
-              },
-            }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <DeleteIcon className="h-6 w-6 mr-4" />
-            Clear Data
-          </motion.a>
-        </div> */}
       </nav>
     </>
   );
