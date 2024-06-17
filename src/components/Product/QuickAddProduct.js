@@ -13,7 +13,7 @@ import {
   defaultSkeletonNormalStyle,
 } from "../../constants/defaultStyles";
 import { useAuth } from "../../auth/AuthContext";
-import  DeleteIcon  from '../Icons/DeleteIcon'
+import DeleteIcon from "../Icons/DeleteIcon";
 
 const emptyForm = {
   image: "",
@@ -97,15 +97,33 @@ function QuickAddProduct({ selectedProduct, onNewUpdateProduct }) {
 
   useEffect(() => {
     if (selectedProduct) {
-      setProductForm(selectedProduct);
+      // Transform selectedProduct.product_categories to formattedData
       const formattedData = selectedProduct.product_categories.map((item) => ({
         Clientcategory: item.category_name,
         amount: item.price,
       }));
+
+      // Set productForm with the transformed data
+      setProductForm({
+        ...selectedProduct,
+        client_Categories: formattedData,
+      });
+
+      // Set formValues with the formatted data
       setFormValues(formattedData);
     }
   }, [selectedProduct]);
 
+
+  const handleDelete = (indexToRemove) => {
+    const updatedValues = formValues.filter((_, index) => index !== indexToRemove);
+    setFormValues(updatedValues);
+
+    setProductForm((prevProductForm) => ({
+      ...prevProductForm,
+      client_Categories: updatedValues,
+    }));
+  };
   const fetchClientCategories = useCallback(async () => {
     setLoading(false);
     try {
@@ -187,8 +205,6 @@ function QuickAddProduct({ selectedProduct, onNewUpdateProduct }) {
     formdata.append("productID", productForm.productID);
     formdata.append("name", productForm.name);
     formdata.append("category", productForm.category);
-    formdata.append("description", productForm.description);
-    formdata.append("description", productForm.description);
     formdata.append("description", productForm.description);
     productForm.client_Categories.forEach((clientCategory, index) => {
       formdata.append(
@@ -297,13 +313,10 @@ function QuickAddProduct({ selectedProduct, onNewUpdateProduct }) {
         return updatedFormValues;
       });
     }
+    setIsTouched(false);
   };
 
-  const handleDelete = (indexToRemove) => {
-    const updatedValues = formValues.filter((_, index) => index !== indexToRemove);
-    setFormValues(updatedValues); //formValues is managed via state (useState)
-  };
-  
+
 
   return (
     <div className="bg-white rounded-xl p-4">
@@ -436,12 +449,14 @@ function QuickAddProduct({ selectedProduct, onNewUpdateProduct }) {
                   {entry.amount}
                 </p>
               </div>
-              <button
+              <div className="w-1/6 p-3 text-red-600 ">
+                <DeleteIcon onClick={() => handleDelete(index)} />
+              </div>
+              {/* <button
           className="ml-2 px-4 py-2 bg-red-500 text-white rounded-xl"
           onClick={() => handleDelete(index)} // Assuming you have a function handleDelete to remove the entry
         >
-          <DeleteIcon />
-        </button>
+        </button> */}
             </div>
           ))}
         </div>

@@ -27,27 +27,6 @@ function DashboardWidgets() {
     <>
       <div className="flex flex-wrap">
         <div className="w-full mb-3 md:w-1/2">
-          <div className="p-4 bg-white rounded-xl md:mr-4 hover:shadow-sm">
-            <div className="font-title">Total Balance</div>
-            <div className="flex justify-between items-center">
-              {/* Icon */}
-              <div className="h-30">
-                <LottieMoney loop className="h-20" />
-              </div>
-              {/* Icon Finished */}
-              <div className="text-2xl mr-2">
-                <NumberFormatBase
-                  value={totalBalance}
-                  className=""
-                  displayType={"text"}
-                  
-                  renderText={(value, props) => <span {...props}>{value}</span>}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="w-full mb-3 md:w-1/2">
           <div className="p-4 bg-white rounded-xl hover:shadow-sm">
             <div className="font-title">Total Products</div>
             <div className="flex justify-between items-center">
@@ -59,6 +38,27 @@ function DashboardWidgets() {
               <div className="text-2xl mr-2">
                 <NumberFormatBase
                   value={products?.length}
+                  className=""
+                  displayType={"text"}
+                  
+                  renderText={(value, props) => <span {...props}>{value}</span>}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="w-full mb-3 md:w-1/2">
+          <div className="p-4 bg-white rounded-xl hover:shadow-sm">
+            <div className="font-title">Total Clients</div>
+            <div className="flex justify-between items-center">
+              {/* Icon */}
+              <div className="h-30">
+                <LottiePersons loop className="h-20" />
+              </div>
+              {/* Icon Finished */}
+              <div className="text-2xl mr-2">
+                <NumberFormatBase
+                  value={clients?.length}
                   className=""
                   displayType={"text"}
                   
@@ -89,18 +89,61 @@ function DashboardWidgets() {
             </div>
           </div>
         </div>
+        
         <div className="w-full mb-3 md:w-1/2">
-          <div className="p-4 bg-white rounded-xl hover:shadow-sm">
-            <div className="font-title">Total Clients</div>
+          <div className="p-4 bg-white rounded-xl md:mr-4 hover:shadow-sm">
+            <div className="font-title">Total Cash Invoice</div>
             <div className="flex justify-between items-center">
               {/* Icon */}
               <div className="h-30">
-                <LottiePersons loop className="h-20" />
+                <LottieMoney loop className="h-20" />
               </div>
               {/* Icon Finished */}
               <div className="text-2xl mr-2">
                 <NumberFormatBase
-                  value={clients?.length}
+                  value={totalBalance}
+                  className=""
+                  displayType={"text"}
+                  
+                  renderText={(value, props) => <span {...props}>{value}</span>}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="w-full mb-3 md:w-1/2">
+          <div className="p-4 bg-white rounded-xl md:mr-4 hover:shadow-sm">
+            <div className="font-title">Total Credit Invoice</div>
+            <div className="flex justify-between items-center">
+              {/* Icon */}
+              <div className="h-30">
+                <LottieMoney loop className="h-20" />
+              </div>
+              {/* Icon Finished */}
+              <div className="text-2xl mr-2">
+                <NumberFormatBase
+                  value={totalBalance}
+                  className=""
+                  displayType={"text"}
+                  
+                  renderText={(value, props) => <span {...props}>{value}</span>}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="w-full mb-3 md:w-1/2">
+          <div className="p-4 bg-white rounded-xl md:mr-4 hover:shadow-sm">
+            <div className="font-title">Total Sales Return</div>
+            <div className="flex justify-between items-center">
+              {/* Icon */}
+              <div className="h-30">
+                <LottieInvoice loop className="h-20" />
+              </div>
+              {/* Icon Finished */}
+              <div className="text-2xl mr-2">
+                <NumberFormatBase
+                  value={totalBalance}
                   className=""
                   displayType={"text"}
                   

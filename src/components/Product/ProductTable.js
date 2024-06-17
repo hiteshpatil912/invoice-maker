@@ -188,41 +188,31 @@ function ProductTable({
     [fetchProducts, searchForm]
   );
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
 
   return (
     <>
       {showAdvanceSearch && (
-        <div className="bg-white rounded-xl px-3 py-3 mb-3">
-          <div className="font-title mb-2">Advanced Search</div>
-          <div className="flex w-full flex-col sm:flex-row">
-            <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
-              <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-gray-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <input
-                autoComplete="nope"
-                value={searchForm.search}
-                placeholder="Search"
-                className={defaultSearchStyle}
-                onChange={(e) => handlerSearchValue(e, "search")}
-              />
-            </div>
-          </div>
-        </div>
+       <div className="bg-white rounded-xl px-3 py-3 mb-3">
+       <div className="font-title mb-2">Advanced Search</div>
+       <div className="flex w-full flex-col sm:flex-row">
+         <div className="mb-2 sm:mb-0 sm:text-left text-default-color flex flex-row font-title flex-1 px-2">
+           <div className="h-12 w-12 rounded-2xl bg-gray-100 mr-2 flex justify-center items-center">
+             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" viewBox="0 0 20 20"
+               fill="currentColor">
+               <path fillRule="evenodd"
+                 d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
+                 clipRule="evenodd" />
+             </svg>
+           </div>
+           <input autoComplete="nope" value={searchForm.search} placeholder="Search" className={defaultSearchStyle}
+             onChange={(e)=> handlerSearchValue(e, "search")}
+           />
+         </div>
+       </div>
+     </div>
       )}
 
       <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">

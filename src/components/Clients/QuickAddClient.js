@@ -13,7 +13,7 @@ import { useAuth } from "../../auth/AuthContext";
 
 const emptyForm = {
   name: "",
-  client_category: "",
+  category: "",
   phone_number:"",
   address: "",
 };
@@ -31,7 +31,7 @@ function QuickAddClient({selectedClient,onNewUpdateClient}) {
   const [clientCategories, setClientCategories] = useState([]);
   const [validForm, setValidForm] = useState({
     name: false,
-    client_category: false,
+    category: false,
     phone_number:false,
     address: false,
   });
@@ -39,13 +39,13 @@ function QuickAddClient({selectedClient,onNewUpdateClient}) {
   const resetForm = () => {
     setClientForm({
       name: "",
-      client_category: "",
+      category: "",
       phone_number:"",
       address: "",
     });
     setValidForm({
       name: false,
-      client_category: false,
+      category: false,
       phone_number:false,
       address: false,
     });
@@ -68,11 +68,11 @@ function QuickAddClient({selectedClient,onNewUpdateClient}) {
       });
       console.log({keyName})
 
-      // Include a condition to check if the keyName is "client_category"
-      if (keyName === "client_category") {
+      // Include a condition to check if the keyName is "category"
+      if (keyName === "category") {
         setValidForm((prev) => ({
           ...prev,
-          [keyName]: !!value.trim(), // Validate the client_category field
+          [keyName]: !!value.trim(), // Validate the category field
         }));
 
         // Add the new category if it doesn't exist
@@ -125,6 +125,7 @@ function QuickAddClient({selectedClient,onNewUpdateClient}) {
       setClientForm(selectedClient);
     }
   }, [selectedClient]);
+  
 
   // Form submission handler
   const submitHandler = useCallback(async () => {
@@ -140,7 +141,7 @@ function QuickAddClient({selectedClient,onNewUpdateClient}) {
     }
     const formdata = new FormData();
     formdata.append("name", clientForm.name);
-    formdata.append("client_category", clientForm.client_category);
+    formdata.append("client_category", clientForm.category);
     formdata.append("phone_number",clientForm.phone_number);
     formdata.append("address",clientForm.address)
 
@@ -165,7 +166,6 @@ function QuickAddClient({selectedClient,onNewUpdateClient}) {
         throw new Error("Network response was not ok");
       }
       const result = await response.json();
-      console.log({result})
       handleEditorNew(result)
       toast.success(result.data.message || "Product Added Successfully!", {
         position: "bottom-center",
@@ -187,7 +187,7 @@ function QuickAddClient({selectedClient,onNewUpdateClient}) {
     setValidForm((prev) => ({
       ...prev,
       name: clientForm?.name?.trim() ? true : false,
-      client_category: clientForm?.client_category?.trim() ? true : false, // Ensure clientCategory validation
+      category: clientForm?.category?.trim() ? true : false, // Ensure clientCategory validation
       phone_number: !!clientForm.phone_number,
       address: clientForm?.address?.trim() ? true : false,
     }));
@@ -280,19 +280,19 @@ function QuickAddClient({selectedClient,onNewUpdateClient}) {
         </div>
         <div className="relative">
           <input
-            value={clientForm.client_category}
+            value={clientForm.category}
             type="text"
             onChange={(e) => {
               const newValue = e.target.value;
               setClientForm((prev) => ({
                 ...prev,
-                client_category: newValue,
+                category: newValue,
               }));
-              handlerClientValue(e, "client_category");
+              handlerClientValue(e, "category");
             }}
             placeholder=""
             className={
-              !validForm.client_category && isTouched
+              !validForm.category && isTouched
                 ? defaultInputInvalidStyle
                 : defaultInputStyle
             }
@@ -300,14 +300,14 @@ function QuickAddClient({selectedClient,onNewUpdateClient}) {
           />
           {/* Spinner for predefined categories*/}
           <select
-            value={clientForm.client_category}
+            value={clientForm.category}
             onChange={(e) => {
               const newValue = e.target.value;
               setClientForm((prev) => ({
                 ...prev,
-                client_category: newValue,
+                category: newValue,
               }));
-              handlerClientValue(e, "client_category");
+              handlerClientValue(e, "category");
             }}
             className="absolute inset-y-0 right-0 pr-3 py-2 bg-transparent text-gray-500"
           >
