@@ -9,6 +9,8 @@ import {
   defaultTdContent,
   defaultTdContentTitleStyle,
   defaultSearchStyle,
+  defaultTdWrapperStyle,
+  defaultTdStyle,
 } from "../../constants/defaultStyles";
 import { toast } from "react-toastify";
 
@@ -62,15 +64,12 @@ function ProductTable({
 
   const fetchProducts = useCallback(
     async (page = 1, searchParams = {}) => {
-      console.log("i am called");
       setLoading(true);
       try {
         const searchQuery = new URLSearchParams({
           ...searchParams,
           page,
         }).toString();
-
-        console.log(searchQuery);
 
         const response = await fetch(`${apiDomain}/products?${searchQuery}`, {
           method: "GET",
@@ -184,7 +183,7 @@ function ProductTable({
       const searchParams = {
         search: keyName === "search" ? value : searchForm.search,
       };
-      fetchProducts(1, searchParams); // Fetch products with search parameters
+      fetchProducts(1, searchParams);
     },
     [fetchProducts, searchForm]
   );
@@ -227,86 +226,108 @@ function ProductTable({
       )}
 
       <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
-        <div className="hidden sm:flex w-full flex-col sm:flex-row">
-          <table className="table-auto w-full">
-            <thead>
-              <tr>
-                <th className="px-4 py-2">ID</th>
-                <th className="px-4 py-2">Product Image</th>
-                <th className="px-4 py-2">Name</th>
-                <th className="px-4 py-2">Description</th>
-                <th className="px-4 py-2">Category</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems.map((product, index) => (
-                <tr className="text-center" key={product.id}>
-                  <td className="border px-4 py-2">
-                    {(currentPage - 1) * itemsPerPage + index + 1}
-                  </td>
-                  <td className="border px-4 py-2">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-16 h-16 object-cover"
-                    />
-                  </td>
-                  <td className="border px-4 py-2">{product.name}</td>
-                  <td className="border px-4 py-2">
-                    {product.description || "N/A"}
-                  </td>
-                  <td className="border px-4 py-2">{product.category}</td>
-                  <td className="border px-4 py-2">
-                    <div className={defaultTdActionStyle}>
-                      <div className={defaultTdContentTitleStyle}>Action</div>
-                      <div className={defaultTdContent}>
-                        <Menu
-                          menuButton={
-                            <MenuButton>
-                              <div className="bg-gray-50 px-2 rounded-xl">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-6 w-6 text-blue-400"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={2}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-                                  />
-                                </svg>
-                              </div>
-                            </MenuButton>
-                          }
-                          transition
-                        >
-                          <MenuItem onClick={() => handleEdit(product)}>
-                            Edit
-                          </MenuItem>
-                          <MenuItem onClick={() => handleDelete(product)}>
-                            Delete
-                          </MenuItem>
-                        </Menu>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {currentItems.length <= 0 && !initLoading && (
-                <tr>
-                  <td colSpan="6" className="px-4 py-2 text-center">
-                    No data available
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="hidden sm:flex invisible sm:visible w-full flex-col sm:flex-row">
+          <div className="sm:text-left text-default-color font-title flex-1">
+            Id
+          </div>
+          <div className="sm:text-left text-default-color font-title flex-1">
+            Product Image
+          </div>
+          <div className="sm:text-left text-default-color font-title flex-1">
+            Name
+          </div>
+          <div className="sm:text-left text-default-color font-title flex-1">
+            Description
+          </div>
+          <div className="sm:text-left text-default-color font-title flex-1">
+            Category
+          </div>
+          <div className="sm:text-left text-default-color font-title sm:w-11">
+            Action
+          </div>
         </div>
+        {currentItems.map((product, index) => (
+          <div className={defaultTdWrapperStyle} key={product.id}>
+            <div className={defaultTdStyle}>
+              <div className="px-4 py-2">
+                {(currentPage - 1) * itemsPerPage + index + 1}
+              </div>
+            </div>
+            <div className={defaultTdStyle}>
+              <div className={defaultTdContentTitleStyle}>image</div>
+              <div className={defaultTdContent}>
+                <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-16 h-16 object-cover"
+                  />{" "}
+                </span>
+              </div>
+            </div>
+            <div className={defaultTdStyle}>
+              <div className={defaultTdContentTitleStyle}>Name</div>
+              <div className={defaultTdContent}>
+                <span className="whitespace-nowrap text-ellipsis overflow-hidden pl-1">
+                  {product.name}
+                </span>
+              </div>
+            </div>
 
-        {products.length <= 0 && !initLoading && <EmptyBar />}
+            <div className={defaultTdStyle}>
+              <div className={defaultTdContentTitleStyle}>Description</div>
+              <div className={defaultTdContent}>
+                <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                  {product.description}{" "}
+                </span>
+              </div>
+            </div>
+            <div className={defaultTdStyle}>
+              <div className={defaultTdContentTitleStyle}>Product Category</div>
+              <div className={defaultTdContent}>
+                <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                  {product.category}{" "}
+                </span>
+              </div>
+            </div>
+            <div className={defaultTdActionStyle}>
+              <div className={defaultTdContentTitleStyle}>Action</div>
+              <div className={defaultTdContent}>
+                <Menu
+                  menuButton={
+                    <MenuButton>
+                      <div className="bg-gray-50 px-2 rounded-xl">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6 text-blue-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+                          />
+                        </svg>
+                      </div>
+                    </MenuButton>
+                  }
+                  transition
+                >
+                  <MenuItem onClick={() => handleEdit(product)}>Edit</MenuItem>
+                  <MenuItem onClick={() => handleDelete(product)}>
+                    Delete
+                  </MenuItem>
+                </Menu>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {products.data.length <= 0 && !initLoading && <EmptyBar />}
+        
         {products.data.length > 0 && (
           <ReactPaginate
             className="inline-flex items-center -space-x-px mt-2"

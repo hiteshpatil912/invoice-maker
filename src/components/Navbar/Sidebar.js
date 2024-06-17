@@ -9,22 +9,21 @@ import ClientPlusIcon from "../Icons/ClientPlusIcon";
 import SalesOrderIcon from "../Icons/SalesOrderIcon";
 import CreditIcon from "../Icons/CreditIcon";
 import ReturnIcon from "../Icons/ReturnIcon";
-import SecurityIcon from "../Icons/SecurityIcon";
+import DiscountIcon from "../Icons/DiscountIcon.js";
 import InvoiceNavbarLoading from "../Loading/InvoiceNavbarLoading";
 import { useAuth } from "../../auth/AuthContext";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
+import CashIcon from "../Icons/CashIcon.js";
+import LogoutIcon from "../Icons/LogoutIcon.js";
+
+
 
 const NAV_DATA = [
   {
     title: "Dashboard",
     link: "/",
     Icon: HomeIcon,
-  },
-  {
-    title: "Invoices",
-    link: "invoices",
-    Icon: InvoiceIcon,
   },
   {
     title: "Clients",
@@ -39,22 +38,28 @@ const NAV_DATA = [
   {
     title: "Discount",
     link: "discount",
-    Icon: ProductIcon,
+    Icon: DiscountIcon,
   },
+  {
+    title: "Invoices",
+    link: "invoices",
+    Icon: InvoiceIcon,
+  },
+
   {
     title: "CashInvoice",
     link: "cashInvoice",
-    Icon: ProductIcon,
-  },
-  {
-    title: "SalesOrder",
-    link: "salesorderInvoice",
-    Icon: SalesOrderIcon,
+    Icon: CashIcon,
   },
   {
     title: "CreditInvoice",
     link: "creditInvoice",
     Icon: CreditIcon,
+  },
+  {
+    title: "SalesOrder",
+    link: "salesorderInvoice",
+    Icon: SalesOrderIcon,
   },
   {
     title: "SalesReturn",
@@ -200,12 +205,6 @@ function Sidebar() {
               navItemDefaultClasses + " bg-gray-50 flex items-center px-3"
             }
           >
-            <button
-              onClick={handleLogout}
-              className="mr-2 px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-700"
-            >
-              Logout
-            </button>
             <img
               className={"object-cover h-10 w-10 rounded-lg"}
               src={company[0]?.image}
@@ -258,16 +257,18 @@ function Sidebar() {
         <hr />
 
         <div className="my-4">
-          <NavLink to={"about"}>
+        <button
+            onClick={handleLogout}
+          >
             <motion.span
-              className="block px-4 py-2 rounded-md flex text-default-color"
+              className="block px-4 py-2 rounded-md flex text-default-color uppercase"
               style={{
-                color: aboutRoute ? "rgb(14 136 14)" : "#777",
+                color: aboutRoute ? "rgb(219 40 40)" : "#777",
               }}
               whileHover={{
                 scale: [1.03, 1, 1.03, 1, 1.03, 1, 1.03, 1],
-                color: "rgb(14 136 14)",
-                textShadow: "0px 0px 3px #85FF66",
+                color: "rgb(219 40 40)",
+                textShadow: "0px 0px 3px #d14949",
                 transition: {
                   backgroundColor: {
                     type: "spring",
@@ -277,10 +278,10 @@ function Sidebar() {
               }}
               whileTap={{ scale: 0.9 }}
             >
-              <SecurityIcon className="h-6 w-6 mr-4" />
-              About Me
+            <LogoutIcon className="h-6 w-6 mr-4" />
+            Logout
             </motion.span>
-          </NavLink>
+          </button>
         </div>
 
         <hr />

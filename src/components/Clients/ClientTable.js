@@ -128,22 +128,22 @@ function ClientTable({
     [apiDomain, authToken, fetchClients]
   );
 
-  const removeFromState = (clientId) => {
-    setClients((prevClients) => {
-      const updatedData = prevClients.data.filter(
-        (client) => client.id !== clientId
-      );
-      const updatedTotal = updatedData.length;
-      return {
-        data: updatedData,
-        pagination: { ...prevClients.pagination, total: updatedTotal },
-      };
-    });
+  // const removeFromState = (clientId) => {
+  //   setClients((prevClients) => {
+  //     const updatedData = prevClients.data.filter(
+  //       (client) => client.id !== clientId
+  //     );
+  //     const updatedTotal = updatedData.length;
+  //     return {
+  //       data: updatedData,
+  //       pagination: { ...prevClients.pagination, total: updatedTotal },
+  //     };
+  //   });
 
-    setCurrentItems((prevItems) =>
-      prevItems.filter((item) => item.id !== clientId)
-    );
-  };
+  //   setCurrentItems((prevItems) =>
+  //     prevItems.filter((item) => item.id !== clientId)
+  //   );
+  // };
 
   useEffect(() => {
     if (authToken) {
