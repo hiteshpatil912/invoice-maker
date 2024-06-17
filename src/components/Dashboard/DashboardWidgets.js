@@ -3,6 +3,8 @@ import LottieMoney from "../LotiIcon/LottieMoney";
 import LottieProduct from "../LotiIcon/LottieProduct";
 import LottieInvoice from "../LotiIcon/LottieInvoice";
 import LottiePersons from "../LotiIcon/LottiePersons";
+import ReturnIcon from "../Icons/ReturnIcon"
+import CreditIcon from "../Icons/CreditIcon"
 import { useSelector } from "react-redux";
 import { getAllClientsSelector } from "../../store/clientSlice";
 import { getAllProductSelector } from "../../store/productSlice";
@@ -113,11 +115,11 @@ function DashboardWidgets() {
         </div>
         <div className="w-full mb-3 md:w-1/2">
           <div className="p-4 bg-white rounded-xl md:mr-4 hover:shadow-sm">
-            <div className="font-title">Total Credit Invoice</div>
+            <div className="font-title pb-1">Total Credit Invoice</div>
             <div className="flex justify-between items-center">
               {/* Icon */}
               <div className="h-30">
-                <LottieMoney loop className="h-20" />
+                <CreditIcon loop className="h-16 animate-slow-bounce rounded-3xl text-white p-3 mt-3 bg-blue-500" />
               </div>
               {/* Icon Finished */}
               <div className="text-2xl mr-2">
@@ -134,11 +136,11 @@ function DashboardWidgets() {
         </div>
         <div className="w-full mb-3 md:w-1/2">
           <div className="p-4 bg-white rounded-xl md:mr-4 hover:shadow-sm">
-            <div className="font-title">Total Sales Return</div>
+            <div className="font-title pb-1">Total Sales Return</div>
             <div className="flex justify-between items-center">
               {/* Icon */}
               <div className="h-30">
-                <LottieInvoice loop className="h-20" />
+                <ReturnIcon loop className="h-16 animate-slow-bounce rounded-3xl text-white p-3 mt-3 bg-blue-500" />
               </div>
               {/* Icon Finished */}
               <div className="text-2xl mr-2">

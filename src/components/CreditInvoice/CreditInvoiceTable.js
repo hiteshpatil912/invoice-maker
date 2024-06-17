@@ -177,8 +177,11 @@ function CreditInvoiceTable({ showAdvanceSearch = false }) {
             Client Name
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-            Status
+          Creation Date
           </div>
+          {/* <div className="sm:text-left text-default-color font-title flex-1">
+            Status
+          </div> */}
           <div className="sm:text-left text-default-color font-title flex-1">
             Amount
           </div>
@@ -225,11 +228,12 @@ function CreditInvoiceTable({ showAdvanceSearch = false }) {
                       className={
                         "whitespace-nowrap text-ellipsis overflow-hidden px-3 rounded-xl py-1 " +
                         (invoice.status === "Paid"
-                          ? "bg-green-200 text-green-600"
+                          ? "bg-red-100 text-red-600"
                           : "bg-gray-100 text-gray-600 ")
                       }
                     >
-                      {invoice.status}
+                      Date
+                      {/* {invoice.status} */}
                     </span>
                   </div>
                 </div>

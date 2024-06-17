@@ -233,7 +233,8 @@ function InvoiceTable({ showAdvanceSearch = false }) {
                           : "bg-gray-100 text-gray-600 ")
                       }
                     >
-                      {invoice.status}
+                      Date
+                      {/* {invoice.status} */}
                     </span>
                   </div>
                 </div>
