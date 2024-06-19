@@ -15,6 +15,7 @@ function InvoiceTopBar({
   onClickDownloadPdf,
   onClickBack,
 }) {
+
   return (
     <div className="bg-white rounded-xl px-3 py-3">
       <div className="flex flex-col flex-wrap sm:flex-row justify-between">

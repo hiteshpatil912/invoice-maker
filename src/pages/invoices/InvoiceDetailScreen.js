@@ -14,6 +14,7 @@ import { NumberFormatBase } from "react-number-format";
 import { toast } from "react-toastify";
 import domtoimage from "dom-to-image";
 import InvoiceTopBar from "../../components/Invoice/InvoiceTopBar";
+import { ToWords } from "to-words";
 import {
   getCurrentBGImage,
   getCurrentColor,
@@ -44,6 +45,8 @@ import { jsPDF } from "jspdf";
 import { useAuth } from "../../auth/AuthContext";
 import ClientSelectionModal from "./selectClientModal";
 import html2canvas from "html2canvas";
+import 'jspdf-autotable';
+
 
 function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
@@ -99,86 +102,176 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState();
   const [company, setCompany] = useState();
 
-
-  
-
   const [currentPage, setCurrentPage] = useState(1);
   const { id } = useParams();
+  const toWords = new ToWords();
 
-  const handleExport = useCallback(() => {
-    if (showNavbar) {
-      toggleNavbar();
+
+
+
+
+  const generatePdf = useCallback((type) => {
+    if (!invoiceForm) {
+      console.error("PdfGenerator - Data is not set");
+      return;
     }
-    setEscapeOverflow(true);
-    setIsViewMode(true);
-    setIsExporting(true);
-    setTimeout(() => {
-      handlePrint();
-    }, 3000);
-  }, [handlePrint, setEscapeOverflow, showNavbar, toggleNavbar]);
 
+    const {
+      companyDetail,
+      clientDetail,
+      invoiceNo,
+      statusName,
+      dueDate,
+      createdDate,
+      currencyUnit,
+      totalAmount,
+      products,
+      discounts,
+    } = invoiceForm;
 
+    const doc = new jsPDF();
+
+    // Header and Line
+    doc.setFontSize(12);
+    // doc.text("", 14, 20); // Blank header
+
+    doc.line(14, 50, 196, 50); // Horizontal line
+
+    // Title
+    doc.setFontSize(18);
+    doc.text("Credit Invoice", 105, 57, null, null, "center");
+
+console.log({clientDetail})
+    // Client and Invoice Details
+    doc.setFontSize(12);
+    const clientInfo = `
+      Name: ${clientDetail.name || ""}
+      Phone: ${clientDetail.phone_number || ""}
+      Address: ${clientDetail.address || ""}
+      Category: ${clientDetail.client_category || ""}
+    `;
+    doc.text(clientInfo, 14, 60);
+
+    const invoiceInfo = `
+      Invoice No: ${invoiceNo || ""}
+      Created Date: ${
+        createdDate ? new Date(createdDate).toLocaleDateString() : ""
+      }
+      Due Date: ${dueDate ? new Date(dueDate).toLocaleDateString() : ""}
+    `;
+    doc.text(invoiceInfo, 105, 60);
+
+    // Product Table
+    if (products && products.length > 0) {
+      const productRows = products.map((product, index) => [
+        index + 1,
+        product.name || "",
+        product.quantity || "",
+        ` ${product.amount} ${currencyUnit}`,
+        `${product.amount * product.quantity} ${currencyUnit}`,
+      ]);
+
+      doc.autoTable({
+        startY: 90,
+        head: [["No.", "Product Name", "Quantity", "Unit Price", "Amount"]],
+        body: productRows,
+        theme: "grid",
+        styles: { cellPadding: 2, fontSize: 10, valign: "middle" },
+        columnStyles: {
+          0: { halign: "center", cellWidth: "wrap" },
+          1: { halign: "left" },
+          2: { halign: "center" },
+          3: { halign: "right" },
+          4: { halign: "right" },
+        },
+      });
+    }
+
+    // Summary Table
+    let startY = doc.autoTable.previous.finalY + 10;
+
+    let discountPercent = 0; // Initialize discountPercent outside the map function
+    let discountAmount = 0; // Initialize discountAmount outside the map function
+
+    console.log({ discountPercent }, { discountAmount });
+
+    if (discounts && discounts.length > 0) {
+      discounts.forEach((discount) => {
+        discountPercent += discount.value; // Accumulate discount percentages
+        discountAmount += discount.amount; // Accumulate discount amounts
+      });
+    }
+    const subtotal = totalAmount + discountAmount
+    const summaryRows = [
+      [
+        {
+          content: "Remark:",
+          colSpan: 4,
+          rowSpan: 3,
+          styles: { halign: "left" },
+        },
+        `Subtotal ${currencyUnit}`,
+        `${subtotal.toFixed(2)} ${currencyUnit} `,
+      ],
+      [`Discount %`, `${discountPercent}`],
+      [`Discount`, `${discountAmount.toFixed(2)} ${currencyUnit}`],
+      [
+        {
+          content: `Net Total :${toWords.convert(totalAmount)}`,
+          colSpan: 4,
+          rowSpan: 1,
+          styles: { halign: "left" },
+        },
+        `Net Total ${currencyUnit}`,
+        `${totalAmount.toFixed(2)} ${currencyUnit} `,
+      ],
+    ];
+
+    // Add Remarks column to columnStyles
+    const columnStyles = {
+      0: { halign: "center", cellWidth: "wrap" },
+      1: { halign: "left" },
+      2: { halign: "center" },
+    };
+
+    // Add a style for the Remarks column (index 3)
+    columnStyles[3] = { halign: "left" };
+
+    // Assuming `doc.autoTable` is from an external library
+    doc.autoTable({
+      startY,
+      body: summaryRows,
+      theme: "grid",
+      styles: { cellPadding: 2, fontSize: 10, valign: "middle" },
+      columnStyles,
+    });
+
+     // Save the PDF
+  const pdfData = doc.output('blob'); // Get PDF as blob data
+
+  // Print function
+  const printPdf = () => {
+    var pdfWindow = window.open('', '_blank');
+    pdfWindow.document.open();
+    pdfWindow.document.write('<embed width="100%" height="100%" type="application/pdf" src="' + URL.createObjectURL(pdfData) + '"></embed>');
+    pdfWindow.document.close();
+  };
+
+  if(type === "print"){
+    printPdf();
+  }
+    doc.save("invoice.pdf");
+  },[invoiceForm,toWords]);
 
   const handleDownloadPdf = useCallback(() => {
-    if (showNavbar) {
-      toggleNavbar();
-    }
-    setEscapeOverflow(true);
-    setIsViewMode(true);
-    setIsExporting(true);
-  
-    try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const component = componentRef.current;
-  
-      html2canvas(component).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = 210; // A4 size
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save('invoice.pdf');
-  
-        setIsExporting(false);
-        setEscapeOverflow(false);
-      });
-    } catch (e) {
-      console.log(e);
-      setIsExporting(false);
-      setEscapeOverflow(false);
-    }
-  }, [setEscapeOverflow, showNavbar, toggleNavbar]);
-  
-  
+    generatePdf("download")
+   
+  }, [generatePdf]);
 
-  
-  // const handleDownloadPdf = useCallback(() => {
-  //   if (showNavbar) {
-  //     toggleNavbar();
-  //   }
-  //   setEscapeOverflow(true);
-  //   setIsViewMode(true);
-  //   setIsExporting(true);
+  const handleExport = useCallback(() => {
+    generatePdf("print")
 
-  //   domtoimage.toPng(componentRef.current).then((dataUrl) => {
-  //     try {
-  //       const pdf = new jsPDF("p", "mm", "a4");
-  //       const img = new Image();
-  //       img.src = dataUrl;
-  //       img.onload = () => {
-  //         const imgWidth = pdf.internal.pageSize.getWidth();
-  //         const imgHeight = (img.height * imgWidth) / img.width;
-
-  //         pdf.addImage(dataUrl, "PNG", 0, 0, imgWidth, imgHeight);
-  //         pdf.save("invoice.pdf");
-  //       };
-  //     } catch (e) {
-  //       console.log(e);
-  //     } finally {
-  //       setIsExporting(false);
-  //       setEscapeOverflow(false);
-  //     }
-  //   });
-  // }, [setEscapeOverflow, showNavbar, toggleNavbar]);
+  }, [generatePdf]);
 
   const fetchClients = useCallback(
     async (page = 1, searchParams = {}) => {
@@ -356,7 +449,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   }, [apiDomain, authToken]);
 
   useEffect(() => {
-      fetchCompanyDetails();
+    fetchCompanyDetails();
   }, [fetchCompanyDetails]);
 
   const fetchDiscounts = useCallback(
@@ -565,7 +658,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         // Calculate the new total amount
         const totalAmount = subTotalAmount + updateTaxes - updatedDiscount;
 
-
         updatedData.products = updateProducts;
         updatedData.taxes = updateTaxes;
         updatedData.totalAmount = totalAmount;
@@ -627,7 +719,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
           const subTotalAmount = sumProductTotal(prev.products);
           const sumDiscounts = sumTotalDiscount(sumTotalAmount, value);
 
-          
           const totalAmount = subTotalAmount - sumDiscounts;
           return { ...prev, discounts: sumDiscounts, totalAmount: totalAmount };
         } else {
@@ -783,7 +874,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     }
   }, [selectedProduct]);
 
-
   useEffect(() => {
     if (initLoading === false) {
       if (params.id === "new" && invoiceForm === null) {
@@ -876,7 +966,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
       invoiceForm?.discounts && invoiceForm.discounts.length > 0
         ? invoiceForm.discounts[0].amount
         : 0;
-
 
     formdata.append("currency", invoiceForm.currencyUnit);
     formdata.append("client_id", invoiceForm.clientDetail.id);
@@ -1009,7 +1098,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                       {invoiceForm.companyDetail?.billingAddress}
                     </p>
                     <p className="text-sm font-medium">
-                      {invoiceForm.companyDetail?.companyMobile }
+                      {invoiceForm.companyDetail?.companyMobile}
                     </p>
                     <p className="text-sm font-medium">
                       {invoiceForm.companyDetail?.companyEmail}
