@@ -99,9 +99,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState();
   const [company, setCompany] = useState();
 
-
-  
-
   const [currentPage, setCurrentPage] = useState(1);
   const { id } = useParams();
 
@@ -117,8 +114,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     }, 3000);
   }, [handlePrint, setEscapeOverflow, showNavbar, toggleNavbar]);
 
-
-
   const handleDownloadPdf = useCallback(() => {
     if (showNavbar) {
       toggleNavbar();
@@ -126,18 +121,18 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     setEscapeOverflow(true);
     setIsViewMode(true);
     setIsExporting(true);
-  
+
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdf = new jsPDF("p", "mm", "a4");
       const component = componentRef.current;
-  
+
       html2canvas(component).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL("image/png");
         const imgWidth = 210; // A4 size
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save('invoice.pdf');
-  
+        pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+        pdf.save("invoice.pdf");
+
         setIsExporting(false);
         setEscapeOverflow(false);
       });
@@ -147,10 +142,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
       setEscapeOverflow(false);
     }
   }, [setEscapeOverflow, showNavbar, toggleNavbar]);
-  
-  
 
-  
   // const handleDownloadPdf = useCallback(() => {
   //   if (showNavbar) {
   //     toggleNavbar();
@@ -356,7 +348,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   }, [apiDomain, authToken]);
 
   useEffect(() => {
-      fetchCompanyDetails();
+    fetchCompanyDetails();
   }, [fetchCompanyDetails]);
 
   const fetchDiscounts = useCallback(
@@ -565,7 +557,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         // Calculate the new total amount
         const totalAmount = subTotalAmount + updateTaxes - updatedDiscount;
 
-
         updatedData.products = updateProducts;
         updatedData.taxes = updateTaxes;
         updatedData.totalAmount = totalAmount;
@@ -627,7 +618,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
           const subTotalAmount = sumProductTotal(prev.products);
           const sumDiscounts = sumTotalDiscount(sumTotalAmount, value);
 
-          
           const totalAmount = subTotalAmount - sumDiscounts;
           return { ...prev, discounts: sumDiscounts, totalAmount: totalAmount };
         } else {
@@ -783,7 +773,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     }
   }, [selectedProduct]);
 
-
   useEffect(() => {
     if (initLoading === false) {
       if (params.id === "new" && invoiceForm === null) {
@@ -876,7 +865,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
       invoiceForm?.discounts && invoiceForm.discounts.length > 0
         ? invoiceForm.discounts[0].amount
         : 0;
-
 
     formdata.append("currency", invoiceForm.currencyUnit);
     formdata.append("client_id", invoiceForm.clientDetail.id);
@@ -1002,14 +990,14 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
               >
                 {invoiceForm ? (
                   <>
-                    <p className="font-bold mb-2">
+                    <p className="font-bold">
                       {invoiceForm.companyDetail?.companyName}
                     </p>
                     <p className="text-sm font-medium">
                       {invoiceForm.companyDetail?.billingAddress}
                     </p>
                     <p className="text-sm font-medium">
-                      {invoiceForm.companyDetail?.companyMobile }
+                      {invoiceForm.companyDetail?.companyMobile}
                     </p>
                     <p className="text-sm font-medium">
                       {invoiceForm.companyDetail?.companyEmail}
@@ -1183,6 +1171,101 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
 
           {/* Products */}
           <div className="py-2 px-4">
+            <table class="min-w-full bg-white border-collapse border border-gray-200">
+              <thead>
+                <tr>
+                  <th class="py-3 px-4 bg-gray-200 text-left border-b">ID</th>
+                  <th class="py-3 px-4 bg-gray-200 text-left border-b">
+                    Description
+                  </th>
+                  <th class="py-3 px-4 bg-gray-200 text-left border-b">
+                    Quantity
+                  </th>
+                  <th class="py-3 px-4 bg-gray-200 text-left border-b">
+                    Price
+                  </th>
+                  <th class="py-3 px-4 bg-gray-200 border-b">
+                    Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="py-3 px-4 border-b">1</td>
+                  <td class="py-3 px-4 border-b">Product A</td>
+                  <td class="py-3 px-4 border-b">2</td>
+                  <td class="py-3 px-4 border-b">10.00KWD</td>
+                  <td class="py-3 px-4 border-b text-center">20.00KWD</td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-4 border-b">2</td>
+                  <td class="py-3 px-4 border-b">Product B</td>
+                  <td class="py-3 px-4 border-b">3</td>
+                  <td class="py-3 px-4 border-b">15.00KWD</td>
+                  <td class="py-3 px-4 border-b text-center">45.00KWD</td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-4 border-b">3</td>
+                  <td class="py-3 px-4 border-b">Product C</td>
+                  <td class="py-3 px-4 border-b">1</td>
+                  <td class="py-3 px-4 border-b">7.00KWD</td>
+                  <td class="py-3 px-4 border-b text-center">7.00KWD</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="flex flex-col lg:flex-row justify-between border my-4">
+              <div class="lg:w-2/3">
+                <div class="">
+                  <p class="text-lg font-bold p-2">Remarks:</p>
+                  <p class="text-md mt-[103px] border-t p-2">
+                    Net Total: KWD six hundred fifteen and six hundred Fils only
+                  </p>
+                </div>
+              </div>
+
+              <div class="lg:w-1/3">
+                <div class="">
+                  <table class="min-w-full bg-white border-collapse border border-gray-200">
+                    <tbody>
+                      <tr>
+                        <td
+                          colspan="4"
+                          class="py-3 px-4 text-center border-b font-bold"
+                        >
+                          Subtotal
+                        </td>
+                        <td class="py-3 px-4 border ">648.00KWD</td>
+                      </tr>
+                      <tr>
+                        <td colspan="4" class="py-3 px-4 text-right border-b">
+                          Discount (%)
+                        </td>
+                        <td class="py-3 px-4 border">5%</td>
+                      </tr>
+                      <tr>
+                        <td
+                          colspan="4"
+                          class="py-3 px-4 text-right border-b font-bold"
+                        >
+                          Discount
+                        </td>
+                        <td class="py-3 px-4 border">32.40KWD</td>
+                      </tr>
+                      <tr>
+                        <td
+                          colspan="4"
+                          class="py-3 px-4 text-right borde font-bold"
+                        >
+                          Net Total
+                        </td>
+                        <td class="py-3 px-4 border-b">$615.60</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
             <div
               className={
                 isExporting
