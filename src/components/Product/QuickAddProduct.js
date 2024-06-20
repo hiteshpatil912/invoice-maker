@@ -364,7 +364,7 @@ function QuickAddProduct({ selectedProduct, onNewUpdateProduct }) {
                 placeholder="Product Name"
                 type="text"
                 className={
-                  !validForm.name && isTouched
+                   isTouched
                     ? defaultInputInvalidStyle
                     : defaultInputStyle
                 }

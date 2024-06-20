@@ -48,7 +48,6 @@ import html2canvas from "html2canvas";
 import 'jspdf-autotable';
 
 
-
 function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
     useAppContext();
