@@ -16,12 +16,12 @@ function SalesOrderInvoiceListScreen() {
     <div>
       <div className="flex flex-col sm:flex-row flex-wrap p-4">
         <div className="sm:mr-4">
-          <PageTitle title="Sales Order Invoice" />
+          <PageTitle title="SALES_ORDER" />
         </div>
         <div className="flex-1">
           <Button onClick={goToNewInvoice} block={1} size="sm">
             <InvoiceIcon />
-            <span className="inline-block ml-2"> Add SalesOrder Invoice </span>
+            <span className="inline-block ml-2"> Add SalesOrder </span>
           </Button>
         </div>
       </div>

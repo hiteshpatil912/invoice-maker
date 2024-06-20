@@ -254,7 +254,7 @@ function ClientTable({
           {currentItems &&
             currentItems.map((client, index) => (
               <div className={defaultTdWrapperStyle} key={client.id}>
-                <div className="px-4 py-2">
+                <div className={defaultTdStyle}>
                   {(currentPage - 1) * itemsPerPage + index + 1}
                 </div>
                 <div className={defaultTdStyle}>

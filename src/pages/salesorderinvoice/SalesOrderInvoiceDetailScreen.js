@@ -15,6 +15,7 @@ import { NumberFormatBase } from "react-number-format";
 import { toast } from "react-toastify";
 import domtoimage from "dom-to-image";
 import InvoiceTopBar from "../../components/Invoice/InvoiceTopBar";
+import { ToWords } from "to-words";
 import {
   getCurrentBGImage,
   getCurrentColor,
@@ -45,6 +46,7 @@ import { jsPDF } from "jspdf";
 import { useAuth } from "../../auth/AuthContext";
 import ClientSelectionModal from "./selectClientModal";
 import html2canvas from "html2canvas";
+import "jspdf-autotable";
 
 function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
@@ -72,7 +74,7 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const [invoiceForm, setInvoiceForm] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [invoiceStatus,setInvoiceStatus] = useState();
+  const [invoiceStatus, setInvoiceStatus] = useState();
   const [pageCount, setPageCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null); // State for selected product
@@ -100,52 +102,176 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const [showClientModal, setShowClientModal] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState();
   const [company, setCompany] = useState();
-  
 
   const [currentPage, setCurrentPage] = useState(1);
   const { id } = useParams();
+  const toWords = new ToWords();
+
+  const generatePdf = useCallback(
+    (type) => {
+      if (!invoiceForm) {
+        console.error("PdfGenerator - Data is not set");
+        return;
+      }
+
+      const {
+        companyDetail,
+        clientDetail,
+        invoiceNo,
+        statusName,
+        dueDate,
+        createdDate,
+        currencyUnit,
+        totalAmount,
+        products,
+        discounts,
+      } = invoiceForm;
+
+      const doc = new jsPDF();
+
+      // Header and Line
+      doc.setFontSize(12);
+      // doc.text("", 14, 20); // Blank header
+
+      doc.line(14, 50, 196, 50); // Horizontal line
+
+      // Title
+      doc.setFontSize(18);
+      doc.text("SalesOrder", 105, 57, null, null, "center");
+
+      console.log({ clientDetail });
+      // Client and Invoice Details
+      doc.setFontSize(12);
+      const clientInfo = `
+      Name: ${clientDetail.name || ""}
+      Phone: ${clientDetail.phone_number || ""}
+      Address: ${clientDetail.address || ""}
+    `;
+      doc.text(clientInfo, 14, 60);
+
+      const invoiceInfo = `
+      Invoice No: ${invoiceNo || ""}
+      Invoice Date: ${
+        createdDate ? new Date(createdDate).toLocaleDateString() : ""
+      }
+    `;
+      doc.text(invoiceInfo, 105, 60);
+
+      // Product Table
+      if (products && products.length > 0) {
+        const productRows = products.map((product, index) => [
+          index + 1,
+          product.name || "",
+          product.quantity || "",
+          ` ${product.amount.toFixed(3)} ${currencyUnit}`,
+          `${(product.amount * product.quantity).toFixed(3)} ${currencyUnit}`,
+        ]);
+
+        doc.autoTable({
+          startY: 90,
+          head: [["No.", "Product Name", "Quantity", "Unit Price", "Amount"]],
+          body: productRows,
+          theme: "grid",
+          styles: { cellPadding: 2, fontSize: 10, valign: "middle" },
+          columnStyles: {
+            0: { halign: "center", cellWidth: "wrap" },
+            1: { halign: "left" },
+            2: { halign: "center" },
+            3: { halign: "right" },
+            4: { halign: "right" },
+          },
+        });
+      }
+
+      // Summary Table
+      let startY = doc.autoTable.previous.finalY + 10;
+
+      let discountPercent = 0; // Initialize discountPercent outside the map function
+      let discountAmount = 0; // Initialize discountAmount outside the map function
+
+      console.log({ discountPercent }, { discountAmount });
+
+      if (discounts && discounts.length > 0) {
+        discounts.forEach((discount) => {
+          discountPercent += discount.value; // Accumulate discount percentages
+          discountAmount += discount.amount; // Accumulate discount amounts
+        });
+      }
+      const subtotal = totalAmount + discountAmount;
+      const summaryRows = [
+        [
+          {
+            content: "Remark:",
+            colSpan: 4,
+            rowSpan: 3,
+            styles: { halign: "left" },
+          },
+          `Subtotal ${currencyUnit}`,
+          `${subtotal.toFixed(3)} ${currencyUnit} `,
+        ],
+        [`Discount (%)`, `${discountPercent} (%)`],
+        [`Discount`, `${discountAmount.toFixed(3)} ${currencyUnit}`],
+        [
+          {
+            content: `Net Total :${toWords.convert(totalAmount)}`,
+            colSpan: 4,
+            rowSpan: 1,
+            styles: { halign: "left" },
+          },
+          `Net Total ${currencyUnit}`,
+          `${totalAmount.toFixed(3)} ${currencyUnit} `,
+        ],
+      ];
+
+      // Add Remarks column to columnStyles
+      const columnStyles = {
+        0: { halign: "center", cellWidth: "wrap" },
+        1: { halign: "left" },
+        2: { halign: "center" },
+      };
+
+      // Add a style for the Remarks column (index 3)
+      columnStyles[3] = { halign: "left" };
+
+      // Assuming `doc.autoTable` is from an external library
+      doc.autoTable({
+        startY,
+        body: summaryRows,
+        theme: "grid",
+        styles: { cellPadding: 2, fontSize: 10, valign: "middle" },
+        columnStyles,
+      });
+
+      // Save the PDF
+      const pdfData = doc.output("blob"); // Get PDF as blob data
+
+      // Print function
+      const printPdf = () => {
+        var pdfWindow = window.open("", "_blank");
+        pdfWindow.document.open();
+        pdfWindow.document.write(
+          '<embed width="100%" height="100%" type="application/pdf" src="' +
+            URL.createObjectURL(pdfData) +
+            '"></embed>'
+        );
+        pdfWindow.document.close();
+      };
+
+      if (type === "print") {
+        printPdf();
+      }
+      doc.save("invoice.pdf");
+    },
+    [invoiceForm, toWords]
+  );
+
+  const handleDownloadPdf = useCallback(() => {
+    generatePdf("download");
+  }, [generatePdf]);
 
   const handleExport = useCallback(() => {
-    if (showNavbar) {
-      toggleNavbar();
-    }
-    setEscapeOverflow(true);
-    setIsViewMode(true);
-    setIsExporting(true);
-    setTimeout(() => {
-      handlePrint();
-    }, 3000);
-  }, [handlePrint, setEscapeOverflow, showNavbar, toggleNavbar]);
-
-  
-  const handleDownloadPdf = useCallback(() => {
-    if (showNavbar) {
-      toggleNavbar();
-    }
-    setEscapeOverflow(true);
-    setIsViewMode(true);
-    setIsExporting(true);
-  
-    try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const component = componentRef.current;
-  
-      html2canvas(component).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = 210; // A4 size
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save('invoice.pdf');
-  
-        setIsExporting(false);
-        setEscapeOverflow(false);
-      });
-    } catch (e) {
-      console.log(e);
-      setIsExporting(false);
-      setEscapeOverflow(false);
-    }
-  }, [setEscapeOverflow, showNavbar, toggleNavbar]);
+    generatePdf("print");
+  }, [generatePdf]);
 
   const fetchClients = useCallback(
     async (page = 1, searchParams = {}) => {
@@ -274,7 +400,7 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         setSelectedCategory(data.data.product_category.name);
         setSelectedClient(newInvoiceForm.clientDetail);
         setInvoiceForm(newInvoiceForm);
-        setInvoiceStatus(data.data.invoice_type)
+        setInvoiceStatus(data.data.invoice_type);
       } else {
         console.error("Failed to fetch invoice details");
       }
@@ -324,7 +450,7 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   }, [apiDomain, authToken]);
 
   useEffect(() => {
-      fetchCompanyDetails();
+    fetchCompanyDetails();
   }, [fetchCompanyDetails]);
 
   const fetchDiscounts = useCallback(
@@ -515,8 +641,7 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     [invoiceForm]
   );
 
-
-  console.log({invoiceForm})
+  console.log({ invoiceForm });
   const onDeleteProduct = useCallback(
     (prodID) => {
       setInvoiceForm((prev) => {
@@ -534,7 +659,6 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
 
         // Calculate the new total amount
         const totalAmount = subTotalAmount + updateTaxes - updatedDiscount;
-
 
         updatedData.products = updateProducts;
         updatedData.taxes = updateTaxes;
@@ -597,7 +721,6 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
           const subTotalAmount = sumProductTotal(prev.products);
           const sumDiscounts = sumTotalDiscount(sumTotalAmount, value);
 
-          
           const totalAmount = subTotalAmount - sumDiscounts;
           return { ...prev, discounts: sumDiscounts, totalAmount: totalAmount };
         } else {
@@ -753,7 +876,6 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
     }
   }, [selectedProduct]);
 
-
   useEffect(() => {
     if (initLoading === false) {
       if (params.id === "new" && invoiceForm === null) {
@@ -818,7 +940,6 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const randomInvoiceNumber = `inv-${generateRandomString(8)}`;
 
   const handleSubmit = (action) => {
-
     const myHeaders = new Headers();
     myHeaders.append("Accept", "application/json");
     myHeaders.append("Authorization", authToken);
@@ -848,19 +969,18 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         ? invoiceForm.discounts[0].amount
         : 0;
 
-
     // Depending on the action parameter, you can handle the logic accordingly
-     if (action === 'cash') {
+    if (action === "cash") {
       // Handle 'paid' action
       formdata.append("invoice_type", "cash");
-    } else if (action === 'credit') {
+    } else if (action === "credit") {
       // Handle 'unpaid' action
       formdata.append("invoice_type", "credit");
-    }else if (action === 'pending') {
+    } else if (action === "pending") {
       // Handle 'unpaid' action
       formdata.append("invoice_type", "sale");
     }
-  
+
     formdata.append("currency", invoiceForm.currencyUnit);
     formdata.append("client_id", invoiceForm.clientDetail.id);
     formdata.append("product_category_id", invoiceForm.productCategoryId);
@@ -924,7 +1044,7 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
           title={
             <>
               {params.id === "new"
-                ? "New Invoice"
+                ? "SalesOrder"
                 : `Invoice Detail ${invoiceForm?.statusName}`}
             </>
           }
@@ -991,7 +1111,7 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                       {invoiceForm.companyDetail?.billingAddress}
                     </p>
                     <p className="text-sm font-medium">
-                      {invoiceForm.companyDetail?.companyMobile }
+                      {invoiceForm.companyDetail?.companyMobile}
                     </p>
                     <p className="text-sm font-medium">
                       {invoiceForm.companyDetail?.companyEmail}
@@ -1656,33 +1776,49 @@ function SalesOrderInvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         </div>
       )}
 
-{invoiceForm && invoiceForm?.statusIndex !== "3" && params.id === "new" ? (
-  <div className="px-4 pt-3">
-    <div className="flex flex-col justify-end flex-wrap sm:flex-row">
-      <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
-        <Button size="sm" block={1} secondary={1} onClick={() => handleSubmit('pending')}>
-          {invoiceStatus === "sale" ? "Update" : "Save"} As Pending
-        </Button>
-      </div>
-    </div>
-  </div>
-) : (
-  <div className="px-4 pt-3">
-    <div className="flex flex-col justify-end flex-wrap sm:flex-row">
-      <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
-        <Button size="sm" block={1} success={1} onClick={() => handleSubmit('cash')}>
-          {invoiceStatus === "sale" ? "Update" : "Save"} As paid
-        </Button>
-      </div>
-      <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
-        <Button size="sm" block={1} danger={1} onClick={() => handleSubmit('credit')}>
-          {invoiceStatus === "sale" ? "Update" : "Save"} As unpaid
-        </Button>
-      </div>
-    </div>
-  </div>
-)
-}
+      {invoiceForm &&
+      invoiceForm?.statusIndex !== "3" &&
+      params.id === "new" ? (
+        <div className="px-4 pt-3">
+          <div className="flex flex-col justify-end flex-wrap sm:flex-row">
+            <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
+              <Button
+                size="sm"
+                block={1}
+                secondary={1}
+                onClick={() => handleSubmit("pending")}
+              >
+                {invoiceStatus === "sale" ? "Update" : "Save"} As Pending
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="px-4 pt-3">
+          <div className="flex flex-col justify-end flex-wrap sm:flex-row">
+            <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
+              <Button
+                size="sm"
+                block={1}
+                success={1}
+                onClick={() => handleSubmit("cash")}
+              >
+                {invoiceStatus === "sale" ? "Update" : "Save"} As paid
+              </Button>
+            </div>
+            <div className="w-48 my-1 sm:my-1 md:my-0 px-4">
+              <Button
+                size="sm"
+                block={1}
+                danger={1}
+                onClick={() => handleSubmit("credit")}
+              >
+                {invoiceStatus === "sale" ? "Update" : "Save"} As unpaid
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {invoiceForm && (
         <div className="p-4">

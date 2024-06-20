@@ -11,7 +11,7 @@ import {
 } from "../../constants/defaultStyles";
 import ReactPaginate from "react-paginate";
 import { useNavigate } from "react-router-dom";
-import { NumberFormatBase } from 'react-number-format';
+import { NumberFormatBase } from "react-number-format";
 import InvoiceIcon from "../Icons/InvoiceIcon";
 import { useAppContext } from "../../context/AppContext";
 import EmptyBar from "../Common/EmptyBar";
@@ -36,48 +36,46 @@ function CreditInvoiceTable({ showAdvanceSearch = false }) {
   const apiDomain = process.env.REACT_APP_API_DOMAIN || "";
   const [currentPage, setCurrentPage] = useState(1);
 
-
-
   // Fetch invoices from the API
   const fetchInvoices = useCallback(
     async (page = 1, searchParams = {}) => {
       try {
         const searchQuery = new URLSearchParams({
           ...searchParams,
-          "invoice_type":"credit",
+          invoice_type: "credit",
           page,
         }).toString();
-      const myHeaders = new Headers();
-      myHeaders.append("Authorization", authToken);
-    const requestOptions = {
-      method: "GET",
-      headers: myHeaders,
-      redirect: "follow"
-    };
+        const myHeaders = new Headers();
+        myHeaders.append("Authorization", authToken);
+        const requestOptions = {
+          method: "GET",
+          headers: myHeaders,
+          redirect: "follow",
+        };
 
-    fetch(`${apiDomain}/invoices?${searchQuery}`, requestOptions)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          setInvoices(data.data.invoices.data);
-          setPageCount(data.data.invoices.pagination.total_pages);
-        } else {
-          console.error("Failed to fetch invoices");
-        }
-      })
-      .catch(error => console.error('Error:', error));
-    }catch (error) {
-      console.error("Error fetching clients:", error);
-    }
-  }, [apiDomain, authToken]);
+        fetch(`${apiDomain}/invoices?${searchQuery}`, requestOptions)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              setInvoices(data.data.invoices.data);
+              setPageCount(data.data.invoices.pagination.total_pages);
+            } else {
+              console.error("Failed to fetch invoices");
+            }
+          })
+          .catch((error) => console.error("Error:", error));
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+      }
+    },
+    [apiDomain, authToken]
+  );
 
   useEffect(() => {
     if (authToken) {
       fetchInvoices(currentPage);
     }
   }, [authToken, fetchInvoices, currentPage]);
-
-
 
   // Invoke when user click to request another page.
   const handlePageClick = (event) => {
@@ -88,35 +86,41 @@ function CreditInvoiceTable({ showAdvanceSearch = false }) {
 
   const handleDelete = useCallback(
     (invoice) => {
-      if (window.confirm(`Are you sure you want to delete ${invoice.invoice_name}?`)) {
+      if (
+        window.confirm(
+          `Are you sure you want to delete ${invoice.invoice_name}?`
+        )
+      ) {
         const myHeaders = new Headers();
         myHeaders.append("Authorization", authToken);
-  
+
         const requestOptions = {
           method: "DELETE",
           headers: myHeaders,
-          redirect: "follow"
+          redirect: "follow",
         };
-  
+
         fetch(`${apiDomain}/invoice/${invoice.id}/delete`, requestOptions)
-          .then(response => response.json())
-          .then(data => {
+          .then((response) => response.json())
+          .then((data) => {
             if (data.success) {
               fetchInvoices(currentPage);
-              toast.success(data.data.message || "Product Deleted Successfully!", {
-                position: "bottom-center",
-                autoClose: 2000,
-              });
+              toast.success(
+                data.data.message || "Product Deleted Successfully!",
+                {
+                  position: "bottom-center",
+                  autoClose: 2000,
+                }
+              );
             } else {
               console.error("Failed to delete invoice");
             }
           })
-          .catch(error => console.error('Error:', error));
+          .catch((error) => console.error("Error:", error));
       }
     },
     [apiDomain, authToken, fetchInvoices, currentPage]
   );
-  
 
   const handleEdit = useCallback(
     (item) => {
@@ -140,8 +144,6 @@ function CreditInvoiceTable({ showAdvanceSearch = false }) {
     },
     [fetchInvoices, searchForm]
   );
-
-
 
   return (
     <>
@@ -167,7 +169,7 @@ function CreditInvoiceTable({ showAdvanceSearch = false }) {
 
       <div className="sm:bg-white rounded-xl sm:px-3 sm:py-3">
         <div className="hidden sm:flex invisible sm:visible w-full flex-col sm:flex-row">
-        <div className="sm:text-left text-default-color font-title flex-1">
+          <div className="sm:text-left text-default-color font-title flex-1">
             ID
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
@@ -177,11 +179,11 @@ function CreditInvoiceTable({ showAdvanceSearch = false }) {
             Client Name
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-          Creation Date
+            Invoice_Date
           </div>
-          {/* <div className="sm:text-left text-default-color font-title flex-1">
-            Status
-          </div> */}
+          <div className="sm:text-left text-default-color font-title flex-1">
+            Invoice_DueDate
+          </div>
           <div className="sm:text-left text-default-color font-title flex-1">
             Amount
           </div>
@@ -192,13 +194,11 @@ function CreditInvoiceTable({ showAdvanceSearch = false }) {
 
         <div>
           {invoices &&
-            invoices.map((invoice,index) => (
+            invoices.map((invoice, index) => (
               <div className={defaultTdWrapperStyle} key={invoice.id}>
                 <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>ID</div>
-                  <div className={defaultTdContent}>
-                    {index+1}
-                  </div>
+                  <div className={defaultTdContent}>{index + 1}</div>
                 </div>
                 <div className={defaultTdStyle}>
                   <div className={defaultTdContentTitleStyle}>Invoice Name</div>
@@ -222,18 +222,20 @@ function CreditInvoiceTable({ showAdvanceSearch = false }) {
                 </div>
 
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Status</div>
+                  <div className={defaultTdContentTitleStyle}>Invoice_Date</div>
                   <div className={defaultTdContent}>
-                    <span
-                      className={
-                        "whitespace-nowrap text-ellipsis overflow-hidden px-3 rounded-xl py-1 " +
-                        (invoice.status === "Paid"
-                          ? "bg-red-100 text-red-600"
-                          : "bg-gray-100 text-gray-600 ")
-                      }
-                    >
-                      Date
-                      {/* {invoice.status} */}
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                      {invoice.creation_date}
+                    </span>
+                  </div>
+                </div>
+                <div className={defaultTdStyle}>
+                  <div className={defaultTdContentTitleStyle}>
+                    Invoice_DueDate
+                  </div>
+                  <div className={defaultTdContent}>
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                      {invoice.due_date}
                     </span>
                   </div>
                 </div>
@@ -322,10 +324,3 @@ function CreditInvoiceTable({ showAdvanceSearch = false }) {
 }
 
 export default CreditInvoiceTable;
-
-
-
-
-
-
-

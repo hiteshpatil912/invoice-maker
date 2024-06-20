@@ -179,11 +179,11 @@ function ReturnInvoiceTable({ showAdvanceSearch = false }) {
             Client Name
           </div>
           <div className="sm:text-left text-default-color font-title flex-1">
-            Creation Date
+            Invoice_Date
           </div>
-          {/* <div className="sm:text-left text-default-color font-title flex-1">
-            Status
-          </div> */}
+          <div className="sm:text-left text-default-color font-title flex-1">
+            Invoice_DueDate
+          </div>
           <div className="sm:text-left text-default-color font-title flex-1">
             Amount
           </div>
@@ -222,18 +222,20 @@ function ReturnInvoiceTable({ showAdvanceSearch = false }) {
                 </div>
 
                 <div className={defaultTdStyle}>
-                  <div className={defaultTdContentTitleStyle}>Status</div>
+                  <div className={defaultTdContentTitleStyle}>Invoice_Date</div>
                   <div className={defaultTdContent}>
-                    <span
-                      className={
-                        "whitespace-nowrap text-ellipsis overflow-hidden px-3 rounded-xl py-1 " +
-                        (invoice.status === "Paid"
-                          ? "bg-green-200 text-green-600"
-                          : "bg-gray-100 text-gray-600 ")
-                      }
-                    >
-                      Date
-                      {/* {invoice.status} */}
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                      {invoice.creation_date}
+                    </span>
+                  </div>
+                </div>
+                <div className={defaultTdStyle}>
+                  <div className={defaultTdContentTitleStyle}>
+                    Invoice_DueDate
+                  </div>
+                  <div className={defaultTdContent}>
+                    <span className="whitespace-nowrap text-ellipsis overflow-hidden">
+                      {invoice.due_date}
                     </span>
                   </div>
                 </div>

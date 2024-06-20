@@ -14,6 +14,7 @@ import { NumberFormatBase } from "react-number-format";
 import { toast } from "react-toastify";
 import domtoimage from "dom-to-image";
 import InvoiceTopBar from "../../components/Invoice/InvoiceTopBar";
+import { ToWords } from "to-words";
 import {
   getCurrentBGImage,
   getCurrentColor,
@@ -44,6 +45,9 @@ import { jsPDF } from "jspdf";
 import { useAuth } from "../../auth/AuthContext";
 import ClientSelectionModal from "./selectClientModal";
 import html2canvas from "html2canvas";
+import 'jspdf-autotable';
+
+
 
 function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
   const { initLoading, showNavbar, toggleNavbar, setEscapeOverflow } =
@@ -101,76 +105,168 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
 
   const [currentPage, setCurrentPage] = useState(1);
   const { id } = useParams();
+  const toWords = new ToWords();
 
-  const handleExport = useCallback(() => {
-    if (showNavbar) {
-      toggleNavbar();
+  const generatePdf = useCallback((type) => {
+    if (!invoiceForm) {
+      console.error("PdfGenerator - Data is not set");
+      return;
     }
-    setEscapeOverflow(true);
-    setIsViewMode(true);
-    setIsExporting(true);
-    setTimeout(() => {
-      handlePrint();
-    }, 3000);
-  }, [handlePrint, setEscapeOverflow, showNavbar, toggleNavbar]);
+
+    const {
+      companyDetail,
+      clientDetail,
+      invoiceNo,
+      statusName,
+      dueDate,
+      createdDate,
+      currencyUnit,
+      totalAmount,
+      products,
+      discounts,
+    } = invoiceForm;
+
+    const doc = new jsPDF();
+
+    // Header and Line
+    doc.setFontSize(12);
+    // doc.text("", 14, 20); // Blank header
+
+    doc.line(14, 50, 196, 50); // Horizontal line
+
+    // Title
+    doc.setFontSize(18);
+    doc.text("New Invoice", 105, 57, null, null, "center");
+
+console.log({clientDetail})
+    // Client and Invoice Details
+    doc.setFontSize(12);
+    const clientInfo = `
+      Name: ${clientDetail.name || ""}
+      Phone: ${clientDetail.phone_number || ""}
+      Address: ${clientDetail.address || ""}
+    `;
+    doc.text(clientInfo, 14, 60);
+
+    const invoiceInfo = `
+      Invoice No: ${invoiceNo || ""}
+      Invoice Date: ${
+        createdDate ? new Date(createdDate).toLocaleDateString() : ""
+      }
+    `;
+    doc.text(invoiceInfo, 105, 60);
+
+    // Product Table
+    if (products && products.length > 0) {
+      const productRows = products.map((product, index) => [
+        index + 1,
+        product.name || "",
+        product.quantity || "",
+        ` ${(product.amount).toFixed(3)} ${currencyUnit}`,
+        `${(product.amount * product.quantity).toFixed(3)} ${currencyUnit}`,
+      ]);
+
+      doc.autoTable({
+        startY: 90,
+        head: [["No.", "Product Name", "Quantity", "Unit Price", "Amount"]],
+        body: productRows,
+        theme: "grid",
+        styles: { cellPadding: 2, fontSize: 10, valign: "middle" },
+        columnStyles: {
+          0: { halign: "center", cellWidth: "wrap" },
+          1: { halign: "left" },
+          2: { halign: "center" },
+          3: { halign: "right" },
+          4: { halign: "right" },
+        },
+      });
+    }
+
+    // Summary Table
+    let startY = doc.autoTable.previous.finalY + 10;
+
+    let discountPercent = 0; // Initialize discountPercent outside the map function
+    let discountAmount = 0; // Initialize discountAmount outside the map function
+
+    console.log({ discountPercent }, { discountAmount });
+
+    if (discounts && discounts.length > 0) {
+      discounts.forEach((discount) => {
+        discountPercent += discount.value; // Accumulate discount percentages
+        discountAmount += discount.amount; // Accumulate discount amounts
+      });
+    }
+    const subtotal = totalAmount + discountAmount
+    const summaryRows = [
+      [
+        {
+          content: "Remark:",
+          colSpan: 4,
+          rowSpan: 3,
+          styles: { halign: "left" },
+        },
+        `Subtotal ${currencyUnit}`,
+        `${subtotal.toFixed(3)} ${currencyUnit} `,
+      ],
+      [`Discount (%)`, `${discountPercent} (%)`],
+      [`Discount`, `${discountAmount.toFixed(3)} ${currencyUnit}`],
+      [
+        {
+          content: `Net Total :${toWords.convert(totalAmount)}`,
+          colSpan: 4,
+          rowSpan: 1,
+          styles: { halign: "left" },
+        },
+        `Net Total ${currencyUnit}`,
+        `${totalAmount.toFixed(3)} ${currencyUnit} `,
+      ],
+    ];
+
+    // Add Remarks column to columnStyles
+    const columnStyles = {
+      0: { halign: "center", cellWidth: "wrap" },
+      1: { halign: "left" },
+      2: { halign: "center" },
+    };
+
+    // Add a style for the Remarks column (index 3)
+    columnStyles[3] = { halign: "left" };
+
+    // Assuming `doc.autoTable` is from an external library
+    doc.autoTable({
+      startY,
+      body: summaryRows,
+      theme: "grid",
+      styles: { cellPadding: 2, fontSize: 10, valign: "middle" },
+      columnStyles,
+    });
+
+     // Save the PDF
+  const pdfData = doc.output('blob'); // Get PDF as blob data
+
+  // Print function
+  const printPdf = () => {
+    var pdfWindow = window.open('', '_blank');
+    pdfWindow.document.open();
+    pdfWindow.document.write('<embed width="100%" height="100%" type="application/pdf" src="' + URL.createObjectURL(pdfData) + '"></embed>');
+    pdfWindow.document.close();
+  };
+
+  if(type === "print"){
+    printPdf();
+  }
+    doc.save("invoice.pdf");
+  },[invoiceForm,toWords]);
 
   const handleDownloadPdf = useCallback(() => {
-    if (showNavbar) {
-      toggleNavbar();
-    }
-    setEscapeOverflow(true);
-    setIsViewMode(true);
-    setIsExporting(true);
+    generatePdf("download")
+   
+  }, [generatePdf]);
 
-    try {
-      const pdf = new jsPDF("p", "mm", "a4");
-      const component = componentRef.current;
+  const handleExport = useCallback(() => {
+    generatePdf("print")
 
-      html2canvas(component).then((canvas) => {
-        const imgData = canvas.toDataURL("image/png");
-        const imgWidth = 210; // A4 size
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-        pdf.save("invoice.pdf");
-
-        setIsExporting(false);
-        setEscapeOverflow(false);
-      });
-    } catch (e) {
-      console.log(e);
-      setIsExporting(false);
-      setEscapeOverflow(false);
-    }
-  }, [setEscapeOverflow, showNavbar, toggleNavbar]);
-
-  // const handleDownloadPdf = useCallback(() => {
-  //   if (showNavbar) {
-  //     toggleNavbar();
-  //   }
-  //   setEscapeOverflow(true);
-  //   setIsViewMode(true);
-  //   setIsExporting(true);
-
-  //   domtoimage.toPng(componentRef.current).then((dataUrl) => {
-  //     try {
-  //       const pdf = new jsPDF("p", "mm", "a4");
-  //       const img = new Image();
-  //       img.src = dataUrl;
-  //       img.onload = () => {
-  //         const imgWidth = pdf.internal.pageSize.getWidth();
-  //         const imgHeight = (img.height * imgWidth) / img.width;
-
-  //         pdf.addImage(dataUrl, "PNG", 0, 0, imgWidth, imgHeight);
-  //         pdf.save("invoice.pdf");
-  //       };
-  //     } catch (e) {
-  //       console.log(e);
-  //     } finally {
-  //       setIsExporting(false);
-  //       setEscapeOverflow(false);
-  //     }
-  //   });
-  // }, [setEscapeOverflow, showNavbar, toggleNavbar]);
+  }, [generatePdf]);
 
   const fetchClients = useCallback(
     async (page = 1, searchParams = {}) => {
@@ -990,7 +1086,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
               >
                 {invoiceForm ? (
                   <>
-                    <p className="font-bold">
+                    <p className="font-bold mb-2">
                       {invoiceForm.companyDetail?.companyName}
                     </p>
                     <p className="text-sm font-medium">
@@ -1062,7 +1158,7 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
                   </div>
                 )}
 
-                {showClientModal && (
+                {clients.data && showClientModal && (
                   <ClientSelectionModal
                     clients={clients.data}
                     onClose={closeChooseClient}
@@ -1171,101 +1267,6 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
 
           {/* Products */}
           <div className="py-2 px-4">
-            <table class="min-w-full bg-white border-collapse border border-gray-200">
-              <thead>
-                <tr>
-                  <th class="py-3 px-4 bg-gray-200 text-left border-b">ID</th>
-                  <th class="py-3 px-4 bg-gray-200 text-left border-b">
-                    Description
-                  </th>
-                  <th class="py-3 px-4 bg-gray-200 text-left border-b">
-                    Quantity
-                  </th>
-                  <th class="py-3 px-4 bg-gray-200 text-left border-b">
-                    Price
-                  </th>
-                  <th class="py-3 px-4 bg-gray-200 border-b">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="py-3 px-4 border-b">1</td>
-                  <td class="py-3 px-4 border-b">Product A</td>
-                  <td class="py-3 px-4 border-b">2</td>
-                  <td class="py-3 px-4 border-b">10.00KWD</td>
-                  <td class="py-3 px-4 border-b text-center">20.00KWD</td>
-                </tr>
-                <tr>
-                  <td class="py-3 px-4 border-b">2</td>
-                  <td class="py-3 px-4 border-b">Product B</td>
-                  <td class="py-3 px-4 border-b">3</td>
-                  <td class="py-3 px-4 border-b">15.00KWD</td>
-                  <td class="py-3 px-4 border-b text-center">45.00KWD</td>
-                </tr>
-                <tr>
-                  <td class="py-3 px-4 border-b">3</td>
-                  <td class="py-3 px-4 border-b">Product C</td>
-                  <td class="py-3 px-4 border-b">1</td>
-                  <td class="py-3 px-4 border-b">7.00KWD</td>
-                  <td class="py-3 px-4 border-b text-center">7.00KWD</td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="flex flex-col lg:flex-row justify-between border my-4">
-              <div class="lg:w-2/3">
-                <div class="">
-                  <p class="text-lg font-bold p-2">Remarks:</p>
-                  <p class="text-md mt-[103px] border-t p-2">
-                    Net Total: KWD six hundred fifteen and six hundred Fils only
-                  </p>
-                </div>
-              </div>
-
-              <div class="lg:w-1/3">
-                <div class="">
-                  <table class="min-w-full bg-white border-collapse border border-gray-200">
-                    <tbody>
-                      <tr>
-                        <td
-                          colspan="4"
-                          class="py-3 px-4 text-center border-b font-bold"
-                        >
-                          Subtotal
-                        </td>
-                        <td class="py-3 px-4 border ">648.00KWD</td>
-                      </tr>
-                      <tr>
-                        <td colspan="4" class="py-3 px-4 text-right border-b">
-                          Discount (%)
-                        </td>
-                        <td class="py-3 px-4 border">5%</td>
-                      </tr>
-                      <tr>
-                        <td
-                          colspan="4"
-                          class="py-3 px-4 text-right border-b font-bold"
-                        >
-                          Discount
-                        </td>
-                        <td class="py-3 px-4 border">32.40KWD</td>
-                      </tr>
-                      <tr>
-                        <td
-                          colspan="4"
-                          class="py-3 px-4 text-right borde font-bold"
-                        >
-                          Net Total
-                        </td>
-                        <td class="py-3 px-4 border-b">$615.60</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
             <div
               className={
                 isExporting
@@ -1769,15 +1770,15 @@ function InvoiceDetailScreen(props, { showAdvanceSearch = false }) {
         </div>
       )}
 
-      {invoiceForm && (
-        <div className="p-4">
-          <InvoiceTopBar
-            onClickExport={handleExport}
-            // onClickDownloadImg={handleDownloadImg}
-            onClickDownloadPdf={handleDownloadPdf}
-          />
-        </div>
-      )}
+     {invoiceForm && (
+    <div className="p-4">
+      <InvoiceTopBar
+        onClickExport={handleExport}
+        // onClickDownloadImg={handleDownloadImg}
+        onClickDownloadPdf={handleDownloadPdf}
+      />
+    </div>
+  )}
     </div>
   );
 }

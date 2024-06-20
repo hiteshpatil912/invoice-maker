@@ -16,12 +16,12 @@ function ReturnInvoiceListScreen() {
     <div>
       <div className="flex flex-col sm:flex-row flex-wrap p-4">
         <div className="sm:mr-4">
-          <PageTitle title="Return Invoice" />
+          <PageTitle title="SALES_RETURN" />
         </div>
         <div className="flex-1">
           <Button onClick={goToNewInvoice} block={1} size="sm">
             <InvoiceIcon />
-            <span className="inline-block ml-2"> Add Return Invoice </span>
+            <span className="inline-block ml-2"> Add SalesReturn</span>
           </Button>
         </div>
       </div>

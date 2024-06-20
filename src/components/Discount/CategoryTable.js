@@ -106,10 +106,9 @@ function CategoryTable({
             },
           }
         );
-
-        if (response.success) {
-          fetchCategories()
         const result = await response.json();
+        if (result.success) {
+        fetchCategories()
         toast.success(result.data.message || "Product Deleted Successfully!", {
           position: "bottom-center",
           autoClose: 2000,
